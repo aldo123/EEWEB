@@ -1,34 +1,134 @@
 {
-  "users": {
-    "Aldo": {
-      "username": "Aldo",
-      "password": "123",
-      "role": "Engineer",
-      "name": "Aldo"
-    },
-    "Panggih": {
-      "username": "Panggih",
-      "password": "123",
-      "role": "Technician",
-      "name": "Panggih"
-    },
-    "Hanafi": {
-      "username": "Hanafi",
-      "password": "123",
-      "role": "Technician",
-      "name": "Hanafi"
-    },
-    "Dany": {
-      "username": "Dany",
-      "password": "123",
-      "role": "Technician",
-      "name": "Dany"
-    },
-    "Maju": {
-      "username": "Maju",
-      "password": "123",
-      "role": "Technician",
-      "name": "Maju"
-    }
+  "Akbar": {
+    "name": "Akbar",
+    "password": "123",
+    "role": "Technician",
+    "username": "Akbar"
+  },
+  "Aldo": {
+    "name": "Aldo",
+    "password": "123",
+    "role": "Engineer",
+    "username": "Aldo"
+  },
+  "Alif": {
+    "name": "Alif",
+    "password": "123",
+    "role": "Technician",
+    "username": "Alif"
+  },
+  "Ardy": {
+    "name": "Ardy",
+    "password": "123",
+    "role": "Technician",
+    "username": "Ardy"
+  },
+  "Ari": {
+    "name": "Ari",
+    "password": "123",
+    "role": "Technician",
+    "username": "Ari"
+  },
+  "Aulia": {
+    "name": "Aulia",
+    "password": "123",
+    "role": "Technician",
+    "username": "Aulia"
+  },
+  "Bambang": {
+    "name": "Bambang",
+    "password": "123",
+    "role": "Engineer",
+    "username": "Bambang"
+  },
+  "Budi": {
+    "name": "Budi",
+    "password": "123",
+    "role": "Technician",
+    "username": "Budi"
+  },
+  "Dany": {
+    "name": "Dany",
+    "password": "123",
+    "role": "Technician",
+    "username": "Dany"
+  },
+  "Faiz": {
+    "name": "Faiz",
+    "password": "123",
+    "role": "Technician",
+    "username": "Faiz"
+  },
+  "Firli": {
+    "name": "Firli",
+    "password": "123",
+    "role": "Technician",
+    "username": "Firli"
+  },
+  "Hanafi": {
+    "name": "Hanafi",
+    "password": "123",
+    "role": "Technician",
+    "username": "Hanafi"
+  },
+  "Indra": {
+    "name": "Indra",
+    "password": "123",
+    "role": "Engineer",
+    "username": "Indra"
+  },
+  "Junaedi": {
+    "name": "Junaedi",
+    "password": "123",
+    "role": "Technician",
+    "username": "Junaedi"
+  },
+  "Maju": {
+    "name": "Maju",
+    "password": "123",
+    "role": "Technician",
+    "username": "Maju"
+  },
+  "Pamuji": {
+    "name": "Pamuji",
+    "password": "123",
+    "role": "Technician",
+    "username": "Pamuji"
+  },
+  "Panggih": {
+    "name": "Panggih",
+    "password": "123",
+    "role": "Technician",
+    "username": "Panggih"
+  },
+  "Rahmat": {
+    "name": "Rahmat",
+    "password": "123",
+    "role": "Engineer",
+    "username": "Rahmat"
+  },
+  "Safik": {
+    "name": "Safik",
+    "password": "123",
+    "role": "Engineer",
+    "username": "Safik"
+  },
+  "Tomi": {
+    "name": "Tomi",
+    "password": "123",
+    "role": "Engineer",
+    "username": "Tomi"
+  },
+  "Tri": {
+    "name": "Tri",
+    "password": "123",
+    "role": "Technician",
+    "username": "Tri"
+  },
+  "Widi": {
+    "name": "Widi",
+    "password": "123",
+    "role": "Technician",
+    "username": "Widi"
   }
 }

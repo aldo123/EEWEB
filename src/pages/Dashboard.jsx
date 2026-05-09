@@ -963,9 +963,9 @@ export default function Dashboard() {
         {/* ADD TASK MODAL */}
         {showModal && (
 
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center p-5 z-50">
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 overflow-y-auto">
 
-            <div className="bg-white rounded-3xl p-5 w-full">
+            <div className="bg-white rounded-3xl p-5 w-full max-w-[420px] max-h-[90vh] overflow-y-auto">
 
               <h2 className="text-2xl font-bold text-slate-800 mb-5">
                 Add Task
@@ -983,7 +983,7 @@ export default function Dashboard() {
                       assignTo: "",
                     })
                   }
-                  className="w-full border rounded-2xl p-4"
+                  className="w-full min-w-0 border border-slate-300 rounded-2xl p-4 bg-white"
                 >
 
                   <option value="DT">
@@ -1024,7 +1024,7 @@ export default function Dashboard() {
                       issue: e.target.value,
                     })
                   }
-                  className="w-full border rounded-2xl p-4 h-24"
+                  className="w-full min-w-0 border border-slate-300 rounded-2xl p-4 h-24 resize-none bg-white"
                 />
 
                 {/* ASSIGN TO */}
@@ -1156,7 +1156,7 @@ export default function Dashboard() {
 
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4 pb-2">
 
                 <div>
 
