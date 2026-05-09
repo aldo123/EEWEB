@@ -1083,7 +1083,7 @@ export default function Dashboard() {
                               e.target.value,
                           })
                         }
-                        className="w-full min-w-0 box-border border border-slate-300 rounded-2xl p-4 bg-white"
+                        className="w-full min-w-0 max-w-full box-border border border-slate-300 rounded-2xl p-3 bg-white appearance-none"
                       />
 
                       <input
@@ -1096,7 +1096,7 @@ export default function Dashboard() {
                               e.target.value,
                           })
                         }
-                        className="w-full min-w-0 box-border border border-slate-300 rounded-2xl p-4 bg-white"
+                        className="w-full min-w-0 max-w-full box-border border border-slate-300 rounded-2xl p-3 bg-white appearance-none"
                       />
 
                     </>
