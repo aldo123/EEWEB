@@ -4,7 +4,7 @@ import {
   db,
   ref,
   get,
-} from "../firebase";
+} from "../firebase/firebase";
 
 export default function Login() {
 

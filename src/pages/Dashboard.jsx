@@ -9,7 +9,7 @@ import {
   push,
   onValue,
   update,
-} from "../firebase";
+} from "../firebase/firebase";
 
 export default function Dashboard() {
 
