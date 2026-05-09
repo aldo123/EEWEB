@@ -965,7 +965,7 @@ export default function Dashboard() {
 
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 overflow-y-auto">
 
-            <div className="bg-white rounded-3xl p-5 w-full max-w-[420px] max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-3xl p-5 w-full max-w-[420px] max-h-[90vh] overflow-y-auto overflow-x-hidden">
 
               <h2 className="text-2xl font-bold text-slate-800 mb-5">
                 Add Task
@@ -1011,7 +1011,7 @@ export default function Dashboard() {
                       machine: e.target.value,
                     })
                   }
-                  className="w-full border rounded-2xl p-4"
+                  className="w-full min-w-0 box-border border border-slate-300 rounded-2xl p-4 bg-white"
                 />
 
                 {/* ISSUE */}
@@ -1036,7 +1036,7 @@ export default function Dashboard() {
                       assignTo: e.target.value,
                     })
                   }
-                  className="w-full border rounded-2xl p-4"
+                  className="w-full min-w-0 box-border border border-slate-300 rounded-2xl p-4 bg-white"
                 >
 
                   <option value="">
@@ -1083,7 +1083,7 @@ export default function Dashboard() {
                               e.target.value,
                           })
                         }
-                        className="w-full border rounded-2xl p-4"
+                        className="w-full min-w-0 box-border border border-slate-300 rounded-2xl p-4 bg-white"
                       />
 
                       <input
@@ -1096,7 +1096,7 @@ export default function Dashboard() {
                               e.target.value,
                           })
                         }
-                        className="w-full border rounded-2xl p-4"
+                        className="w-full min-w-0 box-border border border-slate-300 rounded-2xl p-4 bg-white"
                       />
 
                     </>
@@ -1215,7 +1215,7 @@ export default function Dashboard() {
                             e.target.value,
                         })
                       }
-                      className="w-full border rounded-2xl p-3 h-24"
+                      className="w-full min-w-0 box-border border border-slate-300 rounded-2xl p-4 h-24 resize-none bg-white"
                     />
 
                     <select
@@ -1227,7 +1227,7 @@ export default function Dashboard() {
                             e.target.value,
                         })
                       }
-                      className="w-full border rounded-2xl p-3"
+                      className="w-full min-w-0 box-border border border-slate-300 rounded-2xl p-4 bg-white"
                     >
 
                       <option value="">

@@ -16,3 +16,14 @@ body,
       #cbd5e1 100%
     );
 }
+
+*{
+  box-sizing:border-box;
+}
+
+html,
+body,
+#root{
+  width:100%;
+  overflow-x:hidden;
+}
