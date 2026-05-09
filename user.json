@@ -1,0 +1,34 @@
+{
+  "users": {
+    "Aldo": {
+      "username": "Aldo",
+      "password": "123",
+      "role": "Engineer",
+      "name": "Aldo"
+    },
+    "Panggih": {
+      "username": "Panggih",
+      "password": "123",
+      "role": "Technician",
+      "name": "Panggih"
+    },
+    "Hanafi": {
+      "username": "Hanafi",
+      "password": "123",
+      "role": "Technician",
+      "name": "Hanafi"
+    },
+    "Dany": {
+      "username": "Dany",
+      "password": "123",
+      "role": "Technician",
+      "name": "Dany"
+    },
+    "Maju": {
+      "username": "Maju",
+      "password": "123",
+      "role": "Technician",
+      "name": "Maju"
+    }
+  }
+}
