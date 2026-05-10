@@ -150,7 +150,74 @@ export default function Dashboard() {
 
   }, []);
 
+  // AUTO UPDATE DELAY STATUS
+  useEffect(() => {
 
+    const now = new Date();
+
+    tasks.forEach(async (task) => {
+
+      // ======================
+      // DT AUTO DELAY
+      // ======================
+      if (
+        task.type === "DT" &&
+        task.status !== "Done" &&
+        task.status !== "Delay"
+      ) {
+
+        const createdTime =
+          new Date(task.createdAt);
+
+        const diffMinutes =
+          (now - createdTime) / 1000 / 60;
+
+        if (diffMinutes > 30) {
+
+          await update(
+            ref(db, `task-mobile/${task.id}`),
+            {
+              status: "Delay",
+            }
+          );
+
+        }
+
+      }
+
+      // ======================
+      // PROJECT AUTO DELAY
+      // ======================
+      if (
+        task.type === "Project" &&
+        task.status !== "Done" &&
+        task.status !== "Delay" &&
+        task.status !== "Waiting Approval" &&
+        task.targetDate &&
+        task.targetTime
+      ) {
+
+        const targetDateTime =
+          new Date(
+            `${task.targetDate}T${task.targetTime}`
+          );
+
+        if (now > targetDateTime) {
+
+          await update(
+            ref(db, `task-mobile/${task.id}`),
+            {
+              status: "Delay",
+            }
+          );
+
+        }
+
+      }
+
+    });
+
+  }, [tasks]);
   // LOAD TPM TASKS
   useEffect(() => {
 
@@ -329,9 +396,22 @@ export default function Dashboard() {
         // DT BASED ROLE
         if (task.type === "DT") {
 
+          // BELUM ADA YANG ACCEPT
+          if (!task.acceptedBy) {
+
+            return (
+              task.assignTo === user.role
+            );
+
+          }
+
+          // SUDAH ADA YANG ACCEPT
           return (
-            task.assignTo ===
-            user.role
+
+            task.acceptedBy === user.name ||
+
+            task.createdBy === user.name
+
           );
 
         }
@@ -582,6 +662,17 @@ export default function Dashboard() {
 
     try {
 
+      const closedDate = new Date();
+
+      const createdDate = new Date(
+        selectedTask.createdAt
+      );
+
+      const durationMinutes =
+        Math.floor(
+          (closedDate - createdDate) / 1000 / 60
+        );
+
       await update(
         ref(
           db,
@@ -591,6 +682,7 @@ export default function Dashboard() {
             : `task-mobile/${selectedTask.id}`
         ),
         {
+
           rca: taskReport.rca,
 
           action: taskReport.action,
@@ -600,8 +692,10 @@ export default function Dashboard() {
             user.name,
 
           closedAt:
-            selectedTask.closedAt ||
-            new Date().toLocaleString(),
+            closedDate.toLocaleString(),
+
+          durationMinutes:
+            durationMinutes,
 
           status:
             (
@@ -698,6 +792,17 @@ export default function Dashboard() {
         // PROJECT
         else {
 
+          const approvedDate = new Date();
+
+          const targetDateTime = new Date(
+            `${selectedTask.targetDate}T${selectedTask.targetTime}`
+          );
+
+          const approveDelayMinutes =
+            Math.floor(
+              (approvedDate - targetDateTime) / 1000 / 60
+            );
+
           await update(
             ref(
               db,
@@ -710,9 +815,15 @@ export default function Dashboard() {
                 user.name,
 
               approvedAt:
-                currentDate.toLocaleString(),
+                approvedDate.toLocaleString(),
+
+              approveDelayMinutes:
+                approveDelayMinutes > 0
+                  ? approveDelayMinutes
+                  : 0,
 
               beforePhoto: null,
+
               afterPhoto: null,
             }
           );
@@ -813,8 +924,9 @@ export default function Dashboard() {
     selectedTask.type === "Project" &&
     selectedTask.createdBy === user.name &&
     (
-      selectedTask.status === "Waiting Approval" || 
-      selectedTask.status === "Open" || 
+      selectedTask.status === "Waiting Approval" ||
+      selectedTask.status === "Open" ||
+      selectedTask.status === "Delay" ||
       selectedTask.status === "Progress"
     );
 
@@ -824,6 +936,7 @@ export default function Dashboard() {
     selectedTask.createdBy === user.name &&
     (
       selectedTask.status === "Open" ||
+      selectedTask.status === "Delay" ||
       selectedTask.status === "Progress"
     );
 
@@ -836,6 +949,7 @@ export default function Dashboard() {
       selectedTask.closedBy ===
       user.name
     );
+
   return (
 
     <div className="min-h-screen bg-gradient-to-br from-slate-200 via-slate-100 to-slate-300 flex justify-center p-4">
@@ -1573,67 +1687,86 @@ export default function Dashboard() {
                   </button>
 
                 )}
-                {selectedTask.type === "DT" && (selectedTask.status === "Progress" || selectedTask.status === "Done") && (
-                  <>
+                {selectedTask.type === "DT" &&
+                  (
+                    selectedTask.status === "Progress" ||
+                    selectedTask.status === "Delay" ||
+                    selectedTask.status === "Done"
+                  ) &&
+                  (
+                    selectedTask.createdBy === user.name ||
+                    selectedTask.acceptedBy === user.name
+                  ) && (
+                    <>
 
-                    <textarea
-                      placeholder="Root Cause Analysis (RCA)"
-                      value={taskReport.rca}
-                      onChange={(e) =>
-                        setTaskReport({
-                          ...taskReport,
-                          rca: e.target.value,
-                        })
-                      }
-                      className="w-full border rounded-2xl p-4 h-28"
-                    />
+                      <textarea
+                        placeholder="Root Cause Analysis (RCA)"
+                        value={taskReport.rca}
+                        onChange={(e) =>
+                          setTaskReport({
+                            ...taskReport,
+                            rca: e.target.value,
+                          })
+                        }
+                        className="w-full border rounded-2xl p-4 h-28"
+                      />
 
-                    <textarea
-                      placeholder="Action Taken"
-                      value={taskReport.action}
-                      onChange={(e) =>
-                        setTaskReport({
-                          ...taskReport,
-                          action:
-                            e.target.value,
-                        })
-                      }
-                      className="w-full border rounded-2xl p-4 h-28"
-                    />
+                      <textarea
+                        placeholder="Action Taken"
+                        value={taskReport.action}
+                        onChange={(e) =>
+                          setTaskReport({
+                            ...taskReport,
+                            action:
+                              e.target.value,
+                          })
+                        }
+                        className="w-full border rounded-2xl p-4 h-28"
+                      />
 
-                    {(
-                      selectedTask.status !== "Done" ||
-                      canRevise
-                    ) && (
+                      {(
+                        (
+                          selectedTask.status !== "Done" ||
+                          canRevise
+                        ) &&
+                        (
+                          selectedTask.createdBy === user.name ||
+                          selectedTask.acceptedBy === user.name
+                        )
+                      ) && (
 
-                        <button
-                          onClick={
-                            handleSubmitTask
-                          }
-                          className={`w-full text-white rounded-2xl p-4 font-bold ${selectedTask.status === "Done"
-                            ? "bg-orange-500"
-                            : "bg-green-600"
-                            }`}
-                        >
+                          <button
+                            onClick={
+                              handleSubmitTask
+                            }
+                            className={`w-full text-white rounded-2xl p-4 font-bold ${selectedTask.status === "Done"
+                              ? "bg-orange-500"
+                              : "bg-green-600"
+                              }`}
+                          >
 
-                          {selectedTask.status === "Done"
-                            ? "Revise Report"
-                            : "Close Task"}
+                            {selectedTask.status === "Done"
+                              ? "Revise Report"
+                              : "Close Task"}
 
-                        </button>
+                          </button>
 
-                      )}
+                        )}
 
-                  </>
+                    </>
 
-                )}
+                  )}
 
                 {/* PROJECT / TPM PHOTO */}
                 {(
                   selectedTask.type === "Project" ||
                   selectedTask.type === "TPM"
                 ) &&
-                  selectedTask.status === "Progress" && selectedTask.assignTo === user.name && (
+                  (
+                    selectedTask.status === "Progress" ||
+                    selectedTask.status === "Delay"
+                  ) &&
+                  selectedTask.assignTo === user.name && (
 
                     <div className="space-y-4">
 
@@ -1750,7 +1883,13 @@ export default function Dashboard() {
                     selectedTask.type === "Project" ||
                     selectedTask.type === "TPM"
                   ) &&
-                  selectedTask.status === "Progress" && taskPhotos.before && taskPhotos.after) && (
+                  (
+                    selectedTask.status === "Progress" ||
+                    selectedTask.status === "Delay"
+                  ) &&
+                  taskPhotos.before &&
+                  taskPhotos.after
+                ) && (
                     <button
                       onClick={handleSubmitTask}
                       className="w-full bg-green-600 text-white rounded-2xl p-4 font-bold"
@@ -1861,6 +2000,51 @@ function TaskCard({
   onClick,
 }) {
 
+
+  const now = new Date();
+
+  let displayStatus = task.status;
+
+  // ======================
+  // AUTO DELAY FOR DT
+  // ======================
+  if (
+    task.type === "DT" &&
+    task.status !== "Done"
+  ) {
+
+    const createdTime = new Date(task.createdAt);
+
+    const diffMinutes =
+      (now - createdTime) / 1000 / 60;
+
+    if (diffMinutes > 30) {
+      displayStatus = "Delay";
+    }
+
+  }
+
+  // ======================
+  // AUTO DELAY FOR PROJECT
+  // ======================
+  if (
+    task.type === "Project" &&
+    task.status !== "Done" &&
+    task.status !== "Waiting Approval" &&
+    task.targetDate &&
+    task.targetTime
+  ) {
+
+    const targetDateTime = new Date(
+      `${task.targetDate}T${task.targetTime}`
+    );
+
+    if (now > targetDateTime) {
+      displayStatus = "Delay";
+    }
+
+  }
+
   const statusColor = {
 
     Open:
@@ -1919,8 +2103,8 @@ function TaskCard({
 
         </div>
 
-        <div className={`px-3 py-1 rounded-full text-xs font-bold ${statusColor[task.status]}`}>
-          {task.status}
+        <div className={`px-3 py-1 rounded-full text-xs font-bold ${statusColor[displayStatus]}`}>
+          {displayStatus}
         </div>
 
       </div>
@@ -1988,45 +2172,90 @@ function TaskCard({
           </div>
         )}
 
-        {task.closedBy && (
-          <>
-            <div className="text-green-600 font-semibold">
-              Closed By: {task.closedBy}
-            </div>
-
-            {task.rca && (
-
-              <div className="mt-2">
-
-                <span className="font-semibold text-slate-500">
-                  RCA:
-                </span>
-
-                <div className="text-slate-600">
-                  {task.rca}
-                </div>
-
+        {task.closedBy &&
+          task.status === "Done" && (
+            <>
+              <div className="text-green-600 font-semibold">
+                Closed By: {task.closedBy}
               </div>
 
-            )}
-
-            {task.action && (
-
-              <div className="mt-2">
-
-                <span className="font-semibold text-slate-500">
-                  Action:
-                </span>
-
-                <div className="text-slate-600">
-                  {task.action}
-                </div>
-
+              <div
+                className={`font-semibold ${task.durationMinutes <= 30
+                  ? "text-black"
+                  : "text-red-600"
+                  }`}
+              >
+                Closed Time: {task.closedAt}
               </div>
 
-            )}
-          </>
-        )}
+              <div
+                className={`font-semibold ${task.durationMinutes <= 30
+                  ? "text-black"
+                  : "text-red-600"
+                  }`}
+              >
+                Duration: {task.durationMinutes} Minutes
+              </div>
+
+              {/* {task.approvedAt && (
+                <>
+                  <div
+                    className={`font-semibold ${task.approveDelayMinutes > 0
+                      ? "text-red-600"
+                      : "text-black"
+                      }`}
+                  >
+                    Approved Time: {task.approvedAt}
+                  </div>
+
+                  <div
+                    className={`font-semibold ${task.approveDelayMinutes > 0
+                      ? "text-red-600"
+                      : "text-black"
+                      }`}
+                  >
+                    Approval Delay:
+                    {" "}
+                    {task.approveDelayMinutes}
+                    {" "}
+                    Minutes
+                  </div>
+                </>
+              )} */}
+
+              {task.rca && (
+
+                <div className="mt-2">
+
+                  <span className="font-semibold text-slate-500">
+                    RCA:
+                  </span>
+
+                  <div className="text-slate-600">
+                    {task.rca}
+                  </div>
+
+                </div>
+
+              )}
+
+              {task.action && (
+
+                <div className="mt-2">
+
+                  <span className="font-semibold text-slate-500">
+                    Action:
+                  </span>
+
+                  <div className="text-slate-600">
+                    {task.action}
+                  </div>
+
+                </div>
+
+              )}
+            </>
+          )}
 
       </div>
 
