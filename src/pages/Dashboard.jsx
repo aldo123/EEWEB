@@ -9,7 +9,45 @@ import {
   push,
   onValue,
   update,
+  remove,
 } from "../firebase/firebase";
+
+function getWeekNumber(date) {
+
+  const tempDate = new Date(
+    Date.UTC(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    )
+  );
+
+  const dayNum =
+    tempDate.getUTCDay() || 7;
+
+  tempDate.setUTCDate(
+    tempDate.getUTCDate() + 4 - dayNum
+  );
+
+  const yearStart = new Date(
+    Date.UTC(
+      tempDate.getUTCFullYear(),
+      0,
+      1
+    )
+  );
+
+  return Math.ceil(
+    (
+      (
+        (
+          tempDate - yearStart
+        ) / 86400000
+      ) + 1
+    ) / 7
+  );
+
+}
 
 export default function Dashboard() {
 
@@ -33,6 +71,9 @@ export default function Dashboard() {
     useState(false);
 
   const [tasks, setTasks] =
+    useState([]);
+
+  const [pmTasks, setPmTasks] =
     useState([]);
 
   const [users, setUsers] =
@@ -109,6 +150,122 @@ export default function Dashboard() {
 
   }, []);
 
+
+  // LOAD TPM TASKS
+  useEffect(() => {
+
+    const pmRef = ref(
+      db,
+      "preventive-maintenance"
+    );
+
+    onValue(pmRef, (snapshot) => {
+
+      const data = snapshot.val();
+
+      if (data) {
+
+        const currentWeek =
+          getWeekNumber(
+            new Date()
+          );
+
+        const currentYear =
+          new Date().getFullYear();
+
+        const array = Object.keys(data)
+
+          .filter((key) => {
+
+            const item = data[key];
+
+            return (
+              Number(item.week) ===
+              currentWeek
+            );
+
+          })
+
+          .map(
+            (key) => {
+
+              const item = data[key];
+
+              return {
+
+                id: key,
+
+                type: "TPM",
+
+                machine:
+                  item.machine || "-",
+
+                issue:
+                  item.actionTask || "-",
+
+                assignTo:
+                  item.responsible || "-",
+
+                targetWeek:
+                  item.week || "-",
+
+                dateCompleted:
+                  item.dateCompleted || "",
+
+                weekCompleted:
+                  item.weekCompleted || "",
+
+                status:
+                  item.status === "Done"
+                    ? "Done"
+
+                    : item.status === "Progress" ||
+                      item.status === "Ongoing"
+                      ? "Progress"
+
+                      : item.status ===
+                        "Waiting Approval"
+                        ? "Waiting Approval"
+
+                        : item.status === "Reject"
+                          ? "Reject"
+
+                          : item.status === "Delay"
+                            ? "Delay"
+
+                            : "Open",
+
+                createdBy:
+                  item.createdBy || "WEB TPM",
+
+                createdAt:
+                  item.createdAt || "-",
+
+                acceptedBy:
+                  item.acceptedBy || "",
+
+                beforePhoto:
+                  item.beforePhoto || "",
+
+                afterPhoto:
+                  item.afterPhoto || "",
+              };
+
+            }
+          );
+
+        setPmTasks(array);
+
+      } else {
+
+        setPmTasks([]);
+
+      }
+
+    });
+
+  }, []);
+
   // LOAD USERS
   useEffect(() => {
 
@@ -151,10 +308,15 @@ export default function Dashboard() {
     ),
   ];
 
+  const allTasks = [
+    ...tasks,
+    ...pmTasks,
+  ];
+
   // FILTER MY TASK / ALL TASK
   const baseTasks =
     taskView === "My Task"
-      ? tasks.filter((task) => {
+      ? allTasks.filter((task) => {
 
         // TASK CREATED BY ME
         if (
@@ -176,12 +338,21 @@ export default function Dashboard() {
 
         // PROJECT / TPM BASED USER
         return (
+
           task.assignTo ===
-          user.name
+          user.name ||
+
+          (
+            task.type === "TPM" &&
+            task.status ===
+            "Waiting Approval" &&
+            user.role === "Admin"
+          )
+
         );
 
       })
-      : tasks;
+      : allTasks;
 
   // FILTER OVERVIEW
   const filteredOverviewTasks =
@@ -229,11 +400,8 @@ export default function Dashboard() {
     });
 
     setTaskPhotos({
-      before:
-        task.beforePhoto || "",
-
-      after:
-        task.afterPhoto || "",
+      before: "",
+      after: "",
     });
 
     setReviseTask({
@@ -265,7 +433,10 @@ export default function Dashboard() {
       await update(
         ref(
           db,
-          `task-mobile/${selectedTask.id}`
+
+          selectedTask.type === "TPM"
+            ? `preventive-maintenance/${selectedTask.id}`
+            : `task-mobile/${selectedTask.id}`
         ),
         {
           status: "Progress",
@@ -290,7 +461,7 @@ export default function Dashboard() {
 
   };
 
-  // REVISE PROJECT / TPM
+  // REVISE PROJECT 
   const handleReviseTask = async () => {
 
     try {
@@ -331,6 +502,35 @@ export default function Dashboard() {
       console.log(error);
 
       alert("Failed revise task");
+
+    }
+
+  };
+
+  const handleDeleteTask = async () => {
+
+    const confirmDelete = window.confirm(
+      "Delete this task?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+
+      await remove(
+        ref(
+          db,
+          `task-mobile/${selectedTask.id}`
+        )
+      );
+
+      setShowTaskModal(false);
+
+    } catch (error) {
+
+      console.log(error);
+
+      alert("Failed delete task");
 
     }
 
@@ -385,7 +585,10 @@ export default function Dashboard() {
       await update(
         ref(
           db,
-          `task-mobile/${selectedTask.id}`
+
+          selectedTask.type === "TPM"
+            ? `preventive-maintenance/${selectedTask.id}`
+            : `task-mobile/${selectedTask.id}`
         ),
         {
           rca: taskReport.rca,
@@ -436,21 +639,85 @@ export default function Dashboard() {
 
       try {
 
-        await update(
-          ref(
-            db,
-            `task-mobile/${selectedTask.id}`
-          ),
-          {
-            status: "Done",
+        const currentDate =
+          new Date();
 
-            approvedBy:
-              user.name,
+        // TPM
+        // TPM
+        if (
+          selectedTask.type === "TPM"
+        ) {
 
-            approvedAt:
-              new Date().toLocaleString(),
-          }
-        );
+          const completedWeek =
+            getWeekNumber(currentDate);
+
+          const targetWeek =
+            Number(selectedTask.targetWeek);
+
+          const pointSummary =
+            completedWeek === targetWeek
+              ? 1
+              : 0;
+
+          await update(
+            ref(
+              db,
+              `preventive-maintenance/${selectedTask.id}`
+            ),
+            {
+              status: "Done",
+
+              approvedBy:
+                user.name,
+
+              approvedAt:
+                currentDate.toLocaleString(),
+
+              dateCompleted:
+                currentDate
+                  .toISOString()
+                  .split("T")[0],
+
+              weekCompleted:
+                completedWeek,
+
+              pointSummary:
+                pointSummary,
+
+              updatedAt:
+                currentDate.toISOString(),
+
+              beforePhoto: null,
+
+              afterPhoto: null,
+            }
+          );
+
+        }
+
+        // PROJECT
+        else {
+
+          await update(
+            ref(
+              db,
+              `task-mobile/${selectedTask.id}`
+            ),
+            {
+              status: "Done",
+
+              approvedBy:
+                user.name,
+
+              approvedAt:
+                currentDate.toLocaleString(),
+
+              beforePhoto: null,
+              afterPhoto: null,
+            }
+          );
+
+        }
 
         setShowTaskModal(false);
 
@@ -543,15 +810,22 @@ export default function Dashboard() {
   // CAN REVISE ASSIGN
   const canReviseAssign =
     selectedTask &&
+    selectedTask.type === "Project" &&
+    selectedTask.createdBy === user.name &&
     (
-      selectedTask.type ===
-      "Project" ||
+      selectedTask.status === "Waiting Approval" || 
+      selectedTask.status === "Open" || 
+      selectedTask.status === "Progress"
+    );
 
-      selectedTask.type ===
-      "TPM"
-    ) &&
-    selectedTask.createdBy ===
-    user.name;
+  const canDeleteTask =
+    selectedTask &&
+    selectedTask.type === "Project" &&
+    selectedTask.createdBy === user.name &&
+    (
+      selectedTask.status === "Open" ||
+      selectedTask.status === "Progress"
+    );
 
   const canRevise =
     selectedTask &&
@@ -735,11 +1009,10 @@ export default function Dashboard() {
                       onClick={() =>
                         setOverviewType(item)
                       }
-                      className={`px-5 py-3 rounded-2xl text-sm font-bold whitespace-nowrap transition-all duration-300 border ${
-                        overviewType === item
-                          ? "bg-gradient-to-br from-[#166534] to-[#22c55e] text-white border-green-700 shadow-[0_6px_18px_rgba(22,101,52,.25)] scale-[1.02]"
-                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                      }`}
+                      className={`px-5 py-3 rounded-2xl text-sm font-bold whitespace-nowrap transition-all duration-300 border ${overviewType === item
+                        ? "bg-gradient-to-br from-[#166534] to-[#22c55e] text-white border-green-700 shadow-[0_6px_18px_rgba(22,101,52,.25)] scale-[1.02]"
+                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                        }`}
                     >
                       {item}
                     </button>
@@ -815,48 +1088,43 @@ export default function Dashboard() {
                   }
                 />
 
+                <Card
+                  title="Delay"
+                  value={
+                    filteredOverviewTasks.filter(
+                      (t) =>
+                        t.status === "Delay"
+                    ).length
+                  }
+                  color="red"
+                  active={
+                    filter === "Delay"
+                  }
+                  onClick={() =>
+                    setFilter("Delay")
+                  }
+                />
+
                 {overviewType !== "DT" && (
 
                   <Card
-                    title="Delay"
+                    title="Waiting Approval"
                     value={
                       filteredOverviewTasks.filter(
                         (t) =>
-                          t.status === "Delay"
+                          t.status === "Waiting Approval"
                       ).length
                     }
-                    color="red"
+                    color="yellow"
                     active={
-                      filter === "Delay"
+                      filter === "Waiting Approval"
                     }
                     onClick={() =>
-                      setFilter("Delay")
+                      setFilter("Waiting Approval")
                     }
                   />
 
                 )}
-
-                {overviewType !== "Project" &&
-                  overviewType !== "TPM" && (
-
-                    <Card
-                      title="Urgent"
-                      value={
-                        filteredOverviewTasks.filter(
-                          (t) =>
-                            t.status === "Urgent"
-                        ).length
-                      }
-                      color="red"
-                      active={
-                        filter === "Urgent"
-                      }
-                      onClick={() =>
-                        setFilter("Urgent")
-                      }
-                    />
-
-                  )}
 
               </div>
 
@@ -1068,40 +1336,39 @@ export default function Dashboard() {
                 </select>
 
                 {/* TARGET */}
-                {(newTask.type === "Project" ||
-                  newTask.type === "TPM") && (
+                {(newTask.type === "Project") && (
 
-                    <>
+                  <>
 
-                      <input
-                        type="date"
-                        value={newTask.targetDate}
-                        onChange={(e) =>
-                          setNewTask({
-                            ...newTask,
-                            targetDate:
-                              e.target.value,
-                          })
-                        }
-                        className="w-full min-w-0 max-w-full box-border border border-slate-300 rounded-2xl p-3 bg-white appearance-none"
-                      />
+                    <input
+                      type="date"
+                      value={newTask.targetDate}
+                      onChange={(e) =>
+                        setNewTask({
+                          ...newTask,
+                          targetDate:
+                            e.target.value,
+                        })
+                      }
+                      className="w-full min-w-0 max-w-full box-border border border-slate-300 rounded-2xl p-3 bg-white appearance-none"
+                    />
 
-                      <input
-                        type="time"
-                        value={newTask.targetTime}
-                        onChange={(e) =>
-                          setNewTask({
-                            ...newTask,
-                            targetTime:
-                              e.target.value,
-                          })
-                        }
-                        className="w-full min-w-0 max-w-full box-border border border-slate-300 rounded-2xl p-3 bg-white appearance-none"
-                      />
+                    <input
+                      type="time"
+                      value={newTask.targetTime}
+                      onChange={(e) =>
+                        setNewTask({
+                          ...newTask,
+                          targetTime:
+                            e.target.value,
+                        })
+                      }
+                      className="w-full min-w-0 max-w-full box-border border border-slate-300 rounded-2xl p-3 bg-white appearance-none"
+                    />
 
-                    </>
+                  </>
 
-                  )}
+                )}
 
                 {/* BUTTON */}
                 <div className="flex gap-3 pt-2">
@@ -1135,9 +1402,9 @@ export default function Dashboard() {
         {/* TASK DETAIL MODAL */}
         {showTaskModal && selectedTask && (
 
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center p-5 z-50">
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 overflow-y-auto overflow-x-hidden">
 
-            <div className="bg-white rounded-3xl p-5 w-full max-h-[90vh] overflow-auto">
+            <div className="bg-white rounded-3xl p-5 w-full max-w-[420px] max-h-[90vh] overflow-y-auto overflow-x-hidden">
 
               <div className="flex items-center justify-between mb-5">
 
@@ -1280,6 +1547,17 @@ export default function Dashboard() {
                       Revise Task
                     </button>
 
+                    {canDeleteTask && (
+
+                      <button
+                        onClick={handleDeleteTask}
+                        className="w-full bg-red-500 text-white rounded-2xl p-3 font-bold"
+                      >
+                        Delete Task
+                      </button>
+
+                    )}
+
                   </div>
 
                 )}
@@ -1355,7 +1633,7 @@ export default function Dashboard() {
                   selectedTask.type === "Project" ||
                   selectedTask.type === "TPM"
                 ) &&
-                  selectedTask.status === "Progress" && (
+                  selectedTask.status === "Progress" && selectedTask.assignTo === user.name && (
 
                     <div className="space-y-4">
 
@@ -1425,6 +1703,7 @@ export default function Dashboard() {
                   selectedTask.type === "TPM"
                 ) && (
 
+
                     <div className="space-y-4">
 
                       {selectedTask.beforePhoto && (
@@ -1484,8 +1763,28 @@ export default function Dashboard() {
                 {/* APPROVE BUTTON */}
                 {selectedTask.status ===
                   "Waiting Approval" &&
-                  selectedTask.createdBy ===
-                  user.name && (
+
+                  (
+
+                    (
+                      selectedTask.type ===
+                      "Project" &&
+
+                      selectedTask.createdBy ===
+                      user.name
+                    )
+
+                    ||
+
+                    (
+                      selectedTask.type ===
+                      "TPM" &&
+
+                      user.role ===
+                      "Admin"
+                    )
+
+                  ) && (
 
                     <button
                       onClick={
@@ -1522,11 +1821,10 @@ function Card({
 
   const colors = {
     blue: "bg-blue-100 text-blue-700",
-    orange:
-      "bg-orange-100 text-orange-700",
-    green:
-      "bg-green-100 text-green-700",
+    orange: "bg-orange-100 text-orange-700",
+    green: "bg-green-100 text-green-700",
     red: "bg-red-100 text-red-700",
+    yellow: "bg-yellow-100 text-yellow-700",
   };
 
 
@@ -1534,11 +1832,10 @@ function Card({
 
     <div
       onClick={onClick}
-      className={`rounded-[30px] p-5 transition-all duration-300 cursor-pointer border border-slate-200 shadow-[0_6px_18px_rgba(15,23,42,.08)] active:scale-[0.98] ${
-        active
-          ? "bg-gradient-to-br from-[#166534] to-[#16a34a] text-white"
-          : "bg-white hover:bg-slate-50"
-      }`}
+      className={`rounded-[30px] p-5 transition-all duration-300 cursor-pointer border border-slate-200 shadow-[0_6px_18px_rgba(15,23,42,.08)] active:scale-[0.98] ${active
+        ? "bg-gradient-to-br from-[#166534] to-[#16a34a] text-white"
+        : "bg-white hover:bg-slate-50"
+        }`}
     >
 
       <div className={`inline-flex px-3 py-1 rounded-full text-sm font-bold ${active
@@ -1578,8 +1875,12 @@ function TaskCard({
     Delay:
       "bg-red-100 text-red-700",
 
-    Urgent:
-      "bg-pink-100 text-pink-700",
+
+    Reject:
+      "bg-gray-200 text-gray-700",
+
+    "Waiting Approval":
+      "bg-yellow-100 text-yellow-700",
   };
 
   return (
@@ -1635,11 +1936,25 @@ function TaskCard({
           task.type === "TPM") && (
 
             <div>
-              Target:
-              {" "}
-              {task.targetDate}
-              {" "}
-              {task.targetTime}
+              {
+                task.type === "TPM"
+                  ? (
+                    <>
+                      Target Week:
+                      {" "}
+                      {task.targetWeek}
+                    </>
+                  )
+                  : (
+                    <>
+                      Target:
+                      {" "}
+                      {task.targetDate}
+                      {" "}
+                      {task.targetTime}
+                    </>
+                  )
+              }
             </div>
 
           )}
@@ -1648,9 +1963,24 @@ function TaskCard({
           Created By: {task.createdBy}
         </div>
 
-        <div>
-          Time: {task.createdAt}
-        </div>
+        {task.type !== "TPM" && (
+          <div>
+            Time: {task.createdAt}
+          </div>
+        )}
+
+        {task.type === "TPM" &&
+          task.status === "Done" && (
+            <>
+              <div className="text-green-600 font-semibold">
+                Date Completed: {task.dateCompleted}
+              </div>
+
+              <div className="text-green-600 font-semibold">
+                Week Completed: {task.weekCompleted}
+              </div>
+            </>
+          )}
 
         {task.acceptedBy && (
           <div className="text-blue-600 font-semibold">
