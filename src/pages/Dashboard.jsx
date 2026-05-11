@@ -1426,16 +1426,22 @@ export default function Dashboard() {
                   </option>
 
                   {newTask.type === "DT"
-                    ? uniqueRoles.map((role) => (
+                    ? uniqueRoles
+                      .filter(
+                        (role) => 
+                          role === "Technician"
+                      )
+                      .map((role) => (
 
-                      <option
-                        key={role}
-                        value={role}
-                      >
-                        {role}
-                      </option>
+                        <option
+                          key={role}
+                          value={role}
+                        >
+                          {role}
+                        </option>
 
-                    ))
+                      ))
+
                     : users.map((user) => (
 
                       <option
