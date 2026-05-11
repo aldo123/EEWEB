@@ -914,6 +914,34 @@ export default function Dashboard() {
         taskData
       );
 
+      await fetch("https://api.fonnte.com/send", {
+        method: "POST",
+        headers: {
+          Authorization: "oTbrTtwqaF1nGMYZPBax",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          target: "120363421519113400@g.us",
+
+          message:
+          `🚨 WIK-TPM NEW TASK
+
+          Type : ${taskData.type}
+          Machine : ${taskData.machine}
+          Issue : ${taskData.issue}
+          Assign To : ${taskData.assignTo}
+          Created By : ${taskData.createdBy}
+
+          Burung camar terbang melayang,
+          Mesin bermasalah jangan dibuang 😅
+          Mohon teknisi segera datang,
+          Check task sekarang jangan menghilang 🚨
+          Open Mobile App:
+          https://ee-mobile-q4r4.vercel.app/`,
+        }),
+      });
+
+
       setNewTask({
         type: "DT",
         machine: "",
@@ -2258,8 +2286,8 @@ function TaskCard({
 
             <div
               className={`font-semibold ${task.acceptDurationMinutes <= 30
-                  ? "text-black"
-                  : "text-black-600"
+                ? "text-black"
+                : "text-black-600"
                 }`}
             >
               Response Time:
