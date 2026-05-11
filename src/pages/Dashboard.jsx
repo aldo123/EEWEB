@@ -664,14 +664,70 @@ export default function Dashboard() {
 
       const closedDate = new Date();
 
-      const createdDate = new Date(
-        selectedTask.createdAt
-      );
+      // SAFE DATE
+      let durationMinutes = 0;
 
-      const durationMinutes =
-        Math.floor(
-          (closedDate - createdDate) / 1000 / 60
-        );
+      if (selectedTask.createdAt) {
+
+        const createdDate =
+          new Date(selectedTask.createdAt);
+
+        // VALID DATE CHECK
+        if (!isNaN(createdDate.getTime())) {
+
+          durationMinutes = Math.floor(
+            (closedDate - createdDate) / 1000 / 60
+          );
+
+        }
+
+      }
+
+      const updateData = {
+
+        status:
+          (
+            selectedTask.type === "Project" ||
+            selectedTask.type === "TPM"
+          )
+            ? "Waiting Approval"
+            : "Done",
+
+        closedBy:
+          selectedTask.closedBy ||
+          user.name,
+
+        closedAt:
+          closedDate.toLocaleString(),
+
+        durationMinutes,
+
+      };
+
+      // DT ONLY
+      if (selectedTask.type === "DT") {
+
+        updateData.rca =
+          taskReport.rca;
+
+        updateData.action =
+          taskReport.action;
+
+      }
+
+      // PROJECT / TPM ONLY
+      if (
+        selectedTask.type === "Project" ||
+        selectedTask.type === "TPM"
+      ) {
+
+        updateData.beforePhoto =
+          taskPhotos.before;
+
+        updateData.afterPhoto =
+          taskPhotos.after;
+
+      }
 
       await update(
         ref(
@@ -681,39 +737,7 @@ export default function Dashboard() {
             ? `preventive-maintenance/${selectedTask.id}`
             : `task-mobile/${selectedTask.id}`
         ),
-        {
-
-          rca: taskReport.rca,
-
-          action: taskReport.action,
-
-          closedBy:
-            selectedTask.closedBy ||
-            user.name,
-
-          closedAt:
-            closedDate.toLocaleString(),
-
-          durationMinutes:
-            durationMinutes,
-
-          status:
-            (
-              selectedTask.type ===
-              "Project" ||
-
-              selectedTask.type ===
-              "TPM"
-            )
-              ? "Waiting Approval"
-              : "Done",
-
-          beforePhoto:
-            taskPhotos.before,
-
-          afterPhoto:
-            taskPhotos.after,
-        }
+        updateData
       );
 
       setShowTaskModal(false);
@@ -860,10 +884,7 @@ export default function Dashboard() {
 
       createdBy: user.name,
 
-      createdAt:
-        now.toLocaleDateString() +
-        " " +
-        now.toLocaleTimeString(),
+      createdAt: now.toISOString()
     };
 
     try {
