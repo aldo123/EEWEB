@@ -510,6 +510,25 @@ export default function Dashboard() {
 
     try {
 
+      const acceptedDate = new Date();
+
+      let acceptDurationMinutes = 0;
+
+      if (selectedTask.createdAt) {
+
+        const createdDate =
+          new Date(selectedTask.createdAt);
+
+        if (!isNaN(createdDate.getTime())) {
+
+          acceptDurationMinutes = Math.floor(
+            (acceptedDate - createdDate) / 1000 / 60
+          );
+
+        }
+
+      }
+
       await update(
         ref(
           db,
@@ -524,11 +543,12 @@ export default function Dashboard() {
           acceptedBy: user.name,
 
           acceptedAt:
-            new Date().toLocaleString(),
+            acceptedDate.toLocaleString(),
+
+          acceptDurationMinutes,
         }
       );
 
-      // CLOSE MODAL
       setShowTaskModal(false);
 
     } catch (error) {
@@ -2227,9 +2247,28 @@ function TaskCard({
           )}
 
         {task.acceptedBy && (
-          <div className="text-blue-600 font-semibold">
-            Accepted By: {task.acceptedBy}
-          </div>
+          <>
+            <div className="text-blue-600 font-semibold">
+              Accepted By: {task.acceptedBy}
+            </div>
+
+            <div className="text-blue-600 font-semibold">
+              Accepted Time: {task.acceptedAt}
+            </div>
+
+            <div
+              className={`font-semibold ${task.acceptDurationMinutes <= 30
+                  ? "text-black"
+                  : "text-black-600"
+                }`}
+            >
+              Response Time:
+              {" "}
+              {task.acceptDurationMinutes}
+              {" "}
+              Minutes
+            </div>
+          </>
         )}
 
         {task.closedBy &&
