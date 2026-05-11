@@ -921,7 +921,7 @@ export default function Dashboard() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          target: "120363421519113400@g.us",
+          target: "6282284877153-1586238716@g.us",
 
           message:
           `🚨 Sekilas Info BMKG dari EE-Bot
