@@ -924,7 +924,7 @@ export default function Dashboard() {
           target: "120363421519113400@g.us",
 
           message:
-          `🚨 WIK-TPM NEW TASK
+          `🚨 Sekilas Info BMKG dari EE-Bot
 
           Type : ${taskData.type}
           Machine : ${taskData.machine}
