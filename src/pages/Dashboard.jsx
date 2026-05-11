@@ -932,12 +932,30 @@ export default function Dashboard() {
 
   const canDeleteTask =
     selectedTask &&
-    selectedTask.type === "Project" &&
     selectedTask.createdBy === user.name &&
     (
-      selectedTask.status === "Open" ||
-      selectedTask.status === "Delay" ||
-      selectedTask.status === "Progress"
+
+      // DT
+      (
+        selectedTask.type === "DT" &&
+        (
+          selectedTask.status === "Open" ||
+          selectedTask.status === "Progress"
+        )
+      )
+
+      ||
+
+      // PROJECT
+      (
+        selectedTask.type === "Project" &&
+        (
+          selectedTask.status === "Open" ||
+          selectedTask.status === "Progress" ||
+          selectedTask.status === "Delay"
+        )
+      )
+
     );
 
   const canRevise =
@@ -1428,7 +1446,7 @@ export default function Dashboard() {
                   {newTask.type === "DT"
                     ? uniqueRoles
                       .filter(
-                        (role) => 
+                        (role) =>
                           role === "Technician"
                       )
                       .map((role) => (
@@ -1667,18 +1685,20 @@ export default function Dashboard() {
                       Revise Task
                     </button>
 
-                    {canDeleteTask && (
 
-                      <button
-                        onClick={handleDeleteTask}
-                        className="w-full bg-red-500 text-white rounded-2xl p-3 font-bold"
-                      >
-                        Delete Task
-                      </button>
-
-                    )}
 
                   </div>
+
+                )}
+
+                {canDeleteTask && (
+
+                  <button
+                    onClick={handleDeleteTask}
+                    className="w-full bg-red-500 text-white rounded-2xl p-3 font-bold"
+                  >
+                    Delete Task
+                  </button>
 
                 )}
 
