@@ -1000,32 +1000,40 @@ export default function Dashboard() {
     );
 
   const canDeleteTask =
-    selectedTask &&
-    selectedTask.createdBy === user.name &&
+  selectedTask &&
+  (
+
+    // DT
     (
-
-      // DT
+      selectedTask.type === "DT" &&
       (
-        selectedTask.type === "DT" &&
-        (
-          selectedTask.status === "Open" ||
-          selectedTask.status === "Progress"
-        )
-      )
-
-      ||
-
-      // PROJECT
+        selectedTask.createdBy === user.name ||
+        user.role === "Manager"
+      ) &&
       (
-        selectedTask.type === "Project" &&
-        (
-          selectedTask.status === "Open" ||
-          selectedTask.status === "Progress" ||
-          selectedTask.status === "Delay"
-        )
+        selectedTask.status === "Open" ||
+        selectedTask.status === "Delay" ||
+        selectedTask.status === "Progress"
       )
+    )
 
-    );
+    ||
+
+    // PROJECT
+    (
+      selectedTask.type === "Project" &&
+      (
+        selectedTask.createdBy === user.name ||
+        user.role === "Manager"
+      ) &&
+      (
+        selectedTask.status === "Open" ||
+        selectedTask.status === "Progress" ||
+        selectedTask.status === "Delay"
+      )
+    )
+
+  );
 
   const canRevise =
     selectedTask &&
