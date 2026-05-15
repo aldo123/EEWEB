@@ -924,7 +924,7 @@ export default function Dashboard() {
           target: "120363421519113400@g.us,6285765591177-1563854279@g.us",
 
           message:
-          `🚨 Sekilas Info BMKG dari EE-Bot
+            `🚨 Sekilas Info BMKG dari EE-Bot
 
           Type : ${taskData.type}
           Machine : ${taskData.machine}
@@ -1000,40 +1000,40 @@ export default function Dashboard() {
     );
 
   const canDeleteTask =
-  selectedTask &&
-  (
-
-    // DT
+    selectedTask &&
     (
-      selectedTask.type === "DT" &&
+
+      // DT
       (
-        selectedTask.createdBy === user.name ||
-        user.role === "Manager"
-      ) &&
-      (
-        selectedTask.status === "Open" ||
-        selectedTask.status === "Delay" ||
-        selectedTask.status === "Progress"
+        selectedTask.type === "DT" &&
+        (
+          selectedTask.createdBy === user.name ||
+          user.role === "Manager"
+        ) &&
+        (
+          selectedTask.status === "Open" ||
+          selectedTask.status === "Delay" ||
+          selectedTask.status === "Progress"
+        )
       )
-    )
 
-    ||
+      ||
 
-    // PROJECT
-    (
-      selectedTask.type === "Project" &&
+      // PROJECT
       (
-        selectedTask.createdBy === user.name ||
-        user.role === "Manager"
-      ) &&
-      (
-        selectedTask.status === "Open" ||
-        selectedTask.status === "Progress" ||
-        selectedTask.status === "Delay"
+        selectedTask.type === "Project" &&
+        (
+          selectedTask.createdBy === user.name ||
+          user.role === "Manager"
+        ) &&
+        (
+          selectedTask.status === "Open" ||
+          selectedTask.status === "Progress" ||
+          selectedTask.status === "Delay"
+        )
       )
-    )
 
-  );
+    );
 
   const canRevise =
     selectedTask &&
@@ -1467,9 +1467,15 @@ export default function Dashboard() {
                     DT
                   </option>
 
-                  <option value="Project">
-                    Project
-                  </option>
+                  {(
+                    user.role === "Engineer" ||
+                    user.role === "Manager"
+                  ) && (
+                      <option value="Project">
+                        Project
+                      </option>
+                    )}
+
 
                   {/* <option value="TPM">
                     TPM
@@ -1537,16 +1543,32 @@ export default function Dashboard() {
 
                       ))
 
-                    : users.map((user) => (
+                    : users
+                      .filter((user) => {
 
-                      <option
-                        key={user.id}
-                        value={user.name}
-                      >
-                        {user.name}
-                      </option>
+                        // KHUSUS PROJECT
+                        if (newTask.type === "Project") {
 
-                    ))}
+                          return (
+                            user.role !== "Production" &&
+                            user.role !== "Manager"
+                          );
+
+                        }
+
+                        return true;
+
+                      })
+                      .map((user) => (
+
+                        <option
+                          key={user.id}
+                          value={user.name}
+                        >
+                          {user.name}
+                        </option>
+
+                      ))}
 
                 </select>
 
