@@ -3,6 +3,7 @@ import {
   useEffect,
 } from "react";
 
+
 import {
   db,
   ref,
@@ -11,6 +12,17 @@ import {
   update,
   remove,
 } from "../firebase/firebase";
+
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
+
 
 function getWeekNumber(date) {
 
@@ -66,6 +78,9 @@ export default function Dashboard() {
 
   const [page, setPage] =
     useState("Tasks");
+
+  const [dtFilter, setDtFilter] =
+    useState("Daily");
 
   const [showModal, setShowModal] =
     useState(false);
@@ -501,6 +516,85 @@ export default function Dashboard() {
     ...tasks,
     ...pmTasks,
   ];
+
+  // DT ANALYTICS
+  const dtTasks =
+    tasks.filter(
+      (task) =>
+        task.type === "DT" &&
+        task.status === "Done" &&
+        task.line &&
+        task.durationMinutes
+    );
+
+  const nowDate = new Date();
+
+  const filteredDtTasks =
+    dtTasks.filter((task) => {
+
+      const taskDate =
+        new Date(task.createdAt);
+
+      // DAILY
+      if (dtFilter === "Daily") {
+
+        return (
+          taskDate.toDateString() ===
+          nowDate.toDateString()
+        );
+
+      }
+
+      // WEEKLY
+      if (dtFilter === "Weekly") {
+
+        return (
+          getWeekNumber(taskDate) ===
+          getWeekNumber(nowDate)
+        );
+
+      }
+
+      // MONTHLY
+      if (dtFilter === "Monthly") {
+
+        return (
+          taskDate.getMonth() ===
+          nowDate.getMonth() &&
+
+          taskDate.getFullYear() ===
+          nowDate.getFullYear()
+        );
+
+      }
+
+      return true;
+
+    });
+
+  const lineDowntimeMap = {};
+
+  filteredDtTasks.forEach((task) => {
+
+    if (!lineDowntimeMap[task.line]) {
+
+      lineDowntimeMap[task.line] = 0;
+
+    }
+
+    lineDowntimeMap[task.line] +=
+      Number(task.durationMinutes);
+
+  });
+
+  const dtChartData =
+    Object.keys(lineDowntimeMap).map(
+      (line) => ({
+        line,
+        downtime:
+          lineDowntimeMap[line],
+      })
+    );
 
   // FILTER MY TASK / ALL TASK
   const baseTasks =
@@ -1488,6 +1582,10 @@ export default function Dashboard() {
                       setPage("System");
                     }
 
+                    if (item === "DT Dashboard") {
+                      setPage("DT Dashboard");
+                    }
+
                   }}
                   className="w-full bg-white rounded-3xl p-5 shadow-lg flex items-center justify-between active:scale-[0.98] transition"
                 >
@@ -1503,6 +1601,107 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
+        )}
+
+        {/* DT DASHBOARD */}
+        {page === "DT Dashboard" && (
+
+          <div className="px-5 mt-6 pb-28">
+
+            <div className="flex items-center justify-between mb-5">
+
+              <h3 className="text-xl font-black text-slate-800">
+                DT Analytics
+              </h3>
+
+              <select
+                value={dtFilter}
+                onChange={(e) =>
+                  setDtFilter(e.target.value)
+                }
+                className="border border-slate-300 rounded-2xl px-4 py-2"
+              >
+
+                <option value="Daily">
+                  Daily
+                </option>
+
+                <option value="Weekly">
+                  Weekly
+                </option>
+
+                <option value="Monthly">
+                  Monthly
+                </option>
+
+              </select>
+
+            </div>
+
+            {/* TOTAL DT */}
+            <div className="bg-white rounded-3xl p-5 shadow-lg mb-5">
+
+              <div className="text-slate-500 text-sm">
+                Total Downtime
+              </div>
+
+              <div className="text-4xl font-black text-red-600 mt-2">
+
+                {
+                  dtChartData.reduce(
+                    (sum, item) =>
+                      sum + item.downtime,
+                    0
+                  )
+                }
+
+                <span className="text-lg ml-2">
+                  Minutes
+                </span>
+
+              </div>
+
+            </div>
+
+            {/* CHART */}
+            <div className="bg-white rounded-3xl p-5 shadow-lg">
+
+              <div className="font-bold text-slate-700 mb-5">
+                Downtime By Line
+              </div>
+
+              <div className="h-[320px]">
+
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                >
+
+                  <BarChart data={dtChartData}>
+
+                    <CartesianGrid strokeDasharray="3 3" />
+
+                    <XAxis dataKey="line" />
+
+                    <YAxis />
+
+                    <Tooltip />
+
+                    <Bar
+                      dataKey="downtime"
+                      radius={[10, 10, 0, 0]}
+                    />
+
+                  </BarChart>
+
+                </ResponsiveContainer>
+
+              </div>
+
+            </div>
+
+          </div>
+
         )}
 
         {/* SYSTEM PAGE */}
@@ -2995,6 +3194,22 @@ function TaskCard({
           <p className="text-sm text-slate-500 mt-2">
             {task.issue}
           </p>
+
+          {/* LINE */}
+          {task.line && (
+
+            <div className="mt-3">
+
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
+
+                🏭 {task.line}
+
+              </div>
+
+            </div>
+
+          )}
+
 
         </div>
 
