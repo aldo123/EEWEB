@@ -212,7 +212,7 @@ export default function Dashboard() {
   useEffect(() => {
 
     const now = new Date();
-
+    if (!tasks.length) return;
     tasks.forEach(async (task) => {
 
       // ======================
@@ -276,7 +276,7 @@ export default function Dashboard() {
     });
 
   }, [tasks]);
-  
+
   // LOAD TPM TASKS
   useEffect(() => {
     if (
@@ -493,24 +493,35 @@ export default function Dashboard() {
   // LOAD DT MAX TIME
   useEffect(() => {
 
+    if (
+      page !== "Tasks" &&
+      page !== "DT Dashboard" &&
+      page !== "System"
+    ) return;
+
     const dtRef = ref(
       db,
       "system/dt-max-time"
     );
 
-    onValue(dtRef, (snapshot) => {
+    const unsubscribe = onValue(
+      dtRef,
+      (snapshot) => {
 
-      const data = snapshot.val();
+        const data = snapshot.val();
 
-      if (data) {
+        if (data) {
 
-        setDtMaxTime(data);
+          setDtMaxTime(data);
+
+        }
 
       }
+    );
 
-    });
+    return () => unsubscribe();
 
-  }, []);
+  }, [page]);
 
   // LOAD WORKFLOW
   useEffect(() => {
@@ -2363,10 +2374,10 @@ export default function Dashboard() {
                 )}
 
                 {filteredTasks.map(
-                  (task, index) => (
+                  (task) => (
 
                     <TaskCard
-                      key={index}
+                      key={task.id}
                       task={task}
                       dtMaxTime={dtMaxTime}
                       onClick={() =>
