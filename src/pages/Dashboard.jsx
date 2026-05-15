@@ -651,17 +651,35 @@ export default function Dashboard() {
       : allTasks;
 
   // FILTER OVERVIEW
-  const filteredOverviewTasks =
-    overviewType === "All"
-      ? baseTasks
-      : baseTasks.filter(
-        (task) =>
-          task.type === overviewType
-      );
-
-  // FILTER TASK LIST
   const today = new Date().toDateString();
 
+  const filteredOverviewTasks =
+    (
+      overviewType === "All"
+        ? baseTasks
+        : baseTasks.filter(
+          (task) =>
+            task.type === overviewType
+        )
+    ).filter((task) => {
+
+      // DT hanya task hari ini
+      if (task.type === "DT") {
+
+        if (!task.createdAt) return false;
+
+        return (
+          new Date(task.createdAt).toDateString() === today
+        );
+
+      }
+
+      // PROJECT & TPM tetap semua
+      return true;
+
+    });
+
+  // FILTER TASK LIST
   const filteredTasks =
     filter === "Total"
       ? filteredOverviewTasks
@@ -683,11 +701,11 @@ export default function Dashboard() {
           task.type === "DT"
         ) {
 
-          if (!task.closedAt) return false;
+          if (!task.createdAt) return false;
 
           return (
             task.status === "Done" &&
-            new Date(task.closedAt).toDateString() === today
+            new Date(task.createdAt).toDateString() === today
           );
 
         }
@@ -2186,14 +2204,15 @@ export default function Dashboard() {
                   value={
                     filteredOverviewTasks.filter((t) => {
 
-                      // DT hanya done hari ini
+                      // DT hanya task hari ini
                       if (t.type === "DT") {
 
-                        if (!t.closedAt) return false;
+                        if (!t.createdAt) return false;
 
                         return (
                           t.status === "Done" &&
-                          new Date(t.closedAt).toDateString() === new Date().toDateString()
+                          new Date(t.createdAt).toDateString() ===
+                          new Date().toDateString()
                         );
 
                       }
@@ -2770,16 +2789,26 @@ export default function Dashboard() {
                 )}
 
                 {/* ACCEPT BUTTON */}
-                {selectedTask.status === "Open" && canAccept && (
+                {(
+                  (
+                    selectedTask.status === "Open" ||
+                    selectedTask.status === "Delay"
+                  ) &&
 
-                  <button
-                    onClick={handleAcceptTask}
-                    className="w-full bg-[#166534] text-white rounded-2xl p-4 font-bold"
-                  >
-                    Accept Task
-                  </button>
+                  !selectedTask.acceptedBy &&
 
-                )}
+                  canAccept
+
+                ) && (
+
+                    <button
+                      onClick={handleAcceptTask}
+                      className="w-full bg-[#166534] text-white rounded-2xl p-4 font-bold"
+                    >
+                      Accept Task
+                    </button>
+
+                  )}
                 {selectedTask.type === "DT" &&
                   (
                     selectedTask.status === "Progress" ||
