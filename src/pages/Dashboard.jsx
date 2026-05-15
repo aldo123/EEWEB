@@ -79,6 +79,39 @@ export default function Dashboard() {
   const [users, setUsers] =
     useState([]);
 
+  const [lines, setLines] =
+    useState([]);
+
+  const [newLine, setNewLine] =
+    useState("");
+
+  const [showLines, setShowLines] =
+    useState(false);
+
+  const [dtMaxTime, setDtMaxTime] =
+    useState(30);
+
+  const [workflows, setWorkflows] =
+    useState([]);
+
+  const [selectedTechnician, setSelectedTechnician] =
+    useState("");
+
+  const [selectedEngineer, setSelectedEngineer] =
+    useState("");
+
+  const [showWorkflow, setShowWorkflow] =
+    useState(false);
+
+  const [editingWorkflowId, setEditingWorkflowId] =
+    useState("");
+
+  const [editTechnician, setEditTechnician] =
+    useState("");
+
+  const [editEngineer, setEditEngineer] =
+    useState("");
+
   const [selectedTask, setSelectedTask] =
     useState(null);
 
@@ -111,6 +144,7 @@ export default function Dashboard() {
       type: "DT",
       machine: "",
       issue: "",
+      line: "",
       assignTo: "",
       targetDate: "",
       targetTime: "",
@@ -172,7 +206,7 @@ export default function Dashboard() {
         const diffMinutes =
           (now - createdTime) / 1000 / 60;
 
-        if (diffMinutes > 30) {
+        if (diffMinutes > dtMaxTime) {
 
           await update(
             ref(db, `task-mobile/${task.id}`),
@@ -359,6 +393,94 @@ export default function Dashboard() {
       } else {
 
         setUsers([]);
+
+      }
+
+    });
+
+  }, []);
+
+  // LOAD LINES
+  useEffect(() => {
+
+    const lineRef = ref(
+      db,
+      "lines"
+    );
+
+    onValue(lineRef, (snapshot) => {
+
+      const data = snapshot.val();
+
+      if (data) {
+
+        const array = Object.keys(data).map(
+          (key) => ({
+            id: key,
+            ...data[key],
+          })
+        );
+
+        setLines(array);
+
+      } else {
+
+        setLines([]);
+
+      }
+
+    });
+
+  }, []);
+
+  // LOAD DT MAX TIME
+  useEffect(() => {
+
+    const dtRef = ref(
+      db,
+      "system/dt-max-time"
+    );
+
+    onValue(dtRef, (snapshot) => {
+
+      const data = snapshot.val();
+
+      if (data) {
+
+        setDtMaxTime(data);
+
+      }
+
+    });
+
+  }, []);
+
+  // LOAD WORKFLOW
+  useEffect(() => {
+
+    const workflowRef = ref(
+      db,
+      "workflow"
+    );
+
+    onValue(workflowRef, (snapshot) => {
+
+      const data = snapshot.val();
+
+      if (data) {
+
+        const array = Object.keys(data).map(
+          (key) => ({
+            id: key,
+            ...data[key],
+          })
+        );
+
+        setWorkflows(array);
+
+      } else {
+
+        setWorkflows([]);
 
       }
 
@@ -659,6 +781,162 @@ export default function Dashboard() {
 
   };
 
+  // ADD LINE
+  const handleAddLine = async () => {
+
+    if (!newLine.trim()) {
+
+      alert("Input line name");
+
+      return;
+
+    }
+
+    try {
+
+      await push(
+        ref(db, "lines"),
+        {
+          name: newLine,
+        }
+      );
+
+      setNewLine("");
+
+    } catch (error) {
+
+      console.log(error);
+
+      alert("Failed add line");
+
+    }
+
+  };
+
+  // SAVE DT MAX TIME
+  const handleSaveDtTime = async () => {
+
+    try {
+
+      await update(
+        ref(db, "system"),
+        {
+          "dt-max-time": Number(dtMaxTime),
+        }
+      );
+
+      alert("DT Max Time Updated");
+
+    } catch (error) {
+
+      console.log(error);
+
+      alert("Failed save DT Max Time");
+
+    }
+
+  };
+
+  // ADD WORKFLOW
+  const handleAddWorkflow = async () => {
+
+    if (
+      !selectedTechnician ||
+      !selectedEngineer
+    ) {
+
+      alert("Complete workflow");
+
+      return;
+
+    }
+
+    try {
+
+      await push(
+        ref(db, "workflow"),
+        {
+          technician: selectedTechnician,
+          engineer: selectedEngineer,
+        }
+      );
+
+      setSelectedTechnician("");
+      setSelectedEngineer("");
+
+    } catch (error) {
+
+      console.log(error);
+
+      alert("Failed add workflow");
+
+    }
+
+  };
+
+  // DELETE WORKFLOW
+  const handleDeleteWorkflow = async (id) => {
+
+    const confirmDelete = window.confirm(
+      "Delete this workflow?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+
+      await remove(
+        ref(db, `workflow/${id}`)
+      );
+
+    } catch (error) {
+
+      console.log(error);
+
+      alert("Failed delete workflow");
+
+    }
+
+  };
+
+  // SAVE WORKFLOW EDIT
+  const handleSaveWorkflow = async () => {
+
+    if (
+      !editTechnician ||
+      !editEngineer
+    ) {
+
+      alert("Complete workflow");
+
+      return;
+
+    }
+
+    try {
+
+      await update(
+        ref(db, `workflow/${editingWorkflowId}`),
+        {
+          technician: editTechnician,
+          engineer: editEngineer,
+        }
+      );
+
+      setEditingWorkflowId("");
+      setEditTechnician("");
+      setEditEngineer("");
+
+    } catch (error) {
+
+      console.log(error);
+
+      alert("Failed update workflow");
+
+    }
+
+  };
+
   // CONVERT IMAGE
   const handleImageUpload = (
     e,
@@ -917,6 +1195,7 @@ export default function Dashboard() {
       (
         !newTask.machine.trim() ||
         !newTask.issue.trim() ||
+        !newTask.line ||
         !newTask.assignTo
       )
     ) {
@@ -994,6 +1273,7 @@ export default function Dashboard() {
         type: "DT",
         machine: "",
         issue: "",
+        line: "",
         assignTo: "",
         targetDate: "",
         targetTime: "",
@@ -1189,12 +1469,23 @@ export default function Dashboard() {
                 "DT Dashboard",
                 "History",
                 "Task Record",
-                "System",
+
+                ...(user.role === "Manager"
+                  ? ["System"]
+                  : []),
+
                 "Analytics",
               ].map((item) => (
 
                 <button
                   key={item}
+                  onClick={() => {
+
+                    if (item === "System") {
+                      setPage("System");
+                    }
+
+                  }}
                   className="w-full bg-white rounded-3xl p-5 shadow-lg flex items-center justify-between active:scale-[0.98] transition"
                 >
 
@@ -1211,6 +1502,366 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* SYSTEM PAGE */}
+        {page === "System" && (
+
+          <div className="px-5 mt-6 pb-28 space-y-5">
+
+            {/* ========================= */}
+            {/* LINE SETTING */}
+            {/* ========================= */}
+            <div className="bg-white rounded-3xl p-5 shadow-lg">
+
+              <h3 className="text-xl font-black text-slate-800 mb-5">
+                Line Setting
+              </h3>
+
+              {/* ADD LINE */}
+              <div className="flex gap-2 mb-5">
+
+                <input
+                  type="text"
+                  placeholder="Add New Line"
+                  value={newLine}
+                  onChange={(e) =>
+                    setNewLine(e.target.value)
+                  }
+                  className="flex-1 border border-slate-300 rounded-2xl p-4"
+                />
+
+                <button
+                  onClick={handleAddLine}
+                  className="bg-[#166534] text-white px-5 rounded-2xl font-bold"
+                >
+                  Add
+                </button>
+
+              </div>
+
+              {/* SHOW HIDE */}
+              <button
+                onClick={() =>
+                  setShowLines(!showLines)
+                }
+                className="w-full mb-4 bg-slate-100 border border-slate-200 rounded-2xl p-3 font-bold text-slate-700"
+              >
+                {showLines
+                  ? "Hide Lines"
+                  : `Show Lines (${lines.length})`}
+              </button>
+
+              {/* LINE LIST */}
+              {showLines && (
+
+                <div className="space-y-3">
+
+                  {lines.length === 0 && (
+
+                    <div className="text-slate-400 text-sm">
+                      No Line Registered
+                    </div>
+
+                  )}
+
+                  {lines.map((line) => (
+
+                    <div
+                      key={line.id}
+                      className="border border-slate-200 rounded-2xl p-4 font-semibold text-slate-700"
+                    >
+                      {line.name}
+                    </div>
+
+                  ))}
+
+                </div>
+
+              )}
+
+            </div>
+
+            {/* ========================= */}
+            {/* DT MAX TIME */}
+            {/* ========================= */}
+            <div className="bg-white rounded-3xl p-5 shadow-lg">
+
+              <h3 className="text-xl font-black text-slate-800 mb-5">
+                Max DT Setting
+              </h3>
+
+              <div className="font-bold text-slate-700 mb-3">
+                Max DT Time (Minutes)
+              </div>
+
+              <div className="flex gap-2">
+
+                <input
+                  type="number"
+                  value={dtMaxTime}
+                  onChange={(e) =>
+                    setDtMaxTime(e.target.value)
+                  }
+                  className="flex-1 border border-slate-300 rounded-2xl p-4"
+                />
+
+                <button
+                  onClick={handleSaveDtTime}
+                  className="bg-red-500 text-white px-5 rounded-2xl font-bold"
+                >
+                  Save
+                </button>
+
+              </div>
+
+            </div>
+
+            {/* ========================= */}
+            {/* WORKFLOW */}
+            {/* ========================= */}
+            <div className="bg-white rounded-3xl p-5 shadow-lg">
+
+              <h3 className="text-xl font-black text-slate-800 mb-5">
+                Workflow Setting
+              </h3>
+
+              <div className="space-y-3">
+
+                {/* TECHNICIAN */}
+                <select
+                  value={selectedTechnician}
+                  onChange={(e) =>
+                    setSelectedTechnician(e.target.value)
+                  }
+                  className="w-full border border-slate-300 rounded-2xl p-4"
+                >
+
+                  <option value="">
+                    Select Technician
+                  </option>
+
+                  {users
+                    .filter(
+                      (user) =>
+                        user.role === "Technician"
+                    )
+                    .map((user) => (
+
+                      <option
+                        key={user.id}
+                        value={user.name}
+                      >
+                        {user.name}
+                      </option>
+
+                    ))}
+
+                </select>
+
+                {/* ENGINEER */}
+                <select
+                  value={selectedEngineer}
+                  onChange={(e) =>
+                    setSelectedEngineer(e.target.value)
+                  }
+                  className="w-full border border-slate-300 rounded-2xl p-4"
+                >
+
+                  <option value="">
+                    Select Engineer
+                  </option>
+
+                  {users
+                    .filter(
+                      (user) =>
+                        user.role === "Engineer"
+                    )
+                    .map((user) => (
+
+                      <option
+                        key={user.id}
+                        value={user.name}
+                      >
+                        {user.name}
+                      </option>
+
+                    ))}
+
+                </select>
+
+                <button
+                  onClick={handleAddWorkflow}
+                  className="w-full bg-blue-600 text-white rounded-2xl p-4 font-bold"
+                >
+                  Add Workflow
+                </button>
+
+                {/* SHOW HIDE */}
+                <button
+                  onClick={() =>
+                    setShowWorkflow(!showWorkflow)
+                  }
+                  className="w-full bg-slate-100 border border-slate-200 rounded-2xl p-3 font-bold text-slate-700"
+                >
+                  {showWorkflow
+                    ? "Hide Workflow"
+                    : `Show Workflow (${workflows.length})`}
+                </button>
+
+                {/* LIST */}
+                {showWorkflow && (
+
+                  <div className="space-y-2">
+
+                    {workflows.map((item) => (
+
+                      <div
+                        key={item.id}
+                        className="border border-slate-200 rounded-2xl p-3 text-sm"
+                      >
+
+                        {editingWorkflowId === item.id ? (
+
+                          <div className="space-y-3">
+
+                            <select
+                              value={editTechnician}
+                              onChange={(e) =>
+                                setEditTechnician(e.target.value)
+                              }
+                              className="w-full border border-slate-300 rounded-2xl p-3"
+                            >
+
+                              {users
+                                .filter(
+                                  (user) =>
+                                    user.role === "Technician"
+                                )
+                                .map((user) => (
+
+                                  <option
+                                    key={user.id}
+                                    value={user.name}
+                                  >
+                                    {user.name}
+                                  </option>
+
+                                ))}
+
+                            </select>
+
+                            <select
+                              value={editEngineer}
+                              onChange={(e) =>
+                                setEditEngineer(e.target.value)
+                              }
+                              className="w-full border border-slate-300 rounded-2xl p-3"
+                            >
+
+                              {users
+                                .filter(
+                                  (user) =>
+                                    user.role === "Engineer"
+                                )
+                                .map((user) => (
+
+                                  <option
+                                    key={user.id}
+                                    value={user.name}
+                                  >
+                                    {user.name}
+                                  </option>
+
+                                ))}
+
+                            </select>
+
+                            <div className="flex gap-2">
+
+                              <button
+                                onClick={handleSaveWorkflow}
+                                className="flex-1 bg-green-600 text-white rounded-2xl p-3 font-bold"
+                              >
+                                Save
+                              </button>
+
+                              <button
+                                onClick={() => {
+
+                                  setEditingWorkflowId("");
+                                  setEditTechnician("");
+                                  setEditEngineer("");
+
+                                }}
+                                className="flex-1 bg-slate-300 rounded-2xl p-3 font-bold"
+                              >
+                                Cancel
+                              </button>
+
+                            </div>
+
+                          </div>
+
+                        ) : (
+
+                          <>
+                            <div className="font-bold text-slate-700">
+                              {item.technician}
+                            </div>
+
+                            <div className="text-slate-500 mb-3">
+                              Report To → {item.engineer}
+                            </div>
+
+                            <div className="flex gap-2">
+
+                              <button
+                                onClick={() => {
+
+                                  setEditingWorkflowId(item.id);
+
+                                  setEditTechnician(
+                                    item.technician
+                                  );
+
+                                  setEditEngineer(
+                                    item.engineer
+                                  );
+
+                                }}
+                                className="flex-1 bg-orange-500 text-white rounded-2xl p-2 font-bold"
+                              >
+                                Edit
+                              </button>
+
+                              <button
+                                onClick={() =>
+                                  handleDeleteWorkflow(item.id)
+                                }
+                                className="flex-1 bg-red-500 text-white rounded-2xl p-2 font-bold"
+                              >
+                                Delete
+                              </button>
+
+                            </div>
+                          </>
+
+                        )}
+
+                      </div>
+
+                    ))}
+
+                  </div>
+
+                )}
+
+              </div>
+
+            </div>
+
+          </div>
+
+        )}
 
         {/* TASK PAGE */}
         {page === "Tasks" && (
@@ -1428,6 +2079,7 @@ export default function Dashboard() {
                     <TaskCard
                       key={index}
                       task={task}
+                      dtMaxTime={dtMaxTime}
                       onClick={() =>
                         handleOpenTask(task)
                       }
@@ -1472,14 +2124,16 @@ export default function Dashboard() {
               />
             </button>
 
-            <button
-              onClick={() =>
-                setShowModal(true)
-              }
-              className="w-16 h-16 rounded-full bg-gradient-to-br from-[#166534] to-[#22c55e] text-white text-3xl -mt-10 shadow-[0_10px_30px_rgba(22,101,52,.35)] border-4 border-white active:scale-95 transition-all"
-            >
-              +
-            </button>
+            {user.role !== "Technician" && (
+              <button
+                onClick={() =>
+                  setShowModal(true)
+                }
+                className="w-16 h-16 rounded-full bg-gradient-to-br from-[#166534] to-[#22c55e] text-white text-3xl -mt-10 shadow-[0_10px_30px_rgba(22,101,52,.35)] border-4 border-white active:scale-95 transition-all"
+              >
+                +
+              </button>
+            )}
 
             <NavItem
               icon="📊"
@@ -1572,6 +2226,39 @@ export default function Dashboard() {
                   className="w-full min-w-0 border border-slate-300 rounded-2xl p-4 h-24 resize-none bg-white"
                 />
 
+                {/* LINE */}
+                {newTask.type === "DT" && (
+
+                  <select
+                    value={newTask.line || ""}
+                    onChange={(e) =>
+                      setNewTask({
+                        ...newTask,
+                        line: e.target.value,
+                      })
+                    }
+                    className="w-full min-w-0 border border-slate-300 rounded-2xl p-4 bg-white"
+                  >
+
+                    <option value="">
+                      Select Line
+                    </option>
+
+                    {lines.map((line) => (
+
+                      <option
+                        key={line.id}
+                        value={line.name}
+                      >
+                        {line.name}
+                      </option>
+
+                    ))}
+
+                  </select>
+
+                )}
+
                 {/* ASSIGN TO */}
                 <select
                   value={newTask.assignTo}
@@ -1606,15 +2293,32 @@ export default function Dashboard() {
                       ))
 
                     : users
-                      .filter((user) => {
+                      .filter((u) => {
 
-                        // KHUSUS PROJECT
+                        // PROJECT ONLY
                         if (newTask.type === "Project") {
 
-                          return (
-                            user.role !== "Production" &&
-                            user.role !== "Manager"
+                          // block Production & Manager
+                          if (
+                            u.role === "Production" ||
+                            u.role === "Manager"
+                          ) {
+                            return false;
+                          }
+
+                          // MANAGER BEBAS
+                          if (user.role === "Manager") {
+                            return true;
+                          }
+
+                          // ENGINEER ikut workflow
+                          const workflowMatch = workflows.find(
+                            (wf) =>
+                              wf.engineer === user.name &&
+                              wf.technician === u.name
                           );
+
+                          return !!workflowMatch;
 
                         }
 
@@ -2185,6 +2889,7 @@ function Card({
 function TaskCard({
   task,
   onClick,
+  dtMaxTime,
 }) {
 
 
@@ -2205,7 +2910,7 @@ function TaskCard({
     const diffMinutes =
       (now - createdTime) / 1000 / 60;
 
-    if (diffMinutes > 30) {
+    if (diffMinutes > dtMaxTime) {
       displayStatus = "Delay";
     }
 
