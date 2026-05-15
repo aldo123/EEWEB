@@ -10,7 +10,6 @@ import {
   push,
   onValue,
   update,
-  get,
   remove,
 } from "../firebase/firebase";
 
@@ -170,45 +169,35 @@ export default function Dashboard() {
   // LOAD TASKS
   useEffect(() => {
 
-    if (
-      page !== "Tasks" &&
-      page !== "DT Dashboard"
-    ) return;
-
     const taskRef = ref(
       db,
       "task-mobile"
     );
 
-    const unsubscribe = onValue(
-      taskRef,
-      (snapshot) => {
+    onValue(taskRef, (snapshot) => {
 
-        const data = snapshot.val();
+      const data = snapshot.val();
 
-        if (data) {
+      if (data) {
 
-          const array = Object.keys(data).map(
-            (key) => ({
-              id: key,
-              ...data[key],
-            })
-          );
+        const array = Object.keys(data).map(
+          (key) => ({
+            id: key,
+            ...data[key],
+          })
+        );
 
-          setTasks(array);
+        setTasks(array);
 
-        } else {
+      } else {
 
-          setTasks([]);
-
-        }
+        setTasks([]);
 
       }
-    );
 
-    return () => unsubscribe();
+    });
 
-  }, [page]);
+  }, []);
 
   // AUTO UPDATE DELAY STATUS
   useEffect(() => {
@@ -281,294 +270,238 @@ export default function Dashboard() {
   // LOAD TPM TASKS
   useEffect(() => {
 
-    if (
-      page !== "Tasks" &&
-      page !== "DT Dashboard"
-    ) return;
-
     const pmRef = ref(
       db,
       "preventive-maintenance"
     );
 
-    const unsubscribe = onValue(
-      pmRef,
-      (snapshot) => {
+    onValue(pmRef, (snapshot) => {
 
-        const data = snapshot.val();
+      const data = snapshot.val();
 
-        if (data) {
+      if (data) {
 
-          const currentWeek =
-            getWeekNumber(
-              new Date()
+        const currentWeek =
+          getWeekNumber(
+            new Date()
+          );
+
+        const currentYear =
+          new Date().getFullYear();
+
+        const array = Object.keys(data)
+
+          .filter((key) => {
+
+            const item = data[key];
+
+            return (
+              Number(item.week) ===
+              currentWeek
             );
 
-          const currentYear =
-            new Date().getFullYear();
+          })
 
-          const array = Object.keys(data)
-
-            .filter((key) => {
+          .map(
+            (key) => {
 
               const item = data[key];
 
-              return (
-                Number(item.week) ===
-                currentWeek
-              );
+              return {
 
-            })
+                id: key,
 
-            .map(
-              (key) => {
+                type: "TPM",
 
-                const item = data[key];
+                machine:
+                  item.machine || "-",
 
-                return {
+                issue:
+                  item.actionTask || "-",
 
-                  id: key,
+                assignTo:
+                  item.responsible || "-",
 
-                  type: "TPM",
+                targetWeek:
+                  item.week || "-",
 
-                  machine:
-                    item.machine || "-",
+                dateCompleted:
+                  item.dateCompleted || "",
 
-                  issue:
-                    item.actionTask || "-",
+                weekCompleted:
+                  item.weekCompleted || "",
 
-                  assignTo:
-                    item.responsible || "-",
+                status:
+                  item.status === "Done"
+                    ? "Done"
 
-                  targetWeek:
-                    item.week || "-",
+                    : item.status === "Progress" ||
+                      item.status === "Ongoing"
+                      ? "Progress"
 
-                  dateCompleted:
-                    item.dateCompleted || "",
+                      : item.status ===
+                        "Waiting Approval"
+                        ? "Waiting Approval"
 
-                  weekCompleted:
-                    item.weekCompleted || "",
+                        : item.status === "Reject"
+                          ? "Reject"
 
-                  status:
-                    item.status === "Done"
-                      ? "Done"
+                          : item.status === "Delay"
+                            ? "Delay"
 
-                      : item.status === "Progress" ||
-                        item.status === "Ongoing"
-                        ? "Progress"
+                            : "Open",
 
-                        : item.status ===
-                          "Waiting Approval"
-                          ? "Waiting Approval"
+                createdBy:
+                  item.createdBy || "WEB TPM",
 
-                          : item.status === "Reject"
-                            ? "Reject"
+                createdAt:
+                  item.createdAt || "-",
 
-                            : item.status === "Delay"
-                              ? "Delay"
+                acceptedBy:
+                  item.acceptedBy || "",
 
-                              : "Open",
+                beforePhoto:
+                  item.beforePhoto || "",
 
-                  createdBy:
-                    item.createdBy || "WEB TPM",
+                afterPhoto:
+                  item.afterPhoto || "",
+              };
 
-                  createdAt:
-                    item.createdAt || "-",
+            }
+          );
 
-                  acceptedBy:
-                    item.acceptedBy || "",
+        setPmTasks(array);
 
-                  beforePhoto:
-                    item.beforePhoto || "",
+      } else {
 
-                  afterPhoto:
-                    item.afterPhoto || "",
-                };
+        setPmTasks([]);
 
-              }
-            );
+      }
 
-          setPmTasks(array);
+    });
 
-        } else {
-
-          setPmTasks([]);
-
-        }
-
-      });
-    return () => unsubscribe();
-  }, [page]);
+  }, []);
 
   // LOAD USERS
   useEffect(() => {
-
-    if (
-      page !== "System" &&
-      !showModal &&
-      !showTaskModal
-    ) return;
 
     const userRef = ref(
       db,
       "users"
     );
 
-    const unsubscribe = onValue(
-      userRef,
-      (snapshot) => {
+    onValue(userRef, (snapshot) => {
 
-        const data = snapshot.val();
+      const data = snapshot.val();
 
-        if (data) {
+      if (data) {
 
-          const array = Object.keys(data).map(
-            (key) => ({
-              id: key,
-              ...data[key],
-            })
-          );
+        const array = Object.keys(data).map(
+          (key) => ({
+            id: key,
+            ...data[key],
+          })
+        );
 
-          setUsers(array);
+        setUsers(array);
 
-        } else {
+      } else {
 
-          setUsers([]);
-
-        }
+        setUsers([]);
 
       }
-    );
 
-    return () => unsubscribe();
+    });
 
-  }, [
-    page,
-    showModal,
-    showTaskModal
-  ]);
+  }, []);
 
   // LOAD LINES
   useEffect(() => {
-
-    if (
-      page !== "System" &&
-      !showModal
-    ) return;
 
     const lineRef = ref(
       db,
       "lines"
     );
 
-    const unsubscribe = onValue(
-      lineRef,
-      (snapshot) => {
+    onValue(lineRef, (snapshot) => {
 
-        const data = snapshot.val();
+      const data = snapshot.val();
 
-        if (data) {
+      if (data) {
 
-          const array = Object.keys(data).map(
-            (key) => ({
-              id: key,
-              ...data[key],
-            })
-          );
+        const array = Object.keys(data).map(
+          (key) => ({
+            id: key,
+            ...data[key],
+          })
+        );
 
-          setLines(array);
+        setLines(array);
 
-        } else {
+      } else {
 
-          setLines([]);
-
-        }
+        setLines([]);
 
       }
-    );
 
-    return () => unsubscribe();
+    });
 
-  }, [
-    page,
-    showModal
-  ]);
+  }, []);
 
-  
   // LOAD DT MAX TIME
   useEffect(() => {
 
-    const loadDtTime = async () => {
+    const dtRef = ref(
+      db,
+      "system/dt-max-time"
+    );
 
-      try {
+    onValue(dtRef, (snapshot) => {
 
-        const snapshot = await get(
-          ref(db, "system/dt-max-time")
-        );
+      const data = snapshot.val();
 
-        if (snapshot.exists()) {
+      if (data) {
 
-          setDtMaxTime(
-            snapshot.val()
-          );
-
-        }
-
-      } catch (error) {
-
-        console.log(error);
+        setDtMaxTime(data);
 
       }
 
-    };
-
-    loadDtTime();
+    });
 
   }, []);
 
   // LOAD WORKFLOW
   useEffect(() => {
 
-    if (
-      page !== "System" &&
-      !showModal
-    ) return;
-
     const workflowRef = ref(
       db,
       "workflow"
     );
 
-    const unsubscribe = onValue(
-      workflowRef,
-      (snapshot) => {
+    onValue(workflowRef, (snapshot) => {
 
-        const data = snapshot.val();
+      const data = snapshot.val();
 
-        if (data) {
+      if (data) {
 
-          const array = Object.keys(data).map(
-            (key) => ({
-              id: key,
-              ...data[key],
-            })
-          );
+        const array = Object.keys(data).map(
+          (key) => ({
+            id: key,
+            ...data[key],
+          })
+        );
 
-          setWorkflows(array);
+        setWorkflows(array);
 
-        } else {
+      } else {
 
-          setWorkflows([]);
+        setWorkflows([]);
 
-        }
+      }
 
-      });
+    });
 
-    return () => unsubscribe();
-  }, [
-    page,
-    showModal
-  ]);
+  }, []);
 
   // UNIQUE ROLES
   const uniqueRoles = [
