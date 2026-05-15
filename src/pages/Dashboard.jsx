@@ -1783,16 +1783,30 @@ export default function Dashboard() {
 
                   )}
 
-                  {lines.map((line) => (
+                  {lines.length > 0 ? (
 
-                    <div
-                      key={line.id}
-                      className="border border-slate-200 rounded-2xl p-4 font-semibold text-slate-700"
-                    >
-                      {line.name}
+                    lines.map((line) => (
+
+                      <div
+                        key={line.id}
+                        className="flex items-center justify-between border border-slate-200 rounded-2xl p-3"
+                      >
+
+                        <div className="font-semibold text-slate-700">
+                          {line.name}
+                        </div>
+
+                      </div>
+
+                    ))
+
+                  ) : (
+
+                    <div className="text-slate-400 text-sm">
+                      Loading Lines...
                     </div>
 
-                  ))}
+                  )}
 
                 </div>
 
@@ -2465,16 +2479,26 @@ export default function Dashboard() {
                       Select Line
                     </option>
 
-                    {lines.map((line) => (
+                    {lines.length > 0 ? (
 
-                      <option
-                        key={line.id}
-                        value={line.name}
-                      >
-                        {line.name}
+                      lines.map((line) => (
+
+                        <option
+                          key={line.id}
+                          value={line.name}
+                        >
+                          {line.name}
+                        </option>
+
+                      ))
+
+                    ) : (
+
+                      <option disabled>
+                        Loading Lines...
                       </option>
 
-                    ))}
+                    )}
 
                   </select>
 
@@ -2497,65 +2521,92 @@ export default function Dashboard() {
                   </option>
 
                   {newTask.type === "DT"
-                    ? uniqueRoles
-                      .filter(
-                        (role) =>
-                          role === "Technician"
-                      )
-                      .map((role) => (
 
-                        <option
-                          key={role}
-                          value={role}
-                        >
-                          {role}
-                        </option>
+                    ? (
 
-                      ))
+                      users.length > 0
 
-                    : users
-                      .filter((u) => {
+                        ? uniqueRoles
+                          .filter(
+                            (role) =>
+                              role === "Technician"
+                          )
+                          .map((role) => (
 
-                        // PROJECT ONLY
-                        if (newTask.type === "Project") {
+                            <option
+                              key={role}
+                              value={role}
+                            >
+                              {role}
+                            </option>
 
-                          // block Production & Manager
-                          if (
-                            u.role === "Production" ||
-                            u.role === "Manager"
-                          ) {
-                            return false;
-                          }
+                          ))
 
-                          // MANAGER BEBAS
-                          if (user.role === "Manager") {
+                        : (
+
+                          <option disabled>
+                            Loading Users...
+                          </option>
+
+                        )
+
+                    )
+
+                    : (
+
+                      users.length > 0
+
+                        ? users
+                          .filter((u) => {
+
+                            // PROJECT ONLY
+                            if (newTask.type === "Project") {
+
+                              if (
+                                u.role === "Production" ||
+                                u.role === "Manager"
+                              ) {
+                                return false;
+                              }
+
+                              if (user.role === "Manager") {
+                                return true;
+                              }
+
+                              const workflowMatch =
+                                workflows.find(
+                                  (wf) =>
+                                    wf.engineer === user.name &&
+                                    wf.technician === u.name
+                                );
+
+                              return !!workflowMatch;
+
+                            }
+
                             return true;
-                          }
 
-                          // ENGINEER ikut workflow
-                          const workflowMatch = workflows.find(
-                            (wf) =>
-                              wf.engineer === user.name &&
-                              wf.technician === u.name
-                          );
+                          })
+                          .map((user) => (
 
-                          return !!workflowMatch;
+                            <option
+                              key={user.id}
+                              value={user.name}
+                            >
+                              {user.name}
+                            </option>
 
-                        }
+                          ))
 
-                        return true;
+                        : (
 
-                      })
-                      .map((user) => (
+                          <option disabled>
+                            Loading Users...
+                          </option>
 
-                        <option
-                          key={user.id}
-                          value={user.name}
-                        >
-                          {user.name}
-                        </option>
+                        )
 
-                      ))}
+                    )}
 
                 </select>
 
