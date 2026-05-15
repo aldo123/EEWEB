@@ -695,6 +695,7 @@ export default function Dashboard() {
       );
 
       setShowTaskModal(false);
+      setSelectedTask(null);
 
     } catch (error) {
 
@@ -1062,6 +1063,7 @@ export default function Dashboard() {
       );
 
       setShowTaskModal(false);
+      setSelectedTask(null);
 
     } catch (error) {
 
@@ -1176,6 +1178,7 @@ export default function Dashboard() {
         }
 
         setShowTaskModal(false);
+        setSelectedTask(null);
 
       } catch (error) {
 
