@@ -444,20 +444,43 @@ export default function Dashboard() {
       );
 
   // FILTER TASK LIST
+  const today = new Date().toDateString();
+
   const filteredTasks =
     filter === "Total"
       ? filteredOverviewTasks
-      : filteredOverviewTasks.filter(
-        (task) =>
+      : filteredOverviewTasks.filter((task) => {
 
-          filter === "Progress"
-            ? (
-              task.status === "Progress" ||
-              task.status === "Waiting Approval"
-            )
+        // PROGRESS
+        if (filter === "Progress") {
 
-            : task.status === filter
-      );
+          return (
+            task.status === "Progress" ||
+            task.status === "Waiting Approval"
+          );
+
+        }
+
+        // DONE DT ONLY TODAY
+        if (
+          filter === "Done" &&
+          task.type === "DT"
+        ) {
+
+          if (!task.closedAt) return false;
+
+          return (
+            task.status === "Done" &&
+            new Date(task.closedAt).toDateString() === today
+          );
+
+        }
+
+        // NORMAL
+        return task.status === filter;
+
+      });
+
   // LOGOUT
   const handleLogout = () => {
 
@@ -888,13 +911,38 @@ export default function Dashboard() {
   // ADD TASK
   const handleAddTask = async () => {
 
+    // DT VALIDATION
     if (
-      !newTask.machine ||
-      !newTask.issue ||
-      !newTask.assignTo
+      newTask.type === "DT" &&
+      (
+        !newTask.machine.trim() ||
+        !newTask.issue.trim() ||
+        !newTask.assignTo
+      )
     ) {
+
       alert("Complete all fields");
+
       return;
+
+    }
+
+    // PROJECT VALIDATION
+    if (
+      newTask.type === "Project" &&
+      (
+        !newTask.machine.trim() ||
+        !newTask.issue.trim() ||
+        !newTask.assignTo.trim() ||
+        !newTask.targetDate ||
+        !newTask.targetTime
+      )
+    ) {
+
+      alert("Complete all fields");
+
+      return;
+
     }
 
     const now = new Date();
@@ -1283,10 +1331,24 @@ export default function Dashboard() {
                 <Card
                   title="Done"
                   value={
-                    filteredOverviewTasks.filter(
-                      (t) =>
-                        t.status === "Done"
-                    ).length
+                    filteredOverviewTasks.filter((t) => {
+
+                      // DT hanya done hari ini
+                      if (t.type === "DT") {
+
+                        if (!t.closedAt) return false;
+
+                        return (
+                          t.status === "Done" &&
+                          new Date(t.closedAt).toDateString() === new Date().toDateString()
+                        );
+
+                      }
+
+                      // selain DT tetap normal
+                      return t.status === "Done";
+
+                    }).length
                   }
                   color="green"
                   active={
