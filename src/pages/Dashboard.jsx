@@ -640,9 +640,11 @@ export default function Dashboard() {
 
           (
             task.type === "TPM" &&
-            task.status ===
-            "Waiting Approval" &&
-            user.role === "Admin"
+            task.status === "Waiting Approval" &&
+            (
+              user.role === "Admin" ||
+              user.role === "Manager"
+            )
           )
 
         );
