@@ -1489,35 +1489,32 @@ export default function Dashboard() {
 
       setShowModal(false);
 
-      // await fetch("https://api.fonnte.com/send", {
-      //   method: "POST",
-      //   headers: {
-      //     Authorization: "oTbrTtwqaF1nGMYZPBax",
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify({
-      //     target: "120363421519113400@g.us,6285765591177-1563854279@g.us",
+      await fetch("https://api.fonnte.com/send", {
+        method: "POST",
+        headers: {
+          Authorization: "oTbrTtwqaF1nGMYZPBax",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          target: "120363421519113400@g.us,6285765591177-1563854279@g.us",
 
-      //     message:
-      //       `🚨 Sekilas Info BMKG dari EE-Bot
+          message:
+            `🚨 Sekilas Info BMKG dari EE-Bot
 
-      //     Type : ${taskData.type}
-      //     Machine : ${taskData.machine}
-      //     Issue : ${taskData.issue}
-      //     Assign To : ${taskData.assignTo}
-      //     Created By : ${taskData.createdBy}
+          Type : ${taskData.type}
+          Machine : ${taskData.machine}
+          Issue : ${taskData.issue}
+          Assign To : ${taskData.assignTo}
+          Created By : ${taskData.createdBy}
 
-      //     Burung camar terbang melayang,
-      //     Mesin bermasalah jangan dibuang 😅
-      //     Mohon teknisi segera datang,
-      //     Check task sekarang jangan menghilang 🚨
-      //     Open Mobile App:
-      //     https://ee-mobile-q4r4.vercel.app/`,
-      //   }),
-      // });
-
-
-
+          Burung camar terbang melayang,
+          Mesin bermasalah jangan dibuang 😅
+          Mohon teknisi segera datang,
+          Check task sekarang jangan menghilang 🚨
+          Open Mobile App:
+          https://ee-mobile-q4r4.vercel.app/`,
+        }),
+      });
 
     } catch (error) {
 
@@ -3212,11 +3209,12 @@ export default function Dashboard() {
                     ||
 
                     (
-                      selectedTask.type ===
-                      "TPM" &&
+                      selectedTask.type === "TPM" &&
 
-                      user.role ===
-                      "Admin"
+                      (
+                        user.role === "Admin" ||
+                        user.role === "Manager"
+                      )
                     )
 
                   ) && (
