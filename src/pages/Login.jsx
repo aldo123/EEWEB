@@ -1,42 +1,51 @@
 import { useState } from "react";
 
-import {
-  db,
-  ref,
-  get,
-} from "../firebase/firebase";
+import { supabase }
+from "../supabase/supabase";
 
 export default function Login() {
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] =
+    useState("");
+
+  const [password, setPassword] =
+    useState("");
 
   const handleLogin = async () => {
 
     try {
 
-      const snapshot = await get(
-        ref(db, `users/${username}`)
-      );
+      const { data, error } =
+        await supabase
+          .from("users")
+          .select("*")
+          .eq("username", username)
+          .single();
 
-      if (!snapshot.exists()) {
+      if (error || !data) {
+
+        console.log(error);
+
         alert("User not found");
+
         return;
+
       }
 
-      const userData = snapshot.val();
+      if (String(data.password) !== String(password)) {
 
-      if (userData.password !== password) {
         alert("Wrong password");
+
         return;
+
       }
 
       localStorage.setItem(
         "user",
-        JSON.stringify(userData)
+        JSON.stringify(data)
       );
 
-      alert(`Welcome ${userData.name}`);
+      alert(`Welcome ${data.name}`);
 
       window.location.reload();
 
@@ -45,7 +54,9 @@ export default function Login() {
       console.log(error);
 
       alert("Login Failed");
+
     }
+
   };
 
   return (
@@ -154,4 +165,5 @@ export default function Login() {
     </div>
 
   );
+
 }

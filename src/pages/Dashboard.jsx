@@ -4,14 +4,7 @@ import {
 } from "react";
 
 
-import {
-  db,
-  ref,
-  push,
-  onValue,
-  update,
-  remove,
-} from "../firebase/firebase";
+import { supabase } from "../supabase/supabase";
 
 import {
   BarChart,
@@ -23,6 +16,170 @@ import {
   CartesianGrid,
 } from "recharts";
 
+
+
+// =========================================
+// SUPABASE HELPERS
+// =========================================
+
+const subscribeTable = async (
+  table,
+  setter,
+  transform = null,
+  orderBy = null
+) => {
+
+  const loadData = async () => {
+
+    try {
+
+      let query = supabase
+        .from(table)
+        .select("*");
+
+      if (orderBy) {
+
+        query = query.order(
+          orderBy,
+          { ascending: false }
+        );
+
+      }
+
+      const { data, error } =
+        await query;
+
+      if (error) {
+
+        console.log(
+          `LOAD ERROR: ${table}`,
+          error
+        );
+
+        return;
+
+      }
+
+      const finalData = transform
+        ? transform(data || [])
+        : (data || []);
+
+      setter(finalData);
+
+    } catch (err) {
+
+      console.log(err);
+
+    }
+
+  };
+
+  // FIRST LOAD
+  await loadData();
+
+  // REMOVE OLD CHANNEL
+  const oldChannels =
+    supabase
+      .getChannels()
+      .filter(
+        (c) =>
+          c.topic ===
+          `realtime:${table}-changes`
+      );
+
+  oldChannels.forEach((c) => {
+    supabase.removeChannel(c);
+  });
+
+  // CREATE CHANNEL
+  const channel =
+    supabase.channel(
+      `${table}-changes`
+    );
+
+  // ADD LISTENER FIRST
+  channel.on(
+    "postgres_changes",
+    {
+      event: "*",
+      schema: "public",
+      table: table,
+    },
+    async () => {
+
+      console.log(
+        `Realtime update: ${table}`
+      );
+
+      await loadData();
+
+    }
+  );
+
+  // SUBSCRIBE LAST
+  channel.subscribe((status) => {
+
+    console.log(
+      `${table} realtime status:`,
+      status
+    );
+
+  });
+
+  return channel;
+
+};
+
+const updateData = async (
+  table,
+  id,
+  payload
+) => {
+
+  const { error } = await supabase
+    .from(table)
+    .update(payload)
+    .eq("id", id);
+
+  if (error) {
+    console.log(error);
+    throw error;
+  }
+
+};
+
+const addData = async (
+  table,
+  payload
+) => {
+
+  const { error } = await supabase
+    .from(table)
+    .insert(payload);
+
+  if (error) {
+    console.log(error);
+    throw error;
+  }
+
+};
+
+const deleteData = async (
+  table,
+  id
+) => {
+
+  const { error } = await supabase
+    .from(table)
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.log(error);
+    throw error;
+  }
+
+};
 
 function getWeekNumber(date) {
 
@@ -169,33 +326,26 @@ export default function Dashboard() {
   // LOAD TASKS
   useEffect(() => {
 
-    const taskRef = ref(
-      db,
-      "task-mobile"
-    );
+    let channel;
 
-    onValue(taskRef, (snapshot) => {
+    const init = async () => {
 
-      const data = snapshot.val();
+      channel = await subscribeTable(
+        "task-mobile",
+        setTasks
+      );
 
-      if (data) {
+    };
 
-        const array = Object.keys(data).map(
-          (key) => ({
-            id: key,
-            ...data[key],
-          })
-        );
+    init();
 
-        setTasks(array);
+    return () => {
 
-      } else {
-
-        setTasks([]);
-
+      if (channel) {
+        supabase.removeChannel(channel);
       }
 
-    });
+    };
 
   }, []);
 
@@ -223,12 +373,7 @@ export default function Dashboard() {
 
         if (diffMinutes > dtMaxTime) {
 
-          await update(
-            ref(db, `task-mobile/${task.id}`),
-            {
-              status: "Delay",
-            }
-          );
+          await updateData("task-mobile", task.id, { status: "Delay" });
 
         }
 
@@ -253,12 +398,7 @@ export default function Dashboard() {
 
         if (now > targetDateTime) {
 
-          await update(
-            ref(db, `task-mobile/${task.id}`),
-            {
-              status: "Delay",
-            }
-          );
+          await updateData("task-mobile", task.id, { status: "Delay" });
 
         }
 
@@ -270,236 +410,234 @@ export default function Dashboard() {
   // LOAD TPM TASKS
   useEffect(() => {
 
-    const pmRef = ref(
-      db,
-      "preventive-maintenance"
-    );
+    let channel;
 
-    onValue(pmRef, (snapshot) => {
+    const loadTPM = async () => {
 
-      const data = snapshot.val();
+      channel = await subscribeTable(
+        "preventive-maintenance",
+        (data) => {
 
-      if (data) {
+          const currentWeek =
+            getWeekNumber(new Date());
 
-        const currentWeek =
-          getWeekNumber(
-            new Date()
-          );
+          const array = data
 
-        const currentYear =
-          new Date().getFullYear();
+            .filter((item) =>
+              Number(item.week) === currentWeek
+            )
 
-        const array = Object.keys(data)
+            .map((item) => ({
 
-          .filter((key) => {
+              id:
+                item.id ||
+                item.firebase_id,
 
-            const item = data[key];
+              firebase_id:
+                item.firebase_id,
 
-            return (
-              Number(item.week) ===
-              currentWeek
-            );
+              type: "TPM",
 
-          })
+              machine:
+                item.machine || "-",
 
-          .map(
-            (key) => {
+              issue:
+                item.actionTask || "-",
 
-              const item = data[key];
+              assignTo:
+                item.responsible || "-",
 
-              return {
+              targetWeek:
+                item.week || "-",
 
-                id: key,
+              dateCompleted:
+                item.dateCompleted || "",
 
-                type: "TPM",
+              weekCompleted:
+                item.weekCompleted || "",
 
-                machine:
-                  item.machine || "-",
+              status:
+                item.status === "Done"
+                  ? "Done"
 
-                issue:
-                  item.actionTask || "-",
+                  : item.status === "Progress" ||
+                    item.status === "Ongoing"
+                    ? "Progress"
 
-                assignTo:
-                  item.responsible || "-",
+                    : item.status === "Waiting Approval"
+                      ? "Waiting Approval"
 
-                targetWeek:
-                  item.week || "-",
+                      : item.status === "Reject"
+                        ? "Reject"
 
-                dateCompleted:
-                  item.dateCompleted || "",
+                        : item.status === "Delay"
+                          ? "Delay"
 
-                weekCompleted:
-                  item.weekCompleted || "",
+                          : "Open",
 
-                status:
-                  item.status === "Done"
-                    ? "Done"
+              createdBy:
+                item.createdBy || "WEB TPM",
 
-                    : item.status === "Progress" ||
-                      item.status === "Ongoing"
-                      ? "Progress"
+              createdAt:
+                item.createdAt || "-",
 
-                      : item.status ===
-                        "Waiting Approval"
-                        ? "Waiting Approval"
+              acceptedBy:
+                item.acceptedBy || "",
 
-                        : item.status === "Reject"
-                          ? "Reject"
+              beforePhoto:
+                item.beforePhoto || "",
 
-                          : item.status === "Delay"
-                            ? "Delay"
+              afterPhoto:
+                item.afterPhoto || "",
 
-                            : "Open",
+            }));
 
-                createdBy:
-                  item.createdBy || "WEB TPM",
 
-                createdAt:
-                  item.createdAt || "-",
+          setPmTasks(array);
 
-                acceptedBy:
-                  item.acceptedBy || "",
+        }
+      );
 
-                beforePhoto:
-                  item.beforePhoto || "",
+    };
 
-                afterPhoto:
-                  item.afterPhoto || "",
-              };
+    loadTPM();
 
-            }
-          );
+    return () => {
 
-        setPmTasks(array);
-
-      } else {
-
-        setPmTasks([]);
-
+      if (channel) {
+        supabase.removeChannel(channel);
       }
 
-    });
+    };
 
   }, []);
 
   // LOAD USERS
   useEffect(() => {
 
-    const userRef = ref(
-      db,
-      "users"
-    );
+    let channel;
 
-    onValue(userRef, (snapshot) => {
+    const init = async () => {
 
-      const data = snapshot.val();
+      channel = await subscribeTable(
+        "users",
+        setUsers,
+        null,
+        null
+      );
 
-      if (data) {
+    };
 
-        const array = Object.keys(data).map(
-          (key) => ({
-            id: key,
-            ...data[key],
-          })
-        );
+    init();
 
-        setUsers(array);
+    return () => {
 
-      } else {
-
-        setUsers([]);
-
+      if (channel) {
+        supabase.removeChannel(channel);
       }
 
-    });
+    };
 
   }, []);
 
   // LOAD LINES
   useEffect(() => {
 
-    const lineRef = ref(
-      db,
-      "lines"
-    );
+    let channel;
 
-    onValue(lineRef, (snapshot) => {
+    const init = async () => {
 
-      const data = snapshot.val();
+      channel = await subscribeTable(
+        "lines",
+        setLines,
+        null,
+        null
+      );
 
-      if (data) {
+    };
 
-        const array = Object.keys(data).map(
-          (key) => ({
-            id: key,
-            ...data[key],
-          })
-        );
+    init();
 
-        setLines(array);
+    return () => {
 
-      } else {
-
-        setLines([]);
-
+      if (channel) {
+        supabase.removeChannel(channel);
       }
 
-    });
+    };
 
   }, []);
 
-  // LOAD DT MAX TIME
+
+  // LOAD DT MAX TIME REALTIME
+  // LOAD DT MAX TIME REALTIME
   useEffect(() => {
 
-    const dtRef = ref(
-      db,
-      "system/dt-max-time"
-    );
+    let channel;
 
-    onValue(dtRef, (snapshot) => {
+    const init = async () => {
 
-      const data = snapshot.val();
+      channel = await subscribeTable(
+        "system",
+        (data) => {
 
-      if (data) {
+          const config = data.find(
+            (item) =>
+              item.config_key === "dt-max-time"
+          );
 
-        setDtMaxTime(data);
+          if (config) {
+
+            setDtMaxTime(
+              Number(config.config_value)
+            );
+
+          }
+
+        }
+      );
+
+    };
+
+    init();
+
+    return () => {
+
+      if (channel) {
+
+        supabase.removeChannel(channel);
 
       }
 
-    });
+    };
 
   }, []);
 
   // LOAD WORKFLOW
   useEffect(() => {
 
-    const workflowRef = ref(
-      db,
-      "workflow"
-    );
+    let channel;
 
-    onValue(workflowRef, (snapshot) => {
+    const init = async () => {
 
-      const data = snapshot.val();
+      channel = await subscribeTable(
+        "workflow",
+        setWorkflows,
+        null,
+        null
+      );
 
-      if (data) {
+    };
 
-        const array = Object.keys(data).map(
-          (key) => ({
-            id: key,
-            ...data[key],
-          })
-        );
+    init();
 
-        setWorkflows(array);
+    return () => {
 
-      } else {
-
-        setWorkflows([]);
-
+      if (channel) {
+        supabase.removeChannel(channel);
       }
 
-    });
+    };
 
   }, []);
 
@@ -691,8 +829,7 @@ export default function Dashboard() {
         if (filter === "Progress") {
 
           return (
-            task.status === "Progress" ||
-            task.status === "Waiting Approval"
+            task.status === "Progress"
           );
 
         }
@@ -788,14 +925,14 @@ export default function Dashboard() {
 
       }
 
-      await update(
-        ref(
-          db,
+      await updateData(
 
-          selectedTask.type === "TPM"
-            ? `preventive-maintenance/${selectedTask.id}`
-            : `task-mobile/${selectedTask.id}`
-        ),
+        selectedTask.type === "TPM"
+          ? "preventive-maintenance"
+          : "task-mobile",
+
+        selectedTask.id,
+
         {
           status: "Progress",
 
@@ -806,6 +943,7 @@ export default function Dashboard() {
 
           acceptDurationMinutes,
         }
+
       );
 
       setShowTaskModal(false);
@@ -826,11 +964,9 @@ export default function Dashboard() {
 
     try {
 
-      await update(
-        ref(
-          db,
-          `task-mobile/${selectedTask.id}`
-        ),
+      await updateData(
+        "task-mobile",
+        selectedTask.id,
         {
           machine:
             reviseTask.machine,
@@ -877,12 +1013,7 @@ export default function Dashboard() {
 
     try {
 
-      await remove(
-        ref(
-          db,
-          `task-mobile/${selectedTask.id}`
-        )
-      );
+      await deleteData("task-mobile", selectedTask.id);
 
       setShowTaskModal(false);
 
@@ -909,12 +1040,7 @@ export default function Dashboard() {
 
     try {
 
-      await push(
-        ref(db, "lines"),
-        {
-          name: newLine,
-        }
-      );
+      await addData("lines", { name: newLine });
 
       setNewLine("");
 
@@ -933,12 +1059,15 @@ export default function Dashboard() {
 
     try {
 
-      await update(
-        ref(db, "system"),
-        {
-          "dt-max-time": Number(dtMaxTime),
-        }
-      );
+      const { error } =
+        await supabase
+          .from("system")
+          .update({
+            config_value: Number(dtMaxTime)
+          })
+          .eq("config_key", "dt-max-time")
+
+      if (error) throw error;
 
       alert("DT Max Time Updated");
 
@@ -968,13 +1097,10 @@ export default function Dashboard() {
 
     try {
 
-      await push(
-        ref(db, "workflow"),
-        {
-          technician: selectedTechnician,
-          engineer: selectedEngineer,
-        }
-      );
+      await addData("workflow", {
+        technician: selectedTechnician,
+        engineer: selectedEngineer,
+      });
 
       setSelectedTechnician("");
       setSelectedEngineer("");
@@ -1000,9 +1126,7 @@ export default function Dashboard() {
 
     try {
 
-      await remove(
-        ref(db, `workflow/${id}`)
-      );
+      await deleteData("workflow", id);
 
     } catch (error) {
 
@@ -1030,8 +1154,9 @@ export default function Dashboard() {
 
     try {
 
-      await update(
-        ref(db, `workflow/${editingWorkflowId}`),
+      await updateData(
+        "workflow",
+        editingWorkflowId,
         {
           technician: editTechnician,
           engineer: editEngineer,
@@ -1119,7 +1244,7 @@ export default function Dashboard() {
 
       }
 
-      const updateData = {
+      const payload = {
 
         status:
           (
@@ -1143,10 +1268,10 @@ export default function Dashboard() {
       // DT ONLY
       if (selectedTask.type === "DT") {
 
-        updateData.rca =
+        payload.rca =
           taskReport.rca;
 
-        updateData.action =
+        payload.action =
           taskReport.action;
 
       }
@@ -1157,23 +1282,23 @@ export default function Dashboard() {
         selectedTask.type === "TPM"
       ) {
 
-        updateData.beforePhoto =
+        payload.beforePhoto =
           taskPhotos.before;
 
-        updateData.afterPhoto =
+        payload.afterPhoto =
           taskPhotos.after;
 
       }
 
-      await update(
-        ref(
-          db,
+      await updateData(
 
-          selectedTask.type === "TPM"
-            ? `preventive-maintenance/${selectedTask.id}`
-            : `task-mobile/${selectedTask.id}`
-        ),
-        updateData
+        selectedTask.type === "TPM"
+          ? "preventive-maintenance"
+          : "task-mobile",
+
+        selectedTask.id,
+
+        payload
       );
 
       setShowTaskModal(false);
@@ -1214,11 +1339,9 @@ export default function Dashboard() {
               ? 1
               : 0;
 
-          await update(
-            ref(
-              db,
-              `preventive-maintenance/${selectedTask.id}`
-            ),
+          await updateData(
+            "preventive-maintenance",
+            selectedTask.id,
             {
               status: "Done",
 
@@ -1264,11 +1387,9 @@ export default function Dashboard() {
               (approvedDate - targetDateTime) / 1000 / 60
             );
 
-          await update(
-            ref(
-              db,
-              `task-mobile/${selectedTask.id}`
-            ),
+          await updateData(
+            "task-mobile",
+            selectedTask.id,
             {
               status: "Done",
 
@@ -1353,38 +1474,7 @@ export default function Dashboard() {
 
     try {
 
-      await push(
-        ref(db, "task-mobile"),
-        taskData
-      );
-
-      await fetch("https://api.fonnte.com/send", {
-        method: "POST",
-        headers: {
-          Authorization: "oTbrTtwqaF1nGMYZPBax",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          target: "120363421519113400@g.us,6285765591177-1563854279@g.us",
-
-          message:
-            `🚨 Sekilas Info BMKG dari EE-Bot
-
-          Type : ${taskData.type}
-          Machine : ${taskData.machine}
-          Issue : ${taskData.issue}
-          Assign To : ${taskData.assignTo}
-          Created By : ${taskData.createdBy}
-
-          Burung camar terbang melayang,
-          Mesin bermasalah jangan dibuang 😅
-          Mohon teknisi segera datang,
-          Check task sekarang jangan menghilang 🚨
-          Open Mobile App:
-          https://ee-mobile-q4r4.vercel.app/`,
-        }),
-      });
-
+      await addData("task-mobile", taskData);
 
       setNewTask({
         type: "DT",
@@ -1398,6 +1488,36 @@ export default function Dashboard() {
       });
 
       setShowModal(false);
+
+      // await fetch("https://api.fonnte.com/send", {
+      //   method: "POST",
+      //   headers: {
+      //     Authorization: "oTbrTtwqaF1nGMYZPBax",
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify({
+      //     target: "120363421519113400@g.us,6285765591177-1563854279@g.us",
+
+      //     message:
+      //       `🚨 Sekilas Info BMKG dari EE-Bot
+
+      //     Type : ${taskData.type}
+      //     Machine : ${taskData.machine}
+      //     Issue : ${taskData.issue}
+      //     Assign To : ${taskData.assignTo}
+      //     Created By : ${taskData.createdBy}
+
+      //     Burung camar terbang melayang,
+      //     Mesin bermasalah jangan dibuang 😅
+      //     Mohon teknisi segera datang,
+      //     Check task sekarang jangan menghilang 🚨
+      //     Open Mobile App:
+      //     https://ee-mobile-q4r4.vercel.app/`,
+      //   }),
+      // });
+
+
+
 
     } catch (error) {
 
@@ -2203,7 +2323,7 @@ export default function Dashboard() {
                   value={
                     filteredOverviewTasks.filter(
                       (t) =>
-                        t.status === "Progress" || t.status === "Waiting Approval"
+                        t.status === "Progress"
                     ).length
                   }
                   color="orange"
@@ -2310,20 +2430,21 @@ export default function Dashboard() {
 
                 )}
 
-                {filteredTasks.map(
-                  (task, index) => (
+                {
+                  filteredTasks.map(
+                    (task, index) => (
 
-                    <TaskCard
-                      key={index}
-                      task={task}
-                      dtMaxTime={dtMaxTime}
-                      onClick={() =>
-                        handleOpenTask(task)
-                      }
-                    />
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        dtMaxTime={dtMaxTime}
+                        onClick={() =>
+                          handleOpenTask(task)
+                        }
+                      />
 
-                  )
-                )}
+                    )
+                  )}
 
               </div>
 
