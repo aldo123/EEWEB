@@ -23,7 +23,38 @@ body,
 
 html,
 body,
-#root{
-  width:100%;
-  overflow-x:hidden;
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #111827;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1f2937;
+}
+
+.gantt-main-scroll::-webkit-scrollbar {
+    height: 10px;
+}
+
+.gantt-main-scroll::-webkit-scrollbar-thumb {
+    background: #06b6d4;
+    border-radius: 999px;
+}
+
+.gantt-main-scroll::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
 }
