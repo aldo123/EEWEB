@@ -2584,9 +2584,10 @@ export default function ActivityDetail({
                             ref={ganttScrollRef}
                             className="
                             overflow-x-auto
-                            overflow-y-hidden
+                            overflow-y-auto
                             scrollbar-hide
                             gantt-main-scroll
+                            max-h-[75vh]
                         "
                         >
                             <div className="min-w-[5500px]">
@@ -2608,6 +2609,10 @@ export default function ActivityDetail({
                                     className="
                                     flex
                                     min-w-[5500px]
+                                    sticky
+                                    top-0
+                                    z-50
+                                    h-[42px]
                                     "
                                 >
                                     <div
@@ -2745,6 +2750,9 @@ export default function ActivityDetail({
                                                 className="
                                                 flex
                                                 min-w-[5500px]
+                                                sticky
+                                                top-[42px]
+                                                z-30
                                                 bg-gradient-to-r
                                                 from-[#0f172a]
                                                 to-[#111827]
@@ -2758,14 +2766,14 @@ export default function ActivityDetail({
                                             >
                                                 <div
                                                     className="
-    grid
-    grid-cols-[70px_300px_140px_180px_120px_120px_120px_120px_180px]
-    shrink-0
-    sticky
-    left-0
-    z-10
-    bg-[#0f172a]
-">
+                                                    grid
+                                                    grid-cols-[70px_300px_140px_180px_120px_120px_120px_120px_180px]
+                                                    shrink-0
+                                                    sticky
+                                                    left-0
+                                                    z-10
+                                                    bg-[#0f172a]
+                                                ">
 
                                                     {/* NO */}
                                                     <div className="px-4 h-full flex items-center">
@@ -2776,11 +2784,11 @@ export default function ActivityDetail({
 
                                                     {/* TITLE */}
                                                     <div className="p-4
-                                            text-lg
-                                            font-black
-                                            tracking-wide
-                                            text-white
-                                            drop-shadow-[0_0_12px_rgba(255,255,255,0.3)]">
+                                                        text-lg
+                                                        font-black
+                                                        tracking-wide
+                                                        text-white
+                                                        drop-shadow-[0_0_12px_rgba(255,255,255,0.3)]">
 
                                                         {header.title}
 

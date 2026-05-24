@@ -41,6 +41,9 @@ import LineManagement
 import WorkflowManagement
   from "./configuration/WorkflowManagement";
 
+import RequestList
+  from "./engineering/RequestList";
+
 export default function Dashboard() {
 
   const [user, setUser] =
@@ -55,6 +58,7 @@ export default function Dashboard() {
 
   const [selectedPage, setSelectedPage] =
     useState("project-list");
+
 
   // =========================
   // LOAD USER
@@ -929,32 +933,7 @@ flex flex-col">
 
             {selectedPage ===
               "request-list" && (
-
-                <div className="h-[500px]
-              rounded-[36px]
-              border border-white/5
-              bg-white/[0.03]
-              backdrop-blur-2xl
-              flex items-center justify-center">
-
-                  <div className="text-center">
-
-                    <h1 className="text-5xl font-black text-white">
-
-                      Request List
-
-                    </h1>
-
-                    <p className="text-slate-500 mt-4">
-
-                      Module coming soon
-
-                    </p>
-
-                  </div>
-
-                </div>
-
+                <RequestList />
               )}
 
             {selectedPage ===
