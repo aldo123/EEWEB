@@ -1,995 +1,1765 @@
 import React, {
-  useEffect,
-  useMemo,
-  useState,
+    useEffect,
+    useMemo,
+    useState,
 } from "react";
 
-import Papa from "papaparse";
-
-
 import {
-  Search,
-  Plus,
-  Upload,
-  Download,
-  Wrench,
-  AlertTriangle,
-  CheckCircle2,
-  Clock3,
-  XCircle,
-  BarChart3,
-  ShieldCheck,
+    Search,
+    Plus,
+    Upload,
+    Pencil,
+    Trash2,
+    AlertTriangle,
+    Clock3,
+    CheckCircle2,
+    XCircle,
+    Wrench,
 } from "lucide-react";
+
+import * as XLSX from "xlsx";
+
+import { supabase }
+    from "../../supabase/supabase";
+
+
+// ======================================================
+// HELPERS
+// ======================================================
+
+const normalizeText = (
+    value
+) => {
+
+    return String(value || "")
+        .trim()
+        .toLowerCase();
+
+};
+
+const excelDateToJSDate = (
+    serial
+) => {
+
+    if (!serial)
+        return "";
+
+    if (
+        typeof serial ===
+        "string"
+    ) {
+
+        return serial;
+
+    }
+
+    const utc_days =
+        Math.floor(
+            serial - 25569
+        );
+
+    const utc_value =
+        utc_days * 86400;
+
+    const date_info =
+        new Date(
+            utc_value * 1000
+        );
+
+    return date_info
+        .toISOString()
+        .split("T")[0];
+
+};
+
+const getCurrentWeek = () => {
+
+    const today =
+        new Date();
+
+    const firstDay =
+        new Date(
+            today.getFullYear(),
+            0,
+            1
+        );
+
+    const pastDays =
+        (
+            today - firstDay
+        ) / 86400000;
+
+    return Math.ceil(
+        (pastDays + firstDay.getDay() + 1) / 7
+    );
+
+};
+
+// ======================================================
+// MAIN COMPONENT
+// ======================================================
 
 export default function MaintenancePlan() {
 
-  const [pmData,
-    setPmData] = useState([]);
+    // ======================================================
+    // STATE
+    // ======================================================
 
-  const [search,
-    setSearch] = useState("");
+    const [pmData,
+        setPmData] =
+        useState([]);
 
-  const [weekFilter,
-    setWeekFilter] =
-    useState("All");
+    const [search,
+        setSearch] =
+        useState("");
 
-  const [machineFilter,
-    setMachineFilter] =
-    useState("All");
+    const [summaryFilter,
+        setSummaryFilter] =
+        useState([
+            "ONGOING",
+            "OVERDUE",
+            "DONE",
+        ]);
 
-  const [responsibleFilter,
-    setResponsibleFilter] =
-    useState("All");
+    const [showAddModal,
+        setShowAddModal] =
+        useState(false);
 
-  const [statusFilter,
-    setStatusFilter] =
-    useState("All");
+    const [editingItem,
+        setEditingItem] =
+        useState(null);
 
-  // =========================
-  // LOAD CSV
-  // =========================
-  useEffect(() => {
+    const [editForm,
+        setEditForm] =
+        useState({});
 
-    fetch("/preventive-maintenance_rows (2).csv")
-      .then((res) => res.text())
-      .then((csvText) => {
+    const [showWeekDropdown,
+        setShowWeekDropdown] =
+        useState(false);
 
-        Papa.parse(csvText, {
+    const [
+        showResponsibleDropdown,
+        setShowResponsibleDropdown
+    ] = useState(false);
 
-          header: true,
+    const [addForm,
+        setAddForm] =
+        useState({
 
-          skipEmptyLines: true,
-
-          complete: (result) => {
-
-            setPmData(
-              result.data || []
-            );
-
-          },
+            equipmentType: "",
+            machine: "",
+            item: "",
+            criteria: "",
+            actionTask: "",
+            time: "",
+            frequency: "",
+            annualMaintenance: "",
+            week: "",
+            month: "",
+            responsible: "",
+            status: "Ongoing",
+            closedAt: "",
+            weekCompleted: "",
+            pointSummary: "",
 
         });
 
-      });
+    // ======================================================
+    // LOAD DATA
+    // ======================================================
 
-  }, []);
+    useEffect(() => {
 
-  // =========================
-  // FILTER
-  // =========================
-  const filteredData =
-    useMemo(() => {
+        loadPMData();
 
-      return pmData.filter(
-        (item) => {
+    }, []);
 
-          const matchSearch =
+    const loadPMData = async () => {
 
-            (
-              item["Machine #"] || ""
-            )
-              .toLowerCase()
-              .includes(
-                search.toLowerCase()
-              ) ||
+        const {
+            data,
+            error,
+        } = await supabase
+            .from("preventive-maintenance")
+            .select(`
+            id,
+            equipmentType,
+            machine,
+            item,
+            criteria,
+            actionTask,
+            time,
+            frequency,
+            annualMaintenance,
+            week,
+            month,
+            responsible,
+            status,
+            closedAt,
+            weekCompleted,
+            pointSummary
+        `)
+            .order("id", {
+                ascending: true,
+            })
+            
+        if (error) {
 
-            (
-              item["Equipment Type"] ||
-              ""
-            )
-              .toLowerCase()
-              .includes(
-                search.toLowerCase()
-              ) ||
-
-            (
-              item["Responsible"] ||
-              ""
-            )
-              .toLowerCase()
-              .includes(
-                search.toLowerCase()
-              );
-
-          const matchWeek =
-
-            weekFilter === "All" ||
-
-            String(item["Week"]) ===
-            weekFilter;
-
-          const matchMachine =
-
-            machineFilter === "All" ||
-
-            item["Machine #"] ===
-            machineFilter;
-
-          const matchResponsible =
-
-            responsibleFilter ===
-              "All" ||
-
-            item["Responsible"] ===
-            responsibleFilter;
-
-          const matchStatus =
-
-            statusFilter === "All" ||
-
-            item["Status"] ===
-            statusFilter;
-
-          return (
-            matchSearch &&
-            matchWeek &&
-            matchMachine &&
-            matchResponsible &&
-            matchStatus
-          );
+            console.log(error);
+            return;
 
         }
-      );
 
-    }, [
-      pmData,
-      search,
-      weekFilter,
-      machineFilter,
-      responsibleFilter,
-      statusFilter,
-    ]);
+        console.log(data);
 
-  // =========================
-  // KPI
-  // =========================
-  const overdueCount =
-    filteredData.filter(
-      (x) =>
-        x.Status === "Overdue"
-    ).length;
+        setPmData(data || []);
 
-  const ongoingCount =
-    filteredData.filter(
-      (x) =>
-        x.Status === "Ongoing"
-    ).length;
+    };
 
-  const doneCount =
-    filteredData.filter(
-      (x) =>
-        x.Status === "Done"
-    ).length;
+    // ======================================================
+    // SUMMARY FILTER
+    // ======================================================
 
-  const rejectCount =
-    filteredData.filter(
-      (x) =>
-        x.Status === "Reject"
-    ).length;
+    const handleSummaryFilter =
+        (filter) => {
 
-  // =========================
-  // UNIQUE
-  // =========================
-  const weeks = [
-    "All",
-    ...new Set(
-      pmData.map(
-        (x) => x["Week"]
-      )
-    ),
-  ];
+            setSummaryFilter(
+                (prev) => {
 
-  const machines = [
-    "All",
-    ...new Set(
-      pmData.map(
-        (x) => x["Machine #"]
-      )
-    ),
-  ];
+                    if (
+                        prev.includes(
+                            filter
+                        )
+                    ) {
 
-  const responsibles = [
-    "All",
-    ...new Set(
-      pmData.map(
-        (x) => x["Responsible"]
-      )
-    ),
-  ];
+                        return prev.filter(
+                            (x) =>
+                                x !== filter
+                        );
 
-  return (
+                    }
 
-    <div className="
-    space-y-6
-    pb-10">
+                    return [
+                        ...prev,
+                        filter,
+                    ];
 
-      {/* ========================= */}
-      {/* TOP SECTION */}
-      {/* ========================= */}
+                }
+            );
 
-      <div className="
-      grid grid-cols-12
-      gap-5">
+        };
 
-        {/* TECH PERFORMANCE */}
+    const [weekFilter, setWeekFilter] =
+        useState([
+            String(
+                getCurrentWeek()
+            )
+        ]);
+
+    const [responsibleFilter, setResponsibleFilter] =
+        useState([]);
+    // ======================================================
+    // FILTER
+    // ======================================================
+
+    const filteredData =
+        useMemo(() => {
+
+            return pmData.filter(
+                (item) => {
+
+                    const keyword =
+                        search.toLowerCase();
+
+                    const searchMatch =
+
+                        item.machine
+                            ?.toLowerCase()
+                            .includes(keyword)
+
+                        ||
+
+                        item.equipmentType
+                            ?.toLowerCase()
+                            .includes(keyword)
+
+                        ||
+
+                        item.item
+                            ?.toLowerCase()
+                            .includes(keyword)
+
+                        ||
+
+                        item.responsible
+                            ?.toLowerCase()
+                            .includes(keyword);
+
+                    // =====================================
+                    // SUMMARY FILTER
+                    // =====================================
+
+                    let summaryMatch =
+                        true;
+
+                    if (
+                        summaryFilter.length > 0
+                    ) {
+
+                        summaryMatch =
+                            false;
+
+                        if (
+                            summaryFilter.includes(
+                                "OVERDUE"
+                            ) &&
+                            item.status ===
+                            "Overdue"
+                        ) {
+
+                            summaryMatch =
+                                true;
+
+                        }
+
+                        if (
+                            summaryFilter.includes(
+                                "ONGOING"
+                            ) &&
+                            item.status ===
+                            "Ongoing"
+                        ) {
+
+                            summaryMatch =
+                                true;
+
+                        }
+
+                        if (
+                            summaryFilter.includes(
+                                "DONE"
+                            ) &&
+                            item.status ===
+                            "Done"
+                        ) {
+
+                            summaryMatch =
+                                true;
+
+                        }
+
+                        if (
+                            summaryFilter.includes(
+                                "REJECT"
+                            ) &&
+                            item.status ===
+                            "Reject"
+                        ) {
+
+                            summaryMatch =
+                                true;
+
+                        }
+
+                    }
+
+                    // =====================================
+                    // WEEK FILTER
+                    // =====================================
+
+                    const weekMatch =
+                        weekFilter.length === 0
+                        ||
+                        weekFilter.includes(
+                            String(item.week)
+                        );
+
+                    // =====================================
+                    // RESPONSIBLE FILTER
+                    // =====================================
+
+                    const responsibleMatch =
+                        responsibleFilter.length === 0
+                        ||
+                        responsibleFilter.includes(
+                            item.responsible
+                        );
+
+                    return (
+                        searchMatch
+                        &&
+                        summaryMatch
+                        &&
+                        weekMatch
+                        &&
+                        responsibleMatch
+                    );
+
+                }
+            );
+
+        }, [
+            pmData,
+            search,
+            summaryFilter,
+            weekFilter,
+            responsibleFilter,
+        ]);
+
+    // ======================================================
+    // KPI
+    // ======================================================
+
+    const overdueCount =
+        filteredData.filter(
+            (x) =>
+                x.status ===
+                "Overdue"
+        ).length;
+
+    const ongoingCount =
+        filteredData.filter(
+            (x) =>
+                x.status ===
+                "Ongoing"
+        ).length;
+
+    const doneCount =
+        filteredData.filter(
+            (x) =>
+                x.status ===
+                "Done"
+        ).length;
+
+    const rejectCount =
+        filteredData.filter(
+            (x) =>
+                x.status ===
+                "Reject"
+        ).length;
+
+    // ======================================================
+    // FILTER OPTIONS
+    // ======================================================
+
+    const uniqueWeeks =
+        [...new Set(
+            pmData.map(
+                x => x.week
+            )
+        )]
+            .filter(Boolean)
+            .sort((a, b) => a - b);
+
+    const uniqueResponsibles =
+        [...new Set(
+            pmData.map(
+                x => x.responsible
+            )
+        )]
+            .filter(Boolean)
+            .sort();
+
+    // ======================================================
+    // IMPORT EXCEL
+    // ======================================================
+
+    const handleImportExcel =
+        async (e) => {
+
+            const file =
+                e.target.files[0];
+
+            if (!file)
+                return;
+
+            const reader =
+                new FileReader();
+
+            reader.onload =
+                async (evt) => {
+
+                    try {
+
+                        const data =
+                            evt.target.result;
+
+                        const workbook =
+                            XLSX.read(data, {
+                                type:
+                                    "binary",
+                            });
+
+                        const sheetName =
+                            workbook
+                                .SheetNames[0];
+
+                        const sheet =
+                            workbook
+                                .Sheets[
+                            sheetName
+                            ];
+
+                        const json =
+                            XLSX.utils.sheet_to_json(
+                                sheet
+                            );
+
+                        const formatted = json.map((item) => {
+
+                            return {
+
+                                equipmentType:
+                                    item["Equipment Type"] || "",
+
+                                machine:
+                                    item["Machine"] || "",
+
+                                item:
+                                    item["Item"] || "",
+
+                                criteria:
+                                    item["Criteria"] || "",
+
+                                actionTask:
+                                    item["Action"] || "",
+
+                                time:
+                                    item["Time"]
+                                        ? Number(item["Time"])
+                                        : null,
+
+                                frequency:
+                                    item["Frequency"]
+                                        ? Number(item["Frequency"])
+                                        : null,
+
+                                annualMaintenance:
+                                    item["Annual Maintenance"] || "",
+
+                                week:
+                                    item["Week"]
+                                        ? Number(item["Week"])
+                                        : null,
+
+                                month:
+                                    item["Month"] || "",
+
+                                responsible:
+                                    item["Responsible"] || "",
+
+                                status:
+                                    item["Status"] || "Ongoing",
+
+                                closedAt:
+                                    excelDateToJSDate(
+                                        item["Date completed"]
+                                    ),
+
+                                weekCompleted:
+                                    item["Week Completed"]
+                                        ? Number(item["Week completed"])
+                                        : null,
+
+                                pointSummary:
+                                    item["Point Summary"]
+                                        ? Number(item["Point Summary"])
+                                        : 0,
+
+                            };
+
+                        });
+                        console.log(formatted);
+                        const {
+                            error,
+                        } =
+                            await supabase
+                                .from(
+                                    "preventive-maintenance"
+                                )
+
+                                .insert(
+                                    formatted
+                                );
+
+                        if (error) {
+
+                            console.log(
+                                error
+                            );
+
+                            alert(
+                                "Import failed"
+                            );
+
+                            return;
+
+                        }
+
+                        await loadPMData();
+
+                        alert(
+                            "Import success"
+                        );
+
+                    }
+
+                    catch (err) {
+
+                        console.log(
+                            err
+                        );
+
+                        alert(
+                            "Excel read failed"
+                        );
+
+                    }
+
+                };
+
+            reader.readAsBinaryString(
+                file
+            );
+
+        };
+
+    // ======================================================
+    // DELETE
+    // ======================================================
+
+    const handleDelete =
+        async (id) => {
+
+            const confirmDelete =
+                window.confirm(
+                    "Delete this PM data?"
+                );
+
+            if (
+                !confirmDelete
+            )
+                return;
+
+            const {
+                error,
+            } =
+                await supabase
+                    .from(
+                        "preventive-maintenance"
+                    )
+                    .delete()
+                    .eq(
+                        "id",
+                        id
+                    );
+
+            if (error) {
+
+                console.log(error);
+
+                return;
+
+            }
+
+            await loadPMData();
+
+        };
+
+    // ======================================================
+    // EDIT
+    // ======================================================
+
+    const handleEdit =
+        (item) => {
+
+            setEditingItem(
+                item
+            );
+
+            setEditForm({
+                ...item,
+            });
+
+        };
+
+    const handleSaveEdit =
+        async () => {
+
+            const {
+                error,
+            } =
+                await supabase
+                    .from(
+                        "preventive-maintenance"
+                    )
+                    .update(
+                        editForm
+                    )
+                    .eq(
+                        "id",
+                        editingItem.id
+                    );
+
+            if (error) {
+
+                console.log(error);
+
+                alert(
+                    "Update failed"
+                );
+
+                return;
+
+            }
+
+            await loadPMData();
+
+            setEditingItem(
+                null
+            );
+
+        };
+
+    // ======================================================
+    // ADD
+    // ======================================================
+
+    const handleAddPM =
+        async () => {
+
+            const {
+                error,
+            } =
+                await supabase
+                    .from(
+                        "preventive-maintenance"
+                    )
+                    .insert([
+                        addForm,
+                    ]);
+
+            if (error) {
+
+                console.log(error);
+
+                alert(
+                    "Add failed"
+                );
+
+                return;
+
+            }
+
+            await loadPMData();
+
+            setShowAddModal(
+                false
+            );
+
+            loadPMData();
+
+        };
+
+    return (
+
         <div className="
-        col-span-5
+      p-8
+      text-white
+      min-h-screen
+      bg-gradient-to-br
+      from-[#020617]
+      via-[#03112b]
+      to-[#020617]
+    ">
+
+            {/* ====================================================== */}
+            {/* HEADER */}
+            {/* ====================================================== */}
+
+            <div className="
+        flex
+        items-start
+        justify-between
+        mb-8
         rounded-[32px]
-        border border-emerald-500/10
-        bg-gradient-to-br
-        from-[#071b11]
-        to-[#08131f]
-        p-5">
+        border
+        border-cyan-500/10
+        bg-gradient-to-r
+        from-cyan-500/5
+        to-transparent
+        backdrop-blur-xl
+        p-8
+      ">
 
-          <div className="
-          flex items-center gap-3
-          mb-5">
+                <div>
 
-            <BarChart3
-              className="
-              text-emerald-400"
-            />
+                    <div className="
+            inline-flex
+            items-center
+            gap-2
+            px-4
+            py-2
+            rounded-2xl
+            border
+            border-cyan-500/20
+            bg-cyan-500/10
+            text-cyan-300
+            text-xs
+            font-bold
+            uppercase
+            tracking-[3px]
+            mb-4
+          ">
 
-            <h1 className="
-            text-lg font-bold
-            text-white">
+                        <div className="
+              w-2
+              h-2
+              rounded-full
+              bg-cyan-400
+            " />
 
-              Technician Performance
+                        PREVENTIVE MAINTENANCE
 
-            </h1>
+                    </div>
 
-          </div>
+                    <h1 className="
+            text-6xl
+            font-black
+            leading-tight
+            bg-gradient-to-r
+            from-white
+            via-cyan-200
+            to-cyan-500
+            bg-clip-text
+            text-transparent
+          ">
+                        Maintenance Plan
+                    </h1>
 
-          <div className="
-          space-y-3">
+                    <p className="
+            text-slate-400
+            mt-3
+            text-lg
+          ">
+                        PM monitoring & maintenance management system
+                    </p>
 
-            {[
-              "Aulia",
-              "Panggih",
-              "Tri",
-              "Alif",
-              "Faiz",
-              "Widhi",
-              "Budi",
-            ].map(
-              (
-                tech,
-                index
-              ) => (
+                </div>
 
-                <div
-                  key={index}
-                  className="
-                  flex items-center gap-4">
+            </div>
 
-                  <div className="
-                  w-[70px]
-                  text-sm text-slate-300">
+            {/* ====================================================== */}
+            {/* SUMMARY */}
+            {/* ====================================================== */}
 
-                    {tech}
+            <div className="
+        grid
+        grid-cols-4
+        gap-4
+        mb-6
+      ">
 
-                  </div>
+                <SummaryCard
+                    title="PM Overdue"
+                    value={overdueCount}
+                    color="red"
+                    icon={
+                        <AlertTriangle />
+                    }
+                    active={
+                        summaryFilter.includes(
+                            "OVERDUE"
+                        )
+                    }
+                    onClick={() =>
+                        handleSummaryFilter(
+                            "OVERDUE"
+                        )
+                    }
+                />
 
-                  <div className="
-                  flex-1
-                  h-3 rounded-full
-                  bg-white/5
-                  overflow-hidden">
+                <SummaryCard
+                    title="PM Ongoing"
+                    value={ongoingCount}
+                    color="yellow"
+                    icon={
+                        <Clock3 />
+                    }
+                    active={
+                        summaryFilter.includes(
+                            "ONGOING"
+                        )
+                    }
+                    onClick={() =>
+                        handleSummaryFilter(
+                            "ONGOING"
+                        )
+                    }
+                />
 
-                    <div
-                      className="
-                      h-full rounded-full
-                      bg-gradient-to-r
-                      from-emerald-400
-                      to-yellow-400"
-                      style={{
-                        width: `${90 - index}%`,
-                      }}
+                <SummaryCard
+                    title="PM Done"
+                    value={doneCount}
+                    color="emerald"
+                    icon={
+                        <CheckCircle2 />
+                    }
+                    active={
+                        summaryFilter.includes(
+                            "DONE"
+                        )
+                    }
+                    onClick={() =>
+                        handleSummaryFilter(
+                            "DONE"
+                        )
+                    }
+                />
+
+                <SummaryCard
+                    title="PM Reject"
+                    value={rejectCount}
+                    color="purple"
+                    icon={
+                        <XCircle />
+                    }
+                    active={
+                        summaryFilter.includes(
+                            "REJECT"
+                        )
+                    }
+                    onClick={() =>
+                        handleSummaryFilter(
+                            "REJECT"
+                        )
+                    }
+                />
+
+            </div>
+
+            {/* ====================================================== */}
+            {/* FILTER BAR */}
+            {/* ====================================================== */}
+
+            <div className="
+    flex
+    items-center
+    gap-3
+    mb-5
+">
+
+                {/* SEARCH */}
+
+                <div className="
+        relative
+        flex-1
+    ">
+
+                    <Search
+                        className="
+                absolute
+                left-4
+                top-4
+                text-slate-500
+            "
+                        size={18}
                     />
 
-                  </div>
-
-                  <div className="
-                  text-sm font-bold
-                  text-emerald-300">
-
-                    {90 - index}%
-
-                  </div>
-
-                </div>
-
-              )
-            )}
-
-          </div>
-
-        </div>
-
-        {/* MONTH CHART */}
-        <div className="
-        col-span-4
-        rounded-[32px]
-        border border-cyan-500/10
-        bg-gradient-to-br
-        from-[#081421]
-        to-[#071b11]
-        p-5">
-
-          <div className="
-          flex items-center gap-3
-          mb-6">
-
-            <ShieldCheck
-              className="
-              text-cyan-400"
-            />
-
-            <h1 className="
-            text-lg font-bold">
-
-              % Execution by Month
-
-            </h1>
-
-          </div>
-
-          <div className="
-          flex items-end
-          justify-between
-          h-[170px]">
-
-            {[
-              "Jan",
-              "Feb",
-              "Mar",
-              "Apr",
-              "May",
-              "Jun",
-              "Jul",
-              "Aug",
-            ].map(
-              (
-                month,
-                index
-              ) => (
-
-                <div
-                  key={index}
-                  className="
-                  flex flex-col
-                  items-center gap-2">
-
-                  <div
-                    className="
-                    w-10 rounded-xl
-                    bg-gradient-to-t
-                    from-cyan-500
-                    to-emerald-400"
-                    style={{
-                      height:
-                        index < 4
-                          ? "110px"
-                          : "70px",
-                    }}
-                  />
-
-                  <span className="
-                  text-[11px]
-                  text-slate-400">
-
-                    {month}
-
-                  </span>
-
-                </div>
-
-              )
-            )}
-
-          </div>
-
-        </div>
-
-        {/* SUMMARY */}
-        <div className="
-        col-span-3
-        grid grid-cols-2 gap-4">
-
-          {/* OVERDUE */}
-          <div className="
-          rounded-[24px]
-          border border-red-500/20
-          bg-[#1a0d0d]
-          p-5">
-
-            <div className="
-            flex items-center gap-2
-            text-red-400
-            text-sm">
-
-              <AlertTriangle size={16} />
-
-              PM Overdue
-
-            </div>
-
-            <h1 className="
-            text-4xl font-black
-            mt-5">
-
-              {overdueCount}
-
-            </h1>
-
-          </div>
-
-          {/* ONGOING */}
-          <div className="
-          rounded-[24px]
-          border border-yellow-500/20
-          bg-[#1a170b]
-          p-5">
-
-            <div className="
-            flex items-center gap-2
-            text-yellow-400
-            text-sm">
-
-              <Clock3 size={16} />
-
-              PM Ongoing
-
-            </div>
-
-            <h1 className="
-            text-4xl font-black
-            mt-5">
-
-              {ongoingCount}
-
-            </h1>
-
-          </div>
-
-          {/* DONE */}
-          <div className="
-          rounded-[24px]
-          border border-emerald-500/20
-          bg-[#071b11]
-          p-5">
-
-            <div className="
-            flex items-center gap-2
-            text-emerald-400
-            text-sm">
-
-              <CheckCircle2 size={16} />
-
-              PM Done
-
-            </div>
-
-            <h1 className="
-            text-4xl font-black
-            mt-5">
-
-              {doneCount}
-
-            </h1>
-
-          </div>
-
-          {/* REJECT */}
-          <div className="
-          rounded-[24px]
-          border border-purple-500/20
-          bg-[#1a1020]
-          p-5">
-
-            <div className="
-            flex items-center gap-2
-            text-purple-400
-            text-sm">
-
-              <XCircle size={16} />
-
-              PM Reject
-
-            </div>
-
-            <h1 className="
-            text-4xl font-black
-            mt-5">
-
-              {rejectCount}
-
-            </h1>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* ========================= */}
-      {/* MAIN TABLE */}
-      {/* ========================= */}
-
-      <div className="
-      rounded-[34px]
-      border border-cyan-500/10
-      bg-[#08111f]
-      overflow-hidden">
-
-        {/* HEADER */}
-        <div className="
-        px-7 py-6
-        border-b border-white/5
-        flex items-center justify-between">
-
-          <div className="
-          flex items-center gap-4">
-
-            <div className="
-            w-14 h-14 rounded-2xl
-            bg-emerald-500/15
-            flex items-center justify-center">
-
-              <Wrench
-                className="
-                text-emerald-400"
-              />
-
-            </div>
-
-            <div>
-
-              <h1 className="
-              text-3xl font-black">
-
-                Preventive Maintenance
-
-              </h1>
-
-              <p className="
-              text-slate-400 mt-1">
-
-                Equipment maintenance management
-
-              </p>
-
-            </div>
-
-          </div>
-
-          {/* ACTION */}
-          <div className="
-          flex items-center gap-3">
-
-            <button className="
-            h-12 px-5 rounded-xl
-            bg-emerald-500
-            flex items-center gap-2
-            font-semibold">
-
-              <Plus size={16} />
-
-              Add
-
-            </button>
-
-            <button className="
-            h-12 px-5 rounded-xl
-            border border-white/10
-            bg-white/[0.03]
-            flex items-center gap-2">
-
-              <Download size={16} />
-
-              Export
-
-            </button>
-
-            <button className="
-            h-12 px-5 rounded-xl
-            border border-white/10
-            bg-white/[0.03]
-            flex items-center gap-2">
-
-              <Upload size={16} />
-
-              Import
-
-            </button>
-
-          </div>
-
-        </div>
-
-        {/* FILTER */}
-        <div className="
-        p-6
-        border-b border-white/5
-        grid grid-cols-5 gap-4">
-
-          {/* SEARCH */}
-          <div className="
-          col-span-2
-          h-14 rounded-2xl
-          border border-white/5
-          bg-white/[0.03]
-          px-5
-          flex items-center gap-3">
-
-            <Search
-              size={18}
-              className="
-              text-slate-500"
-            />
-
-            <input
-              type="text"
-              placeholder="Search maintenance..."
-              value={search}
-              onChange={(e) =>
-                setSearch(
-                  e.target.value
-                )
-              }
-              className="
-              bg-transparent
-              outline-none
-              w-full
-              text-white"
-            />
-
-          </div>
-
-          {/* WEEK */}
-          <select
-            value={weekFilter}
-            onChange={(e) =>
-              setWeekFilter(
-                e.target.value
-              )
-            }
-            className="
-            h-14 rounded-2xl
-            border border-white/5
-            bg-white/[0.03]
-            px-4
-            outline-none">
-
-            {weeks.map((week) => (
-
-              <option
-                key={week}
-                value={week}>
-
-                {week}
-
-              </option>
-
-            ))}
-
-          </select>
-
-          {/* MACHINE */}
-          <select
-            value={machineFilter}
-            onChange={(e) =>
-              setMachineFilter(
-                e.target.value
-              )
-            }
-            className="
-            h-14 rounded-2xl
-            border border-white/5
-            bg-white/[0.03]
-            px-4
-            outline-none">
-
-            {machines.map((m) => (
-
-              <option
-                key={m}
-                value={m}>
-
-                {m}
-
-              </option>
-
-            ))}
-
-          </select>
-
-          {/* RESPONSIBLE */}
-          <select
-            value={
-              responsibleFilter
-            }
-            onChange={(e) =>
-              setResponsibleFilter(
-                e.target.value
-              )
-            }
-            className="
-            h-14 rounded-2xl
-            border border-white/5
-            bg-white/[0.03]
-            px-4
-            outline-none">
-
-            {responsibles.map((r) => (
-
-              <option
-                key={r}
-                value={r}>
-
-                {r}
-
-              </option>
-
-            ))}
-
-          </select>
-
-        </div>
-
-        {/* TABLE */}
-        <div className="
-        overflow-auto">
-
-          <table className="
-          w-full text-sm">
-
-            {/* HEADER */}
-            <thead className="
-            bg-cyan-500/[0.04]
-            text-cyan-300">
-
-              <tr>
-
-                <th className="
-                px-6 py-5 text-left">
-
-                  No
-
-                </th>
-
-                <th className="
-                px-6 py-5 text-left">
-
-                  Equipment
-
-                </th>
-
-                <th className="
-                px-6 py-5 text-left">
-
-                  Machine
-
-                </th>
-
-                <th className="
-                px-6 py-5 text-left">
-
-                  Item
-
-                </th>
-
-                <th className="
-                px-6 py-5 text-left">
-
-                  Criteria
-
-                </th>
-
-                <th className="
-                px-6 py-5 text-left">
-
-                  Responsible
-
-                </th>
-
-                <th className="
-                px-6 py-5 text-left">
-
-                  Status
-
-                </th>
-
-                <th className="
-                px-6 py-5 text-left">
-
-                  Week
-
-                </th>
-
-                <th className="
-                px-6 py-5 text-left">
-
-                  Month
-
-                </th>
-
-                <th className="
-                px-6 py-5 text-left">
-
-                  Action
-
-                </th>
-
-              </tr>
-
-            </thead>
-
-            {/* BODY */}
-            <tbody>
-
-              {filteredData.map(
-                (
-                  item,
-                  index
-                ) => (
-
-                  <tr
-                    key={index}
-                    className="
-                    border-b border-white/5
-                    hover:bg-cyan-500/[0.03]
-                    transition-all">
-
-                    <td className="
-                    px-6 py-5">
-
-                      {index + 1}
-
-                    </td>
-
-                    <td className="
-                    px-6 py-5">
-
-                      {
-                        item[
-                          "Equipment Type"
-                        ]
-                      }
-
-                    </td>
-
-                    <td className="
-                    px-6 py-5">
-
-                      {
-                        item[
-                          "Machine #"
-                        ]
-                      }
-
-                    </td>
-
-                    <td className="
-                    px-6 py-5">
-
-                      {item["Item"]}
-
-                    </td>
-
-                    <td className="
-                    px-6 py-5">
-
-                      {
-                        item[
-                          "Criteria"
-                        ]
-                      }
-
-                    </td>
-
-                    <td className="
-                    px-6 py-5">
-
-                      {
-                        item[
-                          "Responsible"
-                        ]
-                      }
-
-                    </td>
-
-                    <td className="
-                    px-6 py-5">
-
-                      <span className={`
-                      px-3 py-1 rounded-xl
-                      text-xs font-bold
-
-                      ${item["Status"] === "Done"
-                          ? "bg-emerald-500/15 text-emerald-400"
-                          : "bg-yellow-500/15 text-yellow-400"
+                    <input
+                        type="text"
+                        placeholder="Search machine, equipment, responsible..."
+                        value={search}
+                        onChange={(e) =>
+                            setSearch(
+                                e.target.value
+                            )
                         }
-                      `}>
+                        className="
+                w-full
+                h-12
+                rounded-2xl
+                bg-slate-900/60
+                border
+                border-slate-800
+                pl-12
+                pr-4
+                outline-none
+                text-sm
+            "
+                    />
+
+                </div>
+
+                {/* ====================================================== */}
+                {/* WEEK DROPDOWN */}
+                {/* ====================================================== */}
+
+                <div className="relative">
+
+                    <button
+                        onClick={() =>
+                            setShowWeekDropdown(
+                                !showWeekDropdown
+                            )
+                        }
+                        className="
+            h-12
+            px-4
+            rounded-2xl
+            border
+            border-slate-800
+            bg-slate-900/70
+            hover:border-cyan-500/40
+            flex
+            items-center
+            gap-2
+            min-w-[140px]
+        "
+                    >
+
+                        <span className="
+            text-sm
+            text-white
+            font-medium
+        ">
+                            Week
+                        </span>
 
                         {
-                          item[
-                            "Status"
-                          ]
+                            weekFilter.length > 0 && (
+
+                                <span className="
+                    px-2
+                    py-0.5
+                    rounded-full
+                    bg-cyan-500
+                    text-[11px]
+                    font-bold
+                ">
+                                    {weekFilter.length}
+                                </span>
+
+                            )
                         }
 
-                      </span>
+                    </button>
 
-                    </td>
+                    {
+                        showWeekDropdown && (
 
-                    <td className="
-                    px-6 py-5">
+                            <div className="
+                absolute
+                top-14
+                left-0
+                w-[220px]
+                rounded-2xl
+                border
+                border-slate-800
+                bg-[#071226]
+                shadow-2xl
+                z-50
+                p-2
+                max-h-[320px]
+                overflow-auto
+            ">
 
-                      {item["Week"]}
+                                {
+                                    uniqueWeeks.map(
+                                        (week) => {
 
-                    </td>
+                                            const selected =
+                                                weekFilter.includes(
+                                                    String(week)
+                                                );
 
-                    <td className="
-                    px-6 py-5">
+                                            return (
 
-                      {item["Month"]}
+                                                <button
+                                                    key={week}
+                                                    onClick={() => {
 
-                    </td>
+                                                        if (selected) {
 
-                    <td className="
-                    px-6 py-5">
+                                                            setWeekFilter(
+                                                                prev =>
+                                                                    prev.filter(
+                                                                        x =>
+                                                                            x !== String(week)
+                                                                    )
+                                                            );
 
-                      <button className="
-                      w-10 h-10 rounded-xl
-                      bg-cyan-500/10
-                      border border-cyan-500/20
-                      flex items-center justify-center">
+                                                        }
 
-                        <Wrench
-                          size={16}
-                          className="
-                          text-cyan-400"
-                        />
+                                                        else {
 
-                      </button>
+                                                            setWeekFilter(
+                                                                prev => [
+                                                                    ...prev,
+                                                                    String(week)
+                                                                ]
+                                                            );
 
-                    </td>
+                                                        }
 
-                  </tr>
+                                                    }}
+                                                    className={`
+                                        w-full
+                                        px-4
+                                        py-3
+                                        rounded-xl
+                                        text-left
+                                        text-sm
+                                        transition
+                                        mb-1
 
-                )
-              )}
+                                        ${selected
+                                                            ? "bg-cyan-500 text-white"
+                                                            : "hover:bg-slate-800 text-slate-300"
+                                                        }
+                                    `}
+                                                >
 
-            </tbody>
+                                                    Week {week}
 
-          </table>
+                                                </button>
+
+                                            );
+
+                                        }
+                                    )
+                                }
+
+                            </div>
+
+                        )
+                    }
+
+                </div>
+
+
+                {/* ====================================================== */}
+                {/* RESPONSIBLE DROPDOWN */}
+                {/* ====================================================== */}
+
+                <div className="relative">
+
+                    <button
+                        onClick={() =>
+                            setShowResponsibleDropdown(
+                                !showResponsibleDropdown
+                            )
+                        }
+                        className="
+            h-12
+            px-4
+            rounded-2xl
+            border
+            border-slate-800
+            bg-slate-900/70
+            hover:border-cyan-500/40
+            flex
+            items-center
+            gap-2
+            min-w-[170px]
+        "
+                    >
+
+                        <span className="
+            text-sm
+            text-white
+            font-medium
+        ">
+                            Responsible
+                        </span>
+
+                        {
+                            responsibleFilter.length > 0 && (
+
+                                <span className="
+                    px-2
+                    py-0.5
+                    rounded-full
+                    bg-emerald-500
+                    text-[11px]
+                    font-bold
+                ">
+                                    {responsibleFilter.length}
+                                </span>
+
+                            )
+                        }
+
+                    </button>
+
+                    {
+                        showResponsibleDropdown && (
+
+                            <div className="
+                absolute
+                top-14
+                left-0
+                w-[240px]
+                rounded-2xl
+                border
+                border-slate-800
+                bg-[#071226]
+                shadow-2xl
+                z-50
+                p-2
+                max-h-[320px]
+                overflow-auto
+            ">
+
+                                {
+                                    uniqueResponsibles.map(
+                                        (person) => {
+
+                                            const selected =
+                                                responsibleFilter.includes(
+                                                    person
+                                                );
+
+                                            return (
+
+                                                <button
+                                                    key={person}
+                                                    onClick={() => {
+
+                                                        if (selected) {
+
+                                                            setResponsibleFilter(
+                                                                prev =>
+                                                                    prev.filter(
+                                                                        x =>
+                                                                            x !== person
+                                                                    )
+                                                            );
+
+                                                        }
+
+                                                        else {
+
+                                                            setResponsibleFilter(
+                                                                prev => [
+                                                                    ...prev,
+                                                                    person
+                                                                ]
+                                                            );
+
+                                                        }
+
+                                                    }}
+                                                    className={`
+                                        w-full
+                                        px-4
+                                        py-3
+                                        rounded-xl
+                                        text-left
+                                        text-sm
+                                        transition
+                                        mb-1
+
+                                        ${selected
+                                                            ? "bg-emerald-500 text-white"
+                                                            : "hover:bg-slate-800 text-slate-300"
+                                                        }
+                                    `}
+                                                >
+
+                                                    {person}
+
+                                                </button>
+
+                                            );
+
+                                        }
+                                    )
+                                }
+
+                            </div>
+
+                        )
+                    }
+
+                </div>
+
+
+
+                {/* ADD BUTTON */}
+
+                <button
+                    onClick={() =>
+                        setShowAddModal(
+                            true
+                        )
+                    }
+                    className="
+            h-12
+            px-5
+            rounded-2xl
+            bg-cyan-500
+            hover:bg-cyan-400
+            flex
+            items-center
+            gap-2
+            font-bold
+            whitespace-nowrap
+        "
+                >
+
+                    <Plus size={18} />
+
+                    Add PM
+
+                </button>
+
+                {/* IMPORT */}
+
+                <label className="
+        h-12
+        px-5
+        rounded-2xl
+        bg-emerald-500
+        hover:bg-emerald-400
+        flex
+        items-center
+        gap-2
+        font-bold
+        cursor-pointer
+        whitespace-nowrap
+    ">
+
+                    <Upload size={18} />
+
+                    Import Excel
+
+                    <input
+                        type="file"
+                        hidden
+                        accept=".xlsx,.xls"
+                        onChange={
+                            handleImportExcel
+                        }
+                    />
+
+                </label>
+
+            </div>
+
+            {/* ====================================================== */}
+            {/* TABLE */}
+            {/* ====================================================== */}
+
+            <div className="
+        overflow-auto
+        rounded-3xl
+        border
+        border-slate-800
+        max-h-[60vh]
+      ">
+
+                <table className="
+          min-w-full
+          text-sm
+        ">
+
+                    <thead className="
+            sticky
+            top-0
+            z-20
+            bg-slate-900
+            text-cyan-300
+          ">
+
+                        <tr>
+
+                            <th className="p-3">
+                                No
+                            </th>
+
+                            <th className="p-3">
+                                Equipment Type
+                            </th>
+
+                            <th className="p-3">
+                                Machine
+                            </th>
+
+                            <th className="p-3">
+                                Item
+                            </th>
+
+                            <th className="p-3">
+                                Criteria
+                            </th>
+
+                            <th className="p-3">
+                                actionTask
+                            </th>
+
+                            <th className="p-3">
+                                Time
+                            </th>
+
+                            <th className="p-3">
+                                Frequency
+                            </th>
+
+                            <th className="p-3">
+                                Annual
+                            </th>
+
+                            <th className="p-3">
+                                Week
+                            </th>
+
+                            <th className="p-3">
+                                Month
+                            </th>
+
+                            <th className="p-3">
+                                Responsible
+                            </th>
+
+                            <th className="p-3">
+                                Status
+                            </th>
+
+                            <th className="p-3">
+                                Date Completed
+                            </th>
+
+                            <th className="p-3">
+                                Week Completed
+                            </th>
+
+                            <th className="p-3">
+                                Point Summary
+                            </th>
+
+                            <th className="p-3">
+                                actionTask
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {
+                            filteredData.map(
+                                (
+                                    item,
+                                    index
+                                ) => (
+
+                                    <tr
+                                        key={item.id}
+                                        className="
+                      border-t
+                      border-slate-800
+                      hover:bg-cyan-500/5
+                    "
+                                    >
+
+                                        <td className="p-3">
+                                            {index + 1}
+                                        </td>
+
+                                        <td className="p-3">
+                                            {
+                                                item.equipmentType
+                                            }
+                                        </td>
+
+                                        <td className="p-3">
+                                            {
+                                                item.machine
+                                            }
+                                        </td>
+
+                                        <td className="p-3">
+                                            {item.item}
+                                        </td>
+
+                                        <td className="p-3">
+                                            {
+                                                item.criteria
+                                            }
+                                        </td>
+
+                                        <td className="
+                      p-3
+                      min-w-[300px]
+                    ">
+                                            {
+                                                item.actionTask
+                                            }
+                                        </td>
+
+                                        <td className="p-3">
+                                            {item.time}
+                                        </td>
+
+                                        <td className="p-3">
+                                            {
+                                                item.frequency
+                                            }
+                                        </td>
+
+                                        <td className="p-3">
+                                            {
+                                                item.annualMaintenance
+                                            }
+                                        </td>
+
+                                        <td className="p-3">
+                                            {item.week}
+                                        </td>
+
+                                        <td className="p-3">
+                                            {item.month}
+                                        </td>
+
+                                        <td className="p-3">
+                                            {
+                                                item.responsible
+                                            }
+                                        </td>
+
+                                        <td className="p-3">
+
+                                            <span className={`
+                        px-3
+                        py-1
+                        rounded-full
+                        text-xs
+                        font-bold
+
+                        ${item.status === "Done"
+                                                    ? "bg-emerald-500/20 text-emerald-400"
+                                                    : item.status === "Overdue"
+                                                        ? "bg-red-500/20 text-red-400"
+                                                        : item.status === "Reject"
+                                                            ? "bg-purple-500/20 text-purple-400"
+                                                            : "bg-yellow-500/20 text-yellow-400"
+                                                }
+                      `}>
+
+                                                {
+                                                    item.status
+                                                }
+
+                                            </span>
+
+                                        </td>
+
+                                        <td className="p-3">
+
+                                            {
+                                                item.closedAt
+                                                    ? excelDateToJSDate(
+                                                        item.closedAt
+                                                    )
+                                                    : "-"
+                                            }
+
+                                        </td>
+
+                                        <td className="p-3">
+
+                                            {
+                                                item.weekCompleted || "-"
+                                            }
+
+                                        </td>
+
+                                        <td className="p-3">
+
+                                            {
+                                                item.pointSummary || 0
+                                            }
+
+                                        </td>
+
+                                        <td className="p-3">
+
+                                            <div className="
+                        flex
+                        items-center
+                        gap-2
+                      ">
+
+                                                <button
+                                                    onClick={() =>
+                                                        handleEdit(
+                                                            item
+                                                        )
+                                                    }
+                                                    className="
+                            w-9
+                            h-9
+                            rounded-xl
+                            border
+                            border-yellow-500/30
+                            bg-yellow-500/10
+                            flex
+                            items-center
+                            justify-center
+                          "
+                                                >
+
+                                                    <Pencil
+                                                        size={16}
+                                                        className="
+                              text-yellow-400
+                            "
+                                                    />
+
+                                                </button>
+
+                                                <button
+                                                    onClick={() =>
+                                                        handleDelete(
+                                                            item.id
+                                                        )
+                                                    }
+                                                    className="
+                            w-9
+                            h-9
+                            rounded-xl
+                            border
+                            border-red-500/30
+                            bg-red-500/10
+                            flex
+                            items-center
+                            justify-center
+                          "
+                                                >
+
+                                                    <Trash2
+                                                        size={16}
+                                                        className="
+                              text-red-400
+                            "
+                                                    />
+
+                                                </button>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                )
+                            )
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
 
         </div>
 
-      </div>
+    );
 
-    </div>
+}
 
-  );
+
+// ======================================================
+// SUMMARY CARD
+// ======================================================
+
+function SummaryCard({
+
+    title,
+    value,
+    color,
+    icon,
+    onClick,
+    active,
+
+}) {
+
+    return (
+
+        <div
+            onClick={onClick}
+            className={`
+        rounded-3xl
+        border
+        p-5
+        cursor-pointer
+        transition
+        hover:scale-[1.02]
+
+        ${active
+                    ? "ring-2 ring-cyan-400"
+                    : ""
+                }
+
+        ${color === "red"
+                    ? "border-red-500/30 bg-red-500/10"
+                    : ""
+                }
+
+        ${color === "yellow"
+                    ? "border-yellow-500/30 bg-yellow-500/10"
+                    : ""
+                }
+
+        ${color === "emerald"
+                    ? "border-emerald-500/30 bg-emerald-500/10"
+                    : ""
+                }
+
+        ${color === "purple"
+                    ? "border-purple-500/30 bg-purple-500/10"
+                    : ""
+                }
+      `}
+        >
+
+            <div className="
+        flex
+        items-center
+        justify-between
+      ">
+
+                <div>
+
+                    <p className="
+            text-sm
+            text-slate-300
+          ">
+                        {title}
+                    </p>
+
+                    <h1 className="
+            text-4xl
+            font-black
+            mt-2
+          ">
+                        {value}
+                    </h1>
+
+                </div>
+
+                <div className="
+          text-white
+        ">
+                    {icon}
+                </div>
+
+            </div>
+
+        </div>
+
+    );
 
 }

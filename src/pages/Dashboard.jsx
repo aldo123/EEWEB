@@ -44,6 +44,9 @@ import WorkflowManagement
 import RequestList
   from "./engineering/RequestList";
 
+import MaintenancePlan
+  from "../pages/DeviceManagement/MaintenancePlan";
+
 export default function Dashboard() {
 
   const [user, setUser] =
@@ -1308,190 +1311,165 @@ flex flex-col">
                 <WorkflowManagement />
               )}
 
-              {/* PART LIST */}
-              {selectedPage ===
-                "part-list" && (
+            {/* PART LIST */}
+            {selectedPage ===
+              "part-list" && (
 
-                  <div className="h-[500px]
+                <div className="h-[500px]
                   rounded-[36px]
                   border border-white/5
                   bg-white/[0.03]
                   backdrop-blur-2xl
                   flex items-center justify-center">
 
-                    <div className="text-center">
+                  <div className="text-center">
 
-                      <h1 className="text-5xl font-black text-white">
+                    <h1 className="text-5xl font-black text-white">
 
-                        Part List
+                      Part List
 
-                      </h1>
+                    </h1>
 
-                      <p className="text-slate-500 mt-4">
+                    <p className="text-slate-500 mt-4">
 
-                        Module coming soon
+                      Module coming soon
 
-                      </p>
-
-                    </div>
+                    </p>
 
                   </div>
+
+                </div>
 
               )}
 
-              {/* IN OUT */}
-              {selectedPage ===
-                "in-out-stock" && (
+            {/* IN OUT */}
+            {selectedPage ===
+              "in-out-stock" && (
 
-                  <div className="h-[500px]
+                <div className="h-[500px]
                   rounded-[36px]
                   border border-white/5
                   bg-white/[0.03]
                   backdrop-blur-2xl
                   flex items-center justify-center">
 
-                    <div className="text-center">
+                  <div className="text-center">
 
-                      <h1 className="text-5xl font-black text-white">
+                    <h1 className="text-5xl font-black text-white">
 
-                        In / Out Stock
+                      In / Out Stock
 
-                      </h1>
+                    </h1>
 
-                      <p className="text-slate-500 mt-4">
+                    <p className="text-slate-500 mt-4">
 
-                        Module coming soon
+                      Module coming soon
 
-                      </p>
-
-                    </div>
+                    </p>
 
                   </div>
+
+                </div>
 
               )}
 
-              {/* STORAGE */}
-              {selectedPage ===
-                "storage" && (
+            {/* STORAGE */}
+            {selectedPage ===
+              "storage" && (
 
-                  <div className="h-[500px]
+                <div className="h-[500px]
                   rounded-[36px]
                   border border-white/5
                   bg-white/[0.03]
                   backdrop-blur-2xl
                   flex items-center justify-center">
 
-                    <div className="text-center">
+                  <div className="text-center">
 
-                      <h1 className="text-5xl font-black text-white">
+                    <h1 className="text-5xl font-black text-white">
 
-                        Storage
+                      Storage
 
-                      </h1>
+                    </h1>
 
-                      <p className="text-slate-500 mt-4">
+                    <p className="text-slate-500 mt-4">
 
-                        Module coming soon
+                      Module coming soon
 
-                      </p>
-
-                    </div>
+                    </p>
 
                   </div>
+
+                </div>
 
               )}
 
-              {/* EQUIPMENT */}
-              {selectedPage ===
-                "equipment-list" && (
+            {/* EQUIPMENT */}
+            {selectedPage ===
+              "equipment-list" && (
 
-                  <div className="h-[500px]
+                <div className="h-[500px]
                   rounded-[36px]
                   border border-white/5
                   bg-white/[0.03]
                   backdrop-blur-2xl
                   flex items-center justify-center">
 
-                    <div className="text-center">
+                  <div className="text-center">
 
-                      <h1 className="text-5xl font-black text-white">
+                    <h1 className="text-5xl font-black text-white">
 
-                        Equipment List
+                      Equipment List
 
-                      </h1>
+                    </h1>
 
-                      <p className="text-slate-500 mt-4">
+                    <p className="text-slate-500 mt-4">
 
-                        Module coming soon
+                      Module coming soon
 
-                      </p>
-
-                    </div>
+                    </p>
 
                   </div>
+
+                </div>
 
               )}
 
-              {/* CALIBRATION */}
-              {selectedPage ===
-                "calibration-plan" && (
+            {/* CALIBRATION */}
+            {selectedPage ===
+              "calibration-plan" && (
 
-                  <div className="h-[500px]
+                <div className="h-[500px]
                   rounded-[36px]
                   border border-white/5
                   bg-white/[0.03]
                   backdrop-blur-2xl
                   flex items-center justify-center">
 
-                    <div className="text-center">
+                  <div className="text-center">
 
-                      <h1 className="text-5xl font-black text-white">
+                    <h1 className="text-5xl font-black text-white">
 
-                        Calibration Plan
+                      Calibration Plan
 
-                      </h1>
+                    </h1>
 
-                      <p className="text-slate-500 mt-4">
+                    <p className="text-slate-500 mt-4">
 
-                        Module coming soon
+                      Module coming soon
 
-                      </p>
-
-                    </div>
+                    </p>
 
                   </div>
+
+                </div>
 
               )}
 
-              {/* MAINTENANCE */}
-              {selectedPage ===
-                "maintenance-plan" && (
-
-                  <div className="h-[500px]
-                  rounded-[36px]
-                  border border-white/5
-                  bg-white/[0.03]
-                  backdrop-blur-2xl
-                  flex items-center justify-center">
-
-                    <div className="text-center">
-
-                      <h1 className="text-5xl font-black text-white">
-
-                        Maintenance Plan
-
-                      </h1>
-
-                      <p className="text-slate-500 mt-4">
-
-                        Module coming soon
-
-                      </p>
-
-                    </div>
-
-                  </div>
-
+            {/* MAINTENANCE */}
+            {selectedPage ===
+              "maintenance-plan" && (
+                <MaintenancePlan />
               )}
 
           </div>
