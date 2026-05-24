@@ -345,18 +345,111 @@ export default function LineManagement() {
 
         <div className="w-full">
 
-            {/* HEADER */}
-            <div className="flex items-start justify-between mb-8">
+            {/* HERO HEADER */}
+            <div 
+            className="
+            relative
+            overflow-hidden
 
-                <div>
+            rounded-[40px]
 
-                    <h1 className="text-5xl font-black text-white tracking-tight">
+            border border-cyan-500/10
+
+            bg-gradient-to-br
+            from-[#071428]
+            via-[#08192f]
+            to-[#05101f]
+
+            shadow-[0_0_80px_rgba(0,255,255,0.05)]
+
+            px-10
+            py-8
+            mb-8
+
+            flex
+            items-start
+            justify-between
+            gap-6
+            "
+            >
+
+                {/* GLOW */}
+                <div className="
+                absolute
+                top-[-100px]
+                right-[-100px]
+
+                w-[300px]
+                h-[300px]
+
+                rounded-full
+
+                bg-cyan-500/10
+
+                blur-[120px]
+                "></div>
+
+                {/* LEFT */}
+                <div className="relative z-10">
+
+                    <div className="
+                    inline-flex
+                    items-center
+                    gap-2
+
+                    px-4
+                    py-2
+
+                    rounded-2xl
+
+                    bg-cyan-500/10
+                    border border-cyan-500/20
+
+                    mb-5
+                    ">
+
+                        <div className="
+                        w-2 h-2
+                        rounded-full
+                        bg-cyan-400
+                        animate-pulse
+                        "></div>
+
+                        <span className="
+                        text-[11px]
+                        font-black
+                        tracking-[2px]
+                        text-cyan-300
+                        ">
+                            PRODUCTION CONFIGURATION
+                        </span>
+
+                    </div>
+
+                    <h1 className="
+                    text-6xl
+                    font-black
+                    leading-tight
+
+                    bg-gradient-to-r
+                    from-white
+                    via-cyan-200
+                    to-cyan-500
+
+                    bg-clip-text
+                    text-transparent
+                    ">
 
                         Line Management
 
                     </h1>
 
-                    <p className="text-slate-500 mt-2">
+                    <p className="
+                    mt-2
+                    text-slate-400
+                    text-sm
+                    font-medium
+                    ">
 
                         Production line configuration management
 
@@ -364,58 +457,108 @@ export default function LineManagement() {
 
                 </div>
 
-                {/* BUTTON */}
-                <button
-                    onClick={handleAdd}
-                    className="h-14 px-7 rounded-2xl
-          bg-gradient-to-r from-green-500 to-emerald-600
-          shadow-[0_0_40px_rgba(34,197,94,.25)]
-          hover:scale-[1.02]
-          transition-all
-          flex items-center gap-3
-          text-sm font-bold text-white"
-                >
-
-                    <Plus size={18} />
-
-                    Add Model
-
-                </button>
-
             </div>
 
             {/* SEARCH */}
-            <div className="rounded-[32px]
-      border border-white/5
-      bg-white/[0.03]
-      backdrop-blur-2xl
-      p-4 mb-8">
-
-                <div className="relative">
-
-                    <Search
-                        size={18}
-                        className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500"
-                    />
-
-                    <input
-                        type="text"
-                        placeholder="Search model or line..."
-                        value={search}
-                        onChange={(e) =>
-                            setSearch(
-                                e.target.value
-                            )
-                        }
-                        className="w-full h-14 rounded-2xl
-            bg-black/20
+            <div className="
+            rounded-[32px]
             border border-white/5
-            pl-14 pr-5
-            text-white
-            placeholder:text-slate-500
-            outline-none
-            focus:border-green-500/20"
-                    />
+            bg-white/[0.03]
+            backdrop-blur-2xl
+            p-4
+            mb-8
+            ">
+
+                <div className="
+                flex
+                items-center
+                gap-4
+                ">
+
+                    {/* SEARCH */}
+                    <div className="relative flex-1">
+
+                        <Search
+                            size={18}
+                            className="
+                            absolute
+                            left-5
+                            top-1/2
+                            -translate-y-1/2
+                            text-slate-500
+                            "
+                        />
+
+                        <input
+                            type="text"
+                            placeholder="Search model or line..."
+                            value={search}
+                            onChange={(e) =>
+                                setSearch(
+                                    e.target.value
+                                )
+                            }
+                            className="
+                            w-full
+                            h-14
+                            rounded-2xl
+
+                            bg-black/20
+
+                            border
+                            border-white/5
+
+                            pl-14
+                            pr-5
+
+                            text-white
+
+                            placeholder:text-slate-500
+
+                            outline-none
+
+                            focus:border-green-500/20
+                            "
+                        />
+
+                    </div>
+
+                    {/* BUTTON */}
+                    <button
+                        onClick={handleAdd}
+                        className="
+                        h-14
+                        px-7
+
+                        rounded-2xl
+
+                        bg-gradient-to-r
+                        from-green-500
+                        to-emerald-600
+
+                        shadow-[0_0_40px_rgba(34,197,94,.25)]
+
+                        hover:scale-[1.02]
+
+                        transition-all
+
+                        flex
+                        items-center
+                        gap-3
+
+                        text-sm
+                        font-bold
+                        text-white
+
+                        shrink-0
+                        "
+                    >
+
+                        <Plus size={18} />
+
+                        Add Model
+
+                    </button>
 
                 </div>
 
@@ -423,11 +566,11 @@ export default function LineManagement() {
 
             {/* GRID */}
             <div className="
-grid
-grid-cols-1
-md:grid-cols-2
-xl:grid-cols-4
-gap-5">
+                grid
+                grid-cols-1
+                md:grid-cols-2
+                xl:grid-cols-4
+                gap-5">
 
                 {filteredModels.map(
                     (model) => (
@@ -435,34 +578,34 @@ gap-5">
                         <div
                             key={model}
                             className="relative
-              rounded-[36px]
-              border border-white/5
-              bg-gradient-to-br
-              from-[#071120]
-              to-[#09182b]
-              backdrop-blur-2xl
-              overflow-hidden
-              hover:border-green-500/20
-              transition-all"
+                            rounded-[36px]
+                            border border-white/5
+                            bg-gradient-to-br
+                            from-[#071120]
+                            to-[#09182b]
+                            backdrop-blur-2xl
+                            overflow-hidden
+                            hover:border-green-500/20
+                            transition-all"
                         >
 
                             {/* GLOW */}
                             <div className="absolute top-[-60px] right-[-60px]
-              w-[180px] h-[180px]
-              bg-green-500/10
-              blur-[80px]
-              rounded-full"></div>
+                            w-[180px] h-[180px]
+                            bg-green-500/10
+                            blur-[80px]
+                            rounded-full"></div>
 
                             {/* CONTENT */}
                             <div className="relative z-10 p-7">
 
                                 {/* ICON */}
                                 <div className="w-20 h-20 rounded-[28px]
-                bg-gradient-to-br
-                from-green-400
-                to-emerald-600
-                flex items-center justify-center
-                shadow-[0_0_40px_rgba(34,197,94,.35)]">
+                                bg-gradient-to-br
+                                from-green-400
+                                to-emerald-600
+                                flex items-center justify-center
+                                shadow-[0_0_40px_rgba(34,197,94,.35)]">
 
                                     <Factory
                                         size={34}
@@ -492,13 +635,13 @@ gap-5">
                                         )
                                     }
                                     className="mt-5 h-11 px-5 rounded-2xl
-                  bg-green-500/10
-                  border border-green-500/20
-                  hover:bg-green-500/20
-                  transition-all
-                  flex items-center gap-2
-                  text-sm font-semibold text-green-400"
-                                >
+                                    bg-green-500/10
+                                    border border-green-500/20
+                                    hover:bg-green-500/20
+                                    transition-all
+                                    flex items-center gap-2
+                                    text-sm font-semibold text-green-400"
+                                                    >
 
                                     <Plus size={16} />
 
@@ -516,9 +659,9 @@ gap-5">
                                         <div
                                             key={line.id}
                                             className="rounded-2xl
-                      border border-white/5
-                      bg-black/20
-                      p-4"
+                                            border border-white/5
+                                            bg-black/20
+                                            p-4"
                                         >
 
                                             <div className="flex items-center justify-between">
@@ -527,8 +670,8 @@ gap-5">
                                                 <div className="flex items-center gap-3">
 
                                                     <div className="w-11 h-11 rounded-xl
-                          bg-green-500/10
-                          flex items-center justify-center">
+                                                        bg-green-500/10
+                                                        flex items-center justify-center">
 
                                                         <GitBranch
                                                             size={18}
@@ -566,11 +709,11 @@ gap-5">
                                                             )
                                                         }
                                                         className="w-10 h-10 rounded-xl
-                            bg-yellow-500/10
-                            border border-yellow-500/20
-                            flex items-center justify-center
-                            hover:bg-yellow-500/20"
-                                                    >
+                                                        bg-yellow-500/10
+                                                        border border-yellow-500/20
+                                                        flex items-center justify-center
+                                                        hover:bg-yellow-500/20"
+                                                                                >
 
                                                         <Pencil
                                                             size={15}
@@ -587,11 +730,11 @@ gap-5">
                                                             )
                                                         }
                                                         className="w-10 h-10 rounded-xl
-                            bg-red-500/10
-                            border border-red-500/20
-                            flex items-center justify-center
-                            hover:bg-red-500/20"
-                                                    >
+                                                        bg-red-500/10
+                                                        border border-red-500/20
+                                                        flex items-center justify-center
+                                                        hover:bg-red-500/20"
+                                                                                >
 
                                                         <Trash2
                                                             size={15}
@@ -623,15 +766,15 @@ gap-5">
             {openModal && (
 
                 <div className="fixed inset-0 z-50
-        bg-black/70
-        backdrop-blur-md
-        flex items-center justify-center p-6">
+                bg-black/70
+                backdrop-blur-md
+                flex items-center justify-center p-6">
 
                     <div className="w-full max-w-[520px]
-          rounded-[36px]
-          border border-white/10
-          bg-[#07111f]
-          overflow-hidden">
+                    rounded-[36px]
+                    border border-white/10
+                    bg-[#07111f]
+                    overflow-hidden">
 
                         {/* HEADER */}
                         <div className="px-8 py-6 border-b border-white/5 flex items-center justify-between">
@@ -663,9 +806,9 @@ gap-5">
                                     )
                                 }
                                 className="w-12 h-12 rounded-2xl
-                bg-white/[0.04]
-                border border-white/5
-                flex items-center justify-center"
+                                bg-white/[0.04]
+                                border border-white/5
+                                flex items-center justify-center"
                             >
 
                                 <X size={18} />
@@ -703,13 +846,13 @@ gap-5">
                                     }
                                     placeholder="Create the line model"
                                     className="w-full h-14 rounded-2xl
-                  bg-black/20
-                  border border-white/5
-                  px-5
-                  text-white
-                  outline-none
-                  focus:border-green-500/20
-                  disabled:opacity-60"
+                                    bg-black/20
+                                    border border-white/5
+                                    px-5
+                                    text-white
+                                    outline-none
+                                    focus:border-green-500/20
+                                    disabled:opacity-60"
                                 />
 
                             </div>
@@ -739,12 +882,12 @@ gap-5">
                                         }
                                         placeholder="Create the line number"
                                         className="w-full h-14 rounded-2xl
-                    bg-black/20
-                    border border-white/5
-                    px-5
-                    text-white
-                    outline-none
-                    focus:border-green-500/20"
+                                        bg-black/20
+                                        border border-white/5
+                                        px-5
+                                        text-white
+                                        outline-none
+                                        focus:border-green-500/20"
                                     />
 
                                 </div>
@@ -763,10 +906,10 @@ gap-5">
                                     )
                                 }
                                 className="h-12 px-5 rounded-2xl
-                bg-white/[0.04]
-                border border-white/5
-                text-slate-300"
-                            >
+                                bg-white/[0.04]
+                                border border-white/5
+                                text-slate-300"
+                                            >
 
                                 Cancel
 
@@ -777,9 +920,9 @@ gap-5">
                                     handleSave
                                 }
                                 className="h-12 px-6 rounded-2xl
-                bg-gradient-to-r from-green-500 to-emerald-600
-                flex items-center gap-3
-                font-bold shadow-[0_0_30px_rgba(34,197,94,.3)]"
+                                bg-gradient-to-r from-green-500 to-emerald-600
+                                flex items-center gap-3
+                                font-bold shadow-[0_0_30px_rgba(34,197,94,.3)]"
                             >
 
                                 <Save size={18} />

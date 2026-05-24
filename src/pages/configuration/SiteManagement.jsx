@@ -1,5 +1,5 @@
 import { useEffect, useState }
-from "react";
+  from "react";
 
 import {
   Plus,
@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 import { supabase }
-from "../../supabase/supabase";
+  from "../../supabase/supabase";
 
 export default function SiteManagement() {
 
@@ -285,18 +285,109 @@ export default function SiteManagement() {
 
     <div className="w-full">
 
-      {/* HEADER */}
-      <div className="flex items-start justify-between mb-8">
+      {/* HERO HEADER */}
+      <div className="
+      relative
+      overflow-hidden
 
-        <div>
+      rounded-[40px]
 
-          <h1 className="text-5xl font-black text-white tracking-tight">
+      border border-cyan-500/10
+
+      bg-gradient-to-br
+      from-[#071428]
+      via-[#08192f]
+      to-[#05101f]
+
+      shadow-[0_0_80px_rgba(0,255,255,0.05)]
+
+      px-10
+      py-8
+      mb-8
+
+      flex
+      items-start
+      justify-between
+      gap-6
+      ">
+
+        {/* GLOW */}
+        <div className="
+          absolute
+          top-[-100px]
+          right-[-100px]
+
+          w-[300px]
+          h-[300px]
+
+          rounded-full
+
+          bg-cyan-500/10
+
+          blur-[120px]
+          "></div>
+
+        {/* LEFT */}
+        <div className="relative z-10">
+
+          <div className="
+              inline-flex
+              items-center
+              gap-2
+
+              px-4
+              py-2
+
+              rounded-2xl
+
+              bg-cyan-500/10
+              border border-cyan-500/20
+
+              mb-5
+              ">
+
+            <div className="
+                  w-2 h-2
+                  rounded-full
+                  bg-cyan-400
+                  animate-pulse
+                  "></div>
+
+            <span className="
+                  text-[11px]
+                  font-black
+                  tracking-[2px]
+                  text-cyan-300
+                  ">
+              FACTORY CONFIGURATION
+            </span>
+
+          </div>
+
+          <h1 className="
+              text-6xl
+              font-black
+              leading-tight
+
+              bg-gradient-to-r
+              from-white
+              via-cyan-200
+              to-cyan-500
+
+              bg-clip-text
+              text-transparent
+              ">
 
             Site Management
 
           </h1>
 
-          <p className="text-slate-500 mt-2">
+          <p className="
+              mt-2
+              text-slate-400
+              text-sm
+              font-medium
+              ">
 
             Factory site configuration management
 
@@ -304,60 +395,110 @@ export default function SiteManagement() {
 
         </div>
 
-        {/* ADD BUTTON */}
-        <button
-          onClick={handleAddSite}
-          className="h-14 px-7 rounded-2xl
-          bg-gradient-to-r from-green-500 to-emerald-600
-          shadow-[0_0_40px_rgba(34,197,94,.25)]
-          hover:scale-[1.02]
-          transition-all
-          flex items-center gap-3
-          text-sm font-bold text-white"
-        >
-
-          <Plus size={18} />
-
-          Add Site
-
-        </button>
-
       </div>
 
       {/* SEARCH */}
-      <div className="rounded-[32px]
+      <div className="
+      rounded-[32px]
       border border-white/5
       bg-white/[0.03]
       backdrop-blur-2xl
-      p-4 mb-8">
+      p-4
+      mb-8
+      ">
 
-        <div className="relative">
+          <div className="
+          flex
+          items-center
+          gap-4
+          ">
 
-          <Search
-            size={18}
-            className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500"
-          />
+              {/* SEARCH */}
+              <div className="relative flex-1">
 
-          <input
-            type="text"
-            value={search}
-            onChange={(e) =>
-              setSearch(
-                e.target.value
-              )
-            }
-            placeholder="Search site..."
-            className="w-full h-14 rounded-2xl
-            bg-black/20
-            border border-white/5
-            pl-14 pr-5
-            text-white
-            placeholder:text-slate-500
-            outline-none
-            focus:border-green-500/20"
-          />
+                  <Search
+                      size={18}
+                      className="
+                      absolute
+                      left-5
+                      top-1/2
+                      -translate-y-1/2
+                      text-slate-500
+                      "
+                  />
 
-        </div>
+                  <input
+                      type="text"
+                      value={search}
+                      onChange={(e) =>
+                          setSearch(
+                              e.target.value
+                          )
+                      }
+                      placeholder="Search site..."
+                      className="
+                      w-full
+                      h-14
+                      rounded-2xl
+
+                      bg-black/20
+
+                      border
+                      border-white/5
+
+                      pl-14
+                      pr-5
+
+                      text-white
+
+                      placeholder:text-slate-500
+
+                      outline-none
+
+                      focus:border-green-500/20
+                      "
+                  />
+
+              </div>
+
+              {/* BUTTON */}
+              <button
+                  onClick={handleAddSite}
+                  className="
+                  h-14
+                  px-7
+
+                  rounded-2xl
+
+                  bg-gradient-to-r
+                  from-green-500
+                  to-emerald-600
+
+                  shadow-[0_0_40px_rgba(34,197,94,.25)]
+
+                  hover:scale-[1.02]
+
+                  transition-all
+
+                  flex
+                  items-center
+                  gap-3
+
+                  text-sm
+                  font-bold
+                  text-white
+
+                  shrink-0
+                  "
+              >
+
+                  <Plus size={18} />
+
+                  Add Site
+
+              </button>
+
+          </div>
 
       </div>
 
@@ -378,11 +519,13 @@ export default function SiteManagement() {
             rounded-[36px]
             border border-white/5
             bg-gradient-to-br
-            from-[#071120]
-            to-[#09182b]
+            from-[#07111f]
+            via-[#081a2e]
+            to-[#05101b]
             backdrop-blur-2xl
             overflow-hidden
             hover:border-green-500/20
+            hover:shadow-[0_0_50px_rgba(0,255,200,0.08)]
             hover:-translate-y-1
             transition-all duration-300"
           >
