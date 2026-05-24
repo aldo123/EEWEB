@@ -74,6 +74,9 @@ export default function RequestList() {
     const [search, setSearch] =
         useState("");
 
+    const [summaryFilter, setSummaryFilter] =
+        useState("ALL");
+
     const [editingItem, setEditingItem] =
         useState(null);
 
@@ -753,7 +756,7 @@ Description: ${item.description}`
             const keyword =
                 search.toLowerCase();
 
-            return (
+            const searchMatch = (
 
                 item.oa_pr
                     ?.toLowerCase()
@@ -791,6 +794,62 @@ Description: ${item.description}`
 
             );
 
+            // ====================================
+            // SUMMARY FILTER
+            // ====================================
+
+            let summaryMatch = true;
+
+            if (
+                summaryFilter === "OVERDUE"
+            ) {
+
+                summaryMatch =
+                    item.status === "Delay";
+
+            }
+
+            else if (
+                summaryFilter === "ONGOING"
+            ) {
+
+                summaryMatch =
+                    item.status === "Ongoing";
+
+            }
+
+            else if (
+                summaryFilter === "DONE"
+            ) {
+
+                summaryMatch =
+                    item.status === "Done";
+
+            }
+
+            else if (
+                summaryFilter === "CANCELLED"
+            ) {
+
+                summaryMatch =
+                    item.status === "Cancelled";
+
+            }
+
+            else if (
+                summaryFilter === "PSC"
+            ) {
+
+                summaryMatch =
+                    item.psc === "Not Yet";
+
+            }
+
+            return (
+                searchMatch &&
+                summaryMatch
+            );
+
         });
 
     // ========================================
@@ -819,6 +878,12 @@ Description: ${item.description}`
         requests.filter(
             (x) =>
                 x.status === "Cancelled"
+        ).length;
+
+    const pscNotCompleteCount =
+        requests.filter(
+            (x) =>
+                x.psc === "Not Yet"
         ).length;
 
     return (
@@ -926,12 +991,40 @@ Description: ${item.description}`
 
             <div className="
                 grid
-                grid-cols-4
+                grid-cols-5
                 gap-4
                 mb-6
             ">
+                <SummaryCard
+                    onClick={() =>
+                        setSummaryFilter(
+                            summaryFilter === "PSC"
+                                ? "ALL"
+                                : "PSC"
+                        )
+                    }
+                    active={
+                        summaryFilter === "PSC"
+                    }
+                    title="PSC Not Complete"
+                    value={pscNotCompleteCount}
+                    color="orange"
+                    icon={
+                        <AlertTriangle />
+                    }
+                />
 
                 <SummaryCard
+                    onClick={() =>
+                        setSummaryFilter(
+                            summaryFilter === "OVERDUE"
+                                ? "ALL"
+                                : "OVERDUE"
+                        )
+                    }
+                    active={
+                        summaryFilter === "OVERDUE"
+                    }
                     title="PR/PO Overdue"
                     value={overdueCount}
                     color="red"
@@ -941,6 +1034,16 @@ Description: ${item.description}`
                 />
 
                 <SummaryCard
+                    onClick={() =>
+                        setSummaryFilter(
+                            summaryFilter === "ONGOING"
+                                ? "ALL"
+                                : "ONGOING"
+                        )
+                    }
+                    active={
+                        summaryFilter === "ONGOING"
+                    }
                     title="PR/PO Ongoing"
                     value={ongoingCount}
                     color="yellow"
@@ -950,6 +1053,16 @@ Description: ${item.description}`
                 />
 
                 <SummaryCard
+                    onClick={() =>
+                        setSummaryFilter(
+                            summaryFilter === "DONE"
+                                ? "ALL"
+                                : "DONE"
+                        )
+                    }
+                    active={
+                        summaryFilter === "DONE"
+                    }
                     title="PR/PO Done"
                     value={doneCount}
                     color="emerald"
@@ -959,6 +1072,16 @@ Description: ${item.description}`
                 />
 
                 <SummaryCard
+                    onClick={() =>
+                        setSummaryFilter(
+                            summaryFilter === "CANCELLED"
+                                ? "ALL"
+                                : "CANCELLED"
+                        )
+                    }
+                    active={
+                        summaryFilter === "CANCELLED"
+                    }
                     title="PR/PO Cancelled"
                     value={cancelCount}
                     color="purple"
@@ -990,10 +1113,7 @@ Description: ${item.description}`
 
                 <input
                     type="text"
-                    placeholder="
-                    Search OA-PR#, PR,
-                    PO, Vendor, PIC...
-                    "
+                    placeholder=" Search OA-PR#, PR, PO, Vendor, PIC..."
                     value={search}
                     onChange={(e) =>
                         setSearch(
@@ -1913,40 +2033,58 @@ function SummaryCard({
     title,
     value,
     color,
-    icon
+    icon,
+    onClick,
+    active
 
 }) {
 
     return (
 
-        <div className={`
+        <div
+            onClick={onClick}
+            className={`
             rounded-3xl
             border
             p-5
+            cursor-pointer
+            transition
+            hover:scale-[1.02]
+
+            ${active
+                ? "ring-2 ring-cyan-400"
+                : ""
+            }
 
             ${color === "red"
-                ? "border-red-500/30 bg-red-500/10"
-                : ""
+                    ? "border-red-500/30 bg-red-500/10"
+                    : ""
 
-            }
+                }
 
             ${color === "yellow"
-                ? "border-yellow-500/30 bg-yellow-500/10"
-                : ""
+                    ? "border-yellow-500/30 bg-yellow-500/10"
+                    : ""
 
-            }
+                }
 
             ${color === "emerald"
-                ? "border-emerald-500/30 bg-emerald-500/10"
-                : ""
+                    ? "border-emerald-500/30 bg-emerald-500/10"
+                    : ""
 
-            }
+                }
 
             ${color === "purple"
-                ? "border-purple-500/30 bg-purple-500/10"
-                : ""
+                    ? "border-purple-500/30 bg-purple-500/10"
+                    : ""
 
-            }
+                }
+
+            ${color === "orange"
+                    ? "border-orange-500/30 bg-orange-500/10"
+                    : ""
+                }
+
         `}>
 
             <div className="
