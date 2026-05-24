@@ -391,10 +391,35 @@ export default function UserRoleManagement() {
 
 
             {/* USER LIST */}
-            <div className="rounded-[36px] border border-white/5 bg-white/[0.03] backdrop-blur-2xl overflow-hidden">
+            <div className="
+                rounded-[36px]
+                border
+                border-white/5
+                bg-white/[0.03]
+                backdrop-blur-2xl
+                overflow-auto
+                max-h-[75vh]
+            ">
 
                 {/* HEADER */}
-                <div className="grid grid-cols-12 px-8 h-16 border-b border-white/5 text-slate-500 text-sm font-medium">
+                <div className="
+                    grid
+                    grid-cols-12
+                    px-8
+                    h-16
+                    border-b
+                    border-white/5
+                    text-slate-500
+                    text-sm
+                    font-medium
+
+                    sticky
+                    top-0
+                    z-20
+
+                    bg-[#07111f]
+                    backdrop-blur-xl
+                ">
 
                     <div className="col-span-4 flex items-center">
 
