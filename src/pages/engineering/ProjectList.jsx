@@ -681,10 +681,71 @@ export default function ProjectList() {
 
     return (
 
-        <div className="space-y-6">
+        <div className="
+                relative
+                space-y-6
+                min-h-screen
+                overflow-hidden
+
+                bg-[radial-gradient(circle_at_top_right,rgba(0,255,200,0.08),transparent_22%),radial-gradient(circle_at_bottom_left,rgba(0,140,255,0.08),transparent_28%),linear-gradient(to_bottom,#020617,#031126,#020617)]
+            ">
+
+                {/* BACKGROUND EFFECT */}
+                <div className="
+                    absolute
+                    top-[-200px]
+                    right-[-150px]
+
+                    w-[500px]
+                    h-[500px]
+
+                    bg-cyan-500/10
+                    blur-[160px]
+                    rounded-full
+
+                    pointer-events-none
+                "></div>
+
+                <div className="
+                    absolute
+                    bottom-[-250px]
+                    left-[-150px]
+
+                    w-[600px]
+                    h-[600px]
+
+                    bg-blue-500/10
+                    blur-[180px]
+                    rounded-full
+
+                    pointer-events-none
+                "></div>
 
             {/* HEADER */}
-            <div className="flex items-start justify-between gap-6">
+            <div className="
+                relative
+                overflow-hidden
+
+                rounded-[32px]
+
+                border
+                border-cyan-500/10
+
+                bg-gradient-to-br
+                from-[#071428]
+                via-[#08192f]
+                to-[#05101f]
+
+                shadow-[0_0_80px_rgba(0,255,255,0.05)]
+
+                px-10
+                py-4
+
+                flex
+                items-start
+                justify-between
+                gap-6
+            ">
 
                 {/* LEFT */}
                 <div className="relative z-10">
@@ -724,43 +785,70 @@ export default function ProjectList() {
 
                     {/* TITLE */}
                     <h1 className="
-                        text-5xl
+                        text-6xl
                         font-black
-                        text-white
-                        tracking-tight
-                        leading-none
+                        leading-tight
+                        bg-gradient-to-r
+                        from-white
+                        via-cyan-200
+                        to-cyan-500
+                        bg-clip-text
+                        text-transparent
+                        
                     ">
 
                         Project List
 
                     </h1>
-
+                    <p className="
+                        mt-1
+                        text-slate-400
+                        text-sm
+                        font-medium
+                    ">
+                        Engineering project monitoring & activity management
+                    </p>
                 </div>
-                {/* GLOW */}
+                {/* CYAN GLOW */}
                 <div className="
                     absolute
                     top-[-120px]
-                    left-[-120px]
-                    w-[280px]
-                    h-[280px]
-                    bg-cyan-500/10
-                    blur-[120px]
-                    rounded-full
-                "></div>
+                    left-[-100px]
 
-                <div className="
-                    absolute
-                    bottom-[-150px]
-                    right-[150px]
-                    w-[300px]
-                    h-[300px]
-                    bg-green-500/10
+                    w-[320px]
+                    h-[320px]
+
+                    bg-cyan-400/10
                     blur-[140px]
                     rounded-full
                 "></div>
 
+                {/* GREEN GLOW */}
+                <div className="
+                    absolute
+                    bottom-[-180px]
+                    right-[120px]
+
+                    w-[320px]
+                    h-[320px]
+
+                    bg-emerald-400/10
+                    blur-[150px]
+                    rounded-full
+                "></div>
+
+                {/* BLUE LINE */}
+                <div className="
+                    absolute
+                    inset-0
+
+                    bg-[linear-gradient(to_right,transparent,rgba(0,255,255,0.03),transparent)]
+
+                    pointer-events-none
+                "></div>
+
                 {/* RIGHT SUMMARY */}
-                <div className="flex gap-4 shrink-0">
+                <div className="flex gap-4 mt-6 items-end">
 
                     {/* NPI */}
                     <div className="
@@ -975,7 +1063,13 @@ export default function ProjectList() {
             </div>
 
             {/* PROJECT GRID */}
-            <div className="grid grid-cols-4 gap-6">
+            <div className="
+                    relative
+                    z-10
+                    grid
+                    grid-cols-4
+                    gap-6
+                ">
 
                 {loading ? (
 

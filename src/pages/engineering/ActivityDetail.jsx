@@ -1934,11 +1934,18 @@ export default function ActivityDetail({
 
                         </div>
 
-                        <h1 className="mt-5
+                        <h1 className="mt-6
                         text-5xl
                         font-black
-                        text-white">
-
+                        leading-tight
+                        bg-gradient-to-r
+                        from-white
+                        via-cyan-200
+                        to-cyan-500
+                        bg-clip-text
+                        text-transparent
+                        "
+                        >
                             {project.title}
 
                         </h1>

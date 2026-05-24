@@ -923,8 +923,13 @@ Description: ${item.description}`
     return (
 
         <div className="
-            p-6
+            p-8
             text-white
+            min-h-screen
+            bg-gradient-to-br
+            from-[#020617]
+            via-[#03112b]
+            to-[#020617]
         ">
 
             {/* ======================================== */}
@@ -933,89 +938,78 @@ Description: ${item.description}`
 
             <div className="
                 flex
-                items-center
+                items-start
                 justify-between
-                mb-6
+                mb-8
+                rounded-[32px]
+                border
+                border-cyan-500/10
+                bg-gradient-to-r
+                from-cyan-500/5
+                to-transparent
+                backdrop-blur-xl
+                p-8
+                shadow-2xl
+                shadow-cyan-500/5
             ">
 
                 <div>
 
+                    <div className="
+                        inline-flex
+                        items-center
+                        gap-2
+                        px-4
+                        py-2
+                        rounded-2xl
+                        border
+                        border-cyan-500/20
+                        bg-cyan-500/10
+                        text-cyan-300
+                        text-xs
+                        font-bold
+                        uppercase
+                        tracking-[3px]
+                        mb-4
+                    ">
+
+                        <div className="
+                            w-2
+                            h-2
+                            rounded-full
+                            bg-cyan-400
+                            animate-pulse
+                        " />
+
+                        PR / PO MONITORING
+
+                    </div>
+
                     <h1 className="
-                        text-4xl
+                        text-6xl
                         font-black
+                        leading-tight
+                        bg-gradient-to-r
+                        from-white
+                        via-cyan-200
+                        to-cyan-500
+                        bg-clip-text
+                        text-transparent
                     ">
                         Request List
                     </h1>
 
                     <p className="
                         text-slate-400
-                        mt-2
+                        mt-3
+                        text-lg
                     ">
-                        PR / PO Monitoring System
+                        Procurement request tracking & monitoring system
                     </p>
 
                 </div>
 
-                <div className="
-                    flex
-                    items-center
-                    gap-3
-                ">
-
-                    <button
-                        onClick={() =>
-                            setShowAddModal(true)
-                        }
-                        className="
-                            px-5
-                            py-3
-                            rounded-2xl
-                            bg-cyan-500
-                            hover:bg-cyan-400
-                            flex
-                            items-center
-                            gap-2
-                            font-bold
-                            transition
-                        "
-                    >
-
-                        <Plus size={18} />
-
-                        Add Request
-
-                    </button>
-
-                    <label className="
-                        px-5
-                        py-3
-                        rounded-2xl
-                        bg-emerald-500
-                        hover:bg-emerald-400
-                        flex
-                        items-center
-                        gap-2
-                        font-bold
-                        cursor-pointer
-                        transition
-                    ">
-
-                        <Upload size={18} />
-
-                        Import Excel
-
-                        <input
-                            type="file"
-                            accept=".xlsx,.xls"
-                            hidden
-                            onChange={
-                                handleImportExcel
-                            }
-                        />
-
-                    </label>
-
-                </div>
+               
 
             </div>
 
@@ -1111,42 +1105,106 @@ Description: ${item.description}`
             {/* ======================================== */}
 
             <div className="
-                relative
+                flex
+                items-center
+                gap-3
                 mb-5
             ">
 
-                <Search
-                    className="
-                        absolute
-                        left-4
-                        top-4
-                        text-slate-500
-                    "
-                    size={18}
-                />
+                <div className="
+                    relative
+                    flex-1
+                ">
 
-                <input
-                    type="text"
-                    placeholder=" Search OA-PR#, PR, PO, Vendor, PIC..."
-                    value={search}
-                    onChange={(e) =>
-                        setSearch(
-                            e.target.value
-                        )
+                    <Search
+                        className="
+                            absolute
+                            left-4
+                            top-4
+                            text-slate-500
+                        "
+                        size={18}
+                    />
+
+                    <input
+                        type="text"
+                        placeholder=" Search OA-PR#, PR, PO, Vendor, PIC..."
+                        value={search}
+                        onChange={(e) =>
+                            setSearch(
+                                e.target.value
+                            )
+                        }
+                        className="
+                            w-full
+                            h-12
+                            rounded-2xl
+                            bg-slate-900/60
+                            border
+                            border-slate-800
+                            pl-12
+                            pr-4
+                            outline-none
+                            text-sm
+                        "
+                    />
+
+                </div>
+
+                <button
+                    onClick={() =>
+                        setShowAddModal(true)
                     }
                     className="
-                        w-full
                         h-12
+                        px-5
                         rounded-2xl
-                        bg-slate-900/60
-                        border
-                        border-slate-800
-                        pl-12
-                        pr-4
-                        outline-none
-                        text-sm
+                        bg-cyan-500
+                        hover:bg-cyan-400
+                        flex
+                        items-center
+                        gap-2
+                        font-bold
+                        transition
+                        whitespace-nowrap
                     "
-                />
+                >
+
+                    <Plus size={18} />
+
+                    Add Request
+
+                </button>
+
+                <label className="
+                    h-12
+                    px-5
+                    rounded-2xl
+                    bg-emerald-500
+                    hover:bg-emerald-400
+                    flex
+                    items-center
+                    gap-2
+                    font-bold
+                    cursor-pointer
+                    transition
+                    whitespace-nowrap
+                ">
+
+                    <Upload size={18} />
+
+                    Import Excel
+
+                    <input
+                        type="file"
+                        accept=".xlsx,.xls"
+                        hidden
+                        onChange={
+                            handleImportExcel
+                        }
+                    />
+
+                </label>
 
             </div>
 
@@ -1159,7 +1217,7 @@ Description: ${item.description}`
                 rounded-3xl
                 border
                 border-slate-800
-                max-h-[70vh]
+                max-h-[50vh]
             ">
 
                 <table className="
