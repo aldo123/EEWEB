@@ -142,6 +142,16 @@ export default function MaintenancePlan() {
         setShowResponsibleDropdown
     ] = useState(false);
 
+    const [
+        showEquipmentDropdown,
+        setShowEquipmentDropdown
+    ] = useState(false);
+
+    const [
+        equipmentTypeFilter,
+        setEquipmentTypeFilter
+    ] = useState([]);
+
     const [addForm,
         setAddForm] =
         useState({
@@ -202,7 +212,7 @@ export default function MaintenancePlan() {
             .order("id", {
                 ascending: true,
             })
-            
+
         if (error) {
 
             console.log(error);
@@ -385,6 +395,17 @@ export default function MaintenancePlan() {
                             item.responsible
                         );
 
+                    // =====================================
+                    // EQUIPMENT TYPE FILTER
+                    // =====================================
+
+                    const equipmentMatch =
+                        equipmentTypeFilter.length === 0
+                        ||
+                        equipmentTypeFilter.includes(
+                            item.equipmentType
+                        );
+
                     return (
                         searchMatch
                         &&
@@ -393,6 +414,8 @@ export default function MaintenancePlan() {
                         weekMatch
                         &&
                         responsibleMatch
+                        &&
+                        equipmentMatch
                     );
 
                 }
@@ -404,6 +427,7 @@ export default function MaintenancePlan() {
             summaryFilter,
             weekFilter,
             responsibleFilter,
+            equipmentTypeFilter,
         ]);
 
     // ======================================================
@@ -455,6 +479,15 @@ export default function MaintenancePlan() {
         [...new Set(
             pmData.map(
                 x => x.responsible
+            )
+        )]
+            .filter(Boolean)
+            .sort();
+
+    const uniqueEquipmentTypes =
+        [...new Set(
+            pmData.map(
+                x => x.equipmentType
             )
         )]
             .filter(Boolean)
@@ -1284,7 +1317,151 @@ export default function MaintenancePlan() {
 
                 </div>
 
+                {/* ====================================================== */}
+                {/* EQUIPMENT TYPE DROPDOWN */}
+                {/* ====================================================== */}
 
+                <div className="relative">
+
+                    <button
+                        onClick={() =>
+                            setShowEquipmentDropdown(
+                                !showEquipmentDropdown
+                            )
+                        }
+                        className="
+            h-12
+            px-4
+            rounded-2xl
+            border
+            border-slate-800
+            bg-slate-900/70
+            hover:border-cyan-500/40
+            flex
+            items-center
+            gap-2
+            min-w-[190px]
+        "
+                    >
+
+                        <span className="
+            text-sm
+            text-white
+            font-medium
+        ">
+                            Equipment Type
+                        </span>
+
+                        {
+                            equipmentTypeFilter.length > 0 && (
+
+                                <span className="
+                    px-2
+                    py-0.5
+                    rounded-full
+                    bg-purple-500
+                    text-[11px]
+                    font-bold
+                ">
+                                    {equipmentTypeFilter.length}
+                                </span>
+
+                            )
+                        }
+
+                    </button>
+
+                    {
+                        showEquipmentDropdown && (
+
+                            <div className="
+                absolute
+                top-14
+                left-0
+                w-[260px]
+                rounded-2xl
+                border
+                border-slate-800
+                bg-[#071226]
+                shadow-2xl
+                z-50
+                p-2
+                max-h-[320px]
+                overflow-auto
+            ">
+
+                                {
+                                    uniqueEquipmentTypes.map(
+                                        (type) => {
+
+                                            const selected =
+                                                equipmentTypeFilter.includes(
+                                                    type
+                                                );
+
+                                            return (
+
+                                                <button
+                                                    key={type}
+                                                    onClick={() => {
+
+                                                        if (selected) {
+
+                                                            setEquipmentTypeFilter(
+                                                                prev =>
+                                                                    prev.filter(
+                                                                        x =>
+                                                                            x !== type
+                                                                    )
+                                                            );
+
+                                                        }
+
+                                                        else {
+
+                                                            setEquipmentTypeFilter(
+                                                                prev => [
+                                                                    ...prev,
+                                                                    type
+                                                                ]
+                                                            );
+
+                                                        }
+
+                                                    }}
+                                                    className={`
+                                        w-full
+                                        px-4
+                                        py-3
+                                        rounded-xl
+                                        text-left
+                                        text-sm
+                                        transition
+                                        mb-1
+
+                                        ${selected
+                                                            ? "bg-purple-500 text-white"
+                                                            : "hover:bg-slate-800 text-slate-300"
+                                                        }
+                                    `}
+                                                >
+
+                                                    {type}
+
+                                                </button>
+
+                                            );
+
+                                        }
+                                    )
+                                }
+
+                            </div>
+
+                        )
+                    }
+
+                </div>
 
                 {/* ADD BUTTON */}
 
