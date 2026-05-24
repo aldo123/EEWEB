@@ -313,79 +313,222 @@ export default function UserRoleManagement() {
 
     return (
 
-        <div className="space-y-6">
+        <div className="
+relative
+space-y-6
+min-h-screen
+overflow-hidden
 
-            {/* HEADER */}
-            <div className="flex items-center justify-between">
+bg-[radial-gradient(circle_at_top_right,rgba(0,255,200,0.08),transparent_22%),radial-gradient(circle_at_bottom_left,rgba(0,140,255,0.08),transparent_28%),linear-gradient(to_bottom,#020617,#031126,#020617)]
+">
 
-                <div>
+            {/* BACKGROUND GLOW */}
+            <div className="
+        absolute
+        top-[-200px]
+        right-[-100px]
 
-                    <h1 className="text-4xl font-black text-white">
+        w-[500px]
+        h-[500px]
 
-                        User & Role Management
+        bg-cyan-500/10
+        blur-[180px]
+        rounded-full
+        pointer-events-none
+    "></div>
+
+            <div className="
+        absolute
+        bottom-[-300px]
+        left-[-200px]
+
+        w-[600px]
+        h-[600px]
+
+        bg-emerald-500/10
+        blur-[180px]
+        rounded-full
+        pointer-events-none
+    "></div>
+
+            {/* HERO HEADER */}
+            <div className="
+        relative
+        overflow-hidden
+
+        rounded-[36px]
+
+        border border-cyan-500/10
+
+        bg-gradient-to-br
+        from-[#071428]
+        via-[#08192f]
+        to-[#05101f]
+
+        shadow-[0_0_80px_rgba(0,255,255,0.05)]
+
+        px-10
+        py-8
+
+        flex
+        items-start
+        justify-between
+        gap-6
+    ">
+
+                {/* LEFT */}
+                <div className="relative z-10">
+
+                    <div className="
+                inline-flex
+                items-center
+                gap-2
+                px-4
+                py-2
+                rounded-2xl
+
+                bg-cyan-500/10
+                border border-cyan-500/20
+
+                mb-5
+            ">
+
+                        <div className="
+                    w-2 h-2
+                    rounded-full
+                    bg-cyan-400
+                    animate-pulse
+                "></div>
+
+                        <span className="
+                    text-[11px]
+                    font-black
+                    tracking-[2px]
+                    text-cyan-300
+                ">
+                            ACCESS CONTROL SYSTEM
+                        </span>
+
+                    </div>
+
+                    <h1 className="
+                text-6xl
+                font-black
+                leading-tight
+                bg-gradient-to-r
+                from-white
+                via-cyan-200
+                to-cyan-500
+                bg-clip-text
+                text-transparent
+            ">
+
+                        User Management
 
                     </h1>
 
-                    <p className="text-slate-500 mt-2">
-
-                        Enterprise access control management
-
+                    <p className="
+                mt-2
+                text-slate-400
+                text-sm
+                font-medium
+            ">
+                        Enterprise access control & user role configuration
                     </p>
 
                 </div>
 
-                {/* ADD */}
-                <button
-                    onClick={handleAddUser}
-                    className="h-14 px-6 rounded-2xl
-          bg-gradient-to-r from-green-500 to-emerald-600
-          shadow-[0_0_30px_rgba(34,197,94,.25)]
-          flex items-center gap-3
-          text-sm font-bold"
-                >
 
-                    <Plus size={18} />
-
-                    Add User
-
-                </button>
 
             </div>
 
             {/* SEARCH */}
-            <div className="rounded-[32px]
-      border border-white/5
-      bg-white/[0.03]
-      backdrop-blur-2xl
-      p-5">
+            <div className="
+                    rounded-[32px]
+                    border border-white/5
+                    bg-white/[0.03]
+                    backdrop-blur-2xl
+                    p-5
+                ">
 
-                <div className="relative">
+                <div className="
+                        flex
+                        items-center
+                        gap-4
+                    ">
 
-                    <Search
-                        size={18}
-                        className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500"
-                    />
+                        <div className="relative flex-1">
 
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(e) =>
-                            setSearch(
-                                e.target.value
-                            )
-                        }
-                        placeholder="Search user..."
-                        className="w-full h-14 rounded-2xl
-            bg-black/20
-            border border-white/5
-            pl-14 pr-5
-            text-white
-            placeholder:text-slate-500
-            outline-none
-            focus:border-green-500/20"
-                    />
+                            <Search
+                                size={18}
+                                className="
+                                    absolute
+                                    left-5
+                                    top-1/2
+                                    -translate-y-1/2
+                                    text-slate-500
+                                "
+                            />
 
-                </div>
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) =>
+                                    setSearch(e.target.value)
+                                }
+                                placeholder="Search user, username, role..."
+                                className="
+                                    w-full
+                                    h-14
+                                    rounded-2xl
+
+                                    bg-black/20
+                                    border border-white/5
+
+                                    pl-14
+                                    pr-5
+
+                                    text-white
+                                    placeholder:text-slate-500
+
+                                    outline-none
+
+                                    focus:border-cyan-500/20
+                                "
+                            />
+
+                        </div>
+
+                        <button
+                            onClick={handleAddUser}
+                            className="
+                                h-14
+                                px-7
+                                rounded-2xl
+
+                                bg-gradient-to-r
+                                from-green-500
+                                to-emerald-600
+
+                                shadow-[0_0_30px_rgba(34,197,94,.25)]
+
+                                flex
+                                items-center
+                                gap-3
+
+                                text-sm
+                                font-bold
+                                shrink-0
+                            "
+                        >
+
+                            <Plus size={18} />
+
+                            Add User
+
+                        </button>
+
+                    </div>
 
             </div>
 
@@ -393,10 +536,18 @@ export default function UserRoleManagement() {
             {/* USER LIST */}
             <div className="
                 rounded-[36px]
+
                 border
-                border-white/5
-                bg-white/[0.03]
+                border-cyan-500/10
+
+                bg-gradient-to-b
+                from-[#07111f]
+                to-[#040b16]
+
                 backdrop-blur-2xl
+
+                shadow-[0_0_50px_rgba(0,255,255,0.04)]
+
                 overflow-auto
                 max-h-[75vh]
             ">
@@ -407,17 +558,26 @@ export default function UserRoleManagement() {
                     grid-cols-12
                     px-8
                     h-16
+
                     border-b
-                    border-white/5
-                    text-slate-500
+                    border-cyan-500/10
+
+                    text-cyan-300
                     text-sm
-                    font-medium
+                    font-semibold
+                    tracking-wide
+
+                    bg-gradient-to-r
+                    from-[#081120]
+                    via-[#071827]
+                    to-[#081120]
+
+                    shadow-[0_10px_40px_rgba(0,0,0,.35)]
 
                     sticky
                     top-0
                     z-20
 
-                    bg-[#07111f]
                     backdrop-blur-xl
                 ">
 
@@ -476,13 +636,85 @@ export default function UserRoleManagement() {
 
                         <div
                             key={item.firebase_id}
-                            className="grid grid-cols-12 px-8 h-24 border-b border-white/5 hover:bg-green-500/[0.03] transition-all duration-300"
+
+                            className="
+                            group
+                            relative
+
+                            grid
+                            grid-cols-12
+
+                            px-8
+                            h-24
+
+                            border-b
+                            border-white/[0.04]
+
+                            bg-gradient-to-r
+                            from-white/[0.015]
+                            to-transparent
+
+                            hover:bg-cyan-500/[0.04]
+                            hover:shadow-[0_0_40px_rgba(0,255,255,0.05)]
+
+                            transition-all
+                            duration-300
+
+                            backdrop-blur-xl
+                            overflow-hidden
+                            "
                         >
+
+                            {/* LEFT GLOW */}
+                            <div className="
+                                absolute
+                                left-0
+                                top-0
+
+                                w-[3px]
+                                h-full
+
+                                bg-gradient-to-b
+                                from-cyan-400
+                                to-emerald-400
+
+                                opacity-0
+                                group-hover:opacity-100
+
+                                transition-all
+                                duration-300
+                            "></div>
 
                             {/* USER */}
                             <div className="col-span-4 flex items-center gap-4">
 
-                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center font-black text-xl shadow-[0_0_20px_rgba(34,197,94,.25)]">
+                                <div className="
+                                    relative
+
+                                    w-14
+                                    h-14
+
+                                    rounded-[18px]
+
+                                    bg-gradient-to-br
+                                    from-cyan-400
+                                    via-emerald-400
+                                    to-green-500
+
+                                    flex
+                                    items-center
+                                    justify-center
+
+                                    font-black
+                                    text-xl
+                                    text-white
+
+                                    shadow-[0_0_25px_rgba(0,255,200,.35)]
+
+                                    group-hover:scale-105
+                                    transition-all
+                                    duration-300
+                                    ">
 
                                     {item.name?.charAt(0)}
 
@@ -509,7 +741,14 @@ export default function UserRoleManagement() {
                             {/* ROLE */}
                             <div className="col-span-2 flex items-center">
 
-                                <div className="inline-flex px-4 py-2 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-semibold">
+                                <div className="inline-flex px-4 py-2 rounded-xl bg-gradient-to-r
+                                    from-emerald-500/10
+                                    to-cyan-500/10
+
+                                    border
+                                    border-cyan-400/20
+
+                                    shadow-[0_0_15px_rgba(0,255,200,.08)] text-green-400 text-sm font-semibold">
 
                                     {item.role}
 
@@ -552,7 +791,9 @@ export default function UserRoleManagement() {
                                         )
                                     }
                                     className="w-11 h-11 rounded-2xl
-            bg-yellow-500/10
+            bg-gradient-to-br
+            from-yellow-500/10
+            to-orange-500/10
             border border-yellow-500/20
             flex items-center justify-center
             hover:bg-yellow-500/20
@@ -574,7 +815,9 @@ export default function UserRoleManagement() {
                                         )
                                     }
                                     className="w-11 h-11 rounded-2xl
-            bg-red-500/10
+            bg-gradient-to-br
+            from-red-500/10
+            to-pink-500/10
             border border-red-500/20
             flex items-center justify-center
             hover:bg-red-500/20
