@@ -687,21 +687,77 @@ export default function ProjectList() {
             <div className="flex items-start justify-between gap-6">
 
                 {/* LEFT */}
-                <div>
+                <div className="relative z-10">
 
-                    <h1 className="text-4xl font-black text-white">
+                    {/* MINI BADGE */}
+                    <div className="
+                        inline-flex
+                        items-center
+                        gap-2
+                        px-4
+                        py-2
+                        rounded-2xl
+
+                        bg-cyan-500/10
+                        border border-cyan-500/20
+
+                        mb-5
+                    ">
+
+                        <div className="
+                            w-2 h-2
+                            rounded-full
+                            bg-cyan-400
+                            animate-pulse
+                        "></div>
+
+                        <span className="
+                            text-[11px]
+                            font-black
+                            tracking-[2px]
+                            text-cyan-300
+                        ">
+                            ENGINEERING MONITORING
+                        </span>
+
+                    </div>
+
+                    {/* TITLE */}
+                    <h1 className="
+                        text-5xl
+                        font-black
+                        text-white
+                        tracking-tight
+                        leading-none
+                    ">
 
                         Project List
 
                     </h1>
 
-                    <p className="text-slate-500 mt-2">
-
-                        Engineering project monitoring system
-
-                    </p>
-
                 </div>
+                {/* GLOW */}
+                <div className="
+                    absolute
+                    top-[-120px]
+                    left-[-120px]
+                    w-[280px]
+                    h-[280px]
+                    bg-cyan-500/10
+                    blur-[120px]
+                    rounded-full
+                "></div>
+
+                <div className="
+                    absolute
+                    bottom-[-150px]
+                    right-[150px]
+                    w-[300px]
+                    h-[300px]
+                    bg-green-500/10
+                    blur-[140px]
+                    rounded-full
+                "></div>
 
                 {/* RIGHT SUMMARY */}
                 <div className="flex gap-4 shrink-0">
