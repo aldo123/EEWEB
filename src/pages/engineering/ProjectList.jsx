@@ -30,6 +30,7 @@ export default function ProjectList() {
     const [search, setSearch] =
         useState("");
 
+
     const [openModal, setOpenModal] =
         useState(false);
 
@@ -610,13 +611,82 @@ export default function ProjectList() {
 
         };
 
+    // =========================
+    // SUMMARY CARD
+    // =========================
+    const totalNPI =
+        taskHeaders.filter((x) => {
+
+            const project =
+                projects.find(
+                    (p) =>
+                        String(p.id) ===
+                        String(x.project_id)
+                );
+
+            return (
+                project?.type === "NPI"
+            );
+
+        }).length;
+
+    const totalKaizen =
+        taskHeaders.filter((x) => {
+
+            const project =
+                projects.find(
+                    (p) =>
+                        String(p.id) ===
+                        String(x.project_id)
+                );
+
+            return (
+                project?.type === "KAIZEN"
+            );
+
+        }).length;
+
+    const totalDT =
+        taskHeaders.filter((x) => {
+
+            const project =
+                projects.find(
+                    (p) =>
+                        String(p.id) ===
+                        String(x.project_id)
+                );
+
+            return (
+                project?.type ===
+                "Downtime and Finding"
+            );
+
+        }).length;
+
+    const totalVAVE =
+        taskHeaders.filter((x) => {
+
+            const project =
+                projects.find(
+                    (p) =>
+                        String(p.id) ===
+                        String(x.project_id)
+                );
+
+            return (
+                project?.type === "VAVE"
+            );
+
+        }).length;
+
     return (
 
         <div className="space-y-6">
 
             {/* HEADER */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between gap-6">
 
+                {/* LEFT */}
                 <div>
 
                     <h1 className="text-4xl font-black text-white">
@@ -630,6 +700,145 @@ export default function ProjectList() {
                         Engineering project monitoring system
 
                     </p>
+
+                </div>
+
+                {/* RIGHT SUMMARY */}
+                <div className="flex gap-4 shrink-0">
+
+                    {/* NPI */}
+                    <div className="
+                        w-[95px]
+                        h-[95px]
+                        rounded-[28px]
+                        border border-cyan-500/20
+                        bg-cyan-500/10
+                        backdrop-blur-xl
+                        flex flex-col
+                        items-center
+                        justify-center
+                    ">
+
+                        <p className="
+                            text-[11px]
+                            font-bold
+                            text-cyan-400
+                            tracking-wide
+                        ">
+                            NPI
+                        </p>
+
+                        <h1 className="
+                            text-3xl
+                            font-black
+                            text-white
+                            mt-1
+                        ">
+                            {totalNPI}
+                        </h1>
+
+                    </div>
+
+                    {/* KAIZEN */}
+                    <div className="
+                        w-[95px]
+                        h-[95px]
+                        rounded-[28px]
+                        border border-green-500/20
+                        bg-green-500/10
+                        backdrop-blur-xl
+                        flex flex-col
+                        items-center
+                        justify-center
+                    ">
+
+                        <p className="
+                            text-[11px]
+                            font-bold
+                            text-green-400
+                            tracking-wide
+                        ">
+                            KAIZEN
+                        </p>
+
+                        <h1 className="
+                            text-3xl
+                            font-black
+                            text-white
+                            mt-1
+                        ">
+                            {totalKaizen}
+                        </h1>
+
+                    </div>
+
+                    {/* DT */}
+                    <div className="
+                        w-[95px]
+                        h-[95px]
+                        rounded-[28px]
+                        border border-yellow-500/20
+                        bg-yellow-500/10
+                        backdrop-blur-xl
+                        flex flex-col
+                        items-center
+                        justify-center
+                    ">
+
+                        <p className="
+                            text-[10px]
+                            font-bold
+                            text-yellow-400
+                            tracking-wide
+                            text-center
+                            leading-3
+                        ">
+                            DT & FINDING
+                        </p>
+
+                        <h1 className="
+                            text-3xl
+                            font-black
+                            text-white
+                            mt-1
+                        ">
+                            {totalDT}
+                        </h1>
+
+                    </div>
+
+                    {/* VAVE */}
+                    <div className="
+                        w-[95px]
+                        h-[95px]
+                        rounded-[28px]
+                        border border-purple-500/20
+                        bg-purple-500/10
+                        backdrop-blur-xl
+                        flex flex-col
+                        items-center
+                        justify-center
+                    ">
+
+                        <p className="
+                            text-[11px]
+                            font-bold
+                            text-purple-400
+                            tracking-wide
+                        ">
+                            VAVE
+                        </p>
+
+                        <h1 className="
+                            text-3xl
+                            font-black
+                            text-white
+                            mt-1
+                        ">
+                            {totalVAVE}
+                        </h1>
+
+                    </div>
 
                 </div>
 
@@ -1388,9 +1597,8 @@ export default function ProjectList() {
                                 bg-black/30 border border-white/5 outline-none"
                             />
 
-                            <input
-                                type="text"
-                                placeholder="Type"
+                            {/* TYPE */}
+                            <select
                                 value={formData.type}
                                 onChange={(e) =>
                                     setFormData({
@@ -1399,8 +1607,31 @@ export default function ProjectList() {
                                     })
                                 }
                                 className="w-full h-14 px-5 rounded-2xl
-                                bg-black/30 border border-white/5 outline-none"
-                            />
+                                bg-black/30 border border-white/5 outline-none
+                                text-white"
+                            >
+
+                                <option value="">
+                                    Select Type
+                                </option>
+
+                                <option value="NPI">
+                                    NPI
+                                </option>
+
+                                <option value="KAIZEN">
+                                    KAIZEN
+                                </option>
+
+                                <option value="Downtime and Finding">
+                                    Downtime and Finding
+                                </option>
+
+                                <option value="VAVE">
+                                    VAVE
+                                </option>
+
+                            </select>
 
                             {/* SITE */}
                             <select

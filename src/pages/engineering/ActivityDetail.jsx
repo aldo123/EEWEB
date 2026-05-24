@@ -514,7 +514,13 @@ export default function ActivityDetail({
                     false
                 );
 
-                loadTaskHeaders();
+                await loadTaskHeaders();
+
+                if (refreshProjects) {
+
+                    await refreshProjects();
+
+                }
 
             } catch (error) {
 
@@ -951,7 +957,13 @@ export default function ActivityDetail({
 
                 }
 
-                loadTaskHeaders();
+                await loadTaskHeaders();
+
+                if (refreshProjects) {
+
+                    await refreshProjects();
+
+                }
 
             } catch (error) {
 
