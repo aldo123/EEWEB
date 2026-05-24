@@ -75,7 +75,34 @@ export default function RequestList() {
         useState("");
 
     const [summaryFilter, setSummaryFilter] =
-        useState("ALL");
+        useState([
+            "PSC",
+            "ONGOING",
+            "OVERDUE"
+        ]);
+
+    const handleSummaryFilter = (filter) => {
+
+        setSummaryFilter((prev) => {
+
+            // REMOVE FILTER
+            if (prev.includes(filter)) {
+
+                return prev.filter(
+                    (x) => x !== filter
+                );
+
+            }
+
+            // ADD FILTER
+            return [
+                ...prev,
+                filter
+            ];
+
+        });
+
+    };
 
     const [editingItem, setEditingItem] =
         useState(null);
@@ -794,54 +821,62 @@ Description: ${item.description}`
 
             );
 
-            // ====================================
-            // SUMMARY FILTER
-            // ====================================
+
 
             let summaryMatch = true;
 
-            if (
-                summaryFilter === "OVERDUE"
-            ) {
+            // ====================================
+            // MULTI FILTER
+            // ====================================
 
-                summaryMatch =
-                    item.status === "Delay";
+            if (summaryFilter.length > 0) {
 
-            }
+                summaryMatch = false;
 
-            else if (
-                summaryFilter === "ONGOING"
-            ) {
+                if (
+                    summaryFilter.includes("OVERDUE") &&
+                    item.status === "Delay"
+                ) {
 
-                summaryMatch =
-                    item.status === "Ongoing";
+                    summaryMatch = true;
 
-            }
+                }
 
-            else if (
-                summaryFilter === "DONE"
-            ) {
+                if (
+                    summaryFilter.includes("ONGOING") &&
+                    item.status === "Ongoing"
+                ) {
 
-                summaryMatch =
-                    item.status === "Done";
+                    summaryMatch = true;
 
-            }
+                }
 
-            else if (
-                summaryFilter === "CANCELLED"
-            ) {
+                if (
+                    summaryFilter.includes("DONE") &&
+                    item.status === "Done"
+                ) {
 
-                summaryMatch =
-                    item.status === "Cancelled";
+                    summaryMatch = true;
 
-            }
+                }
 
-            else if (
-                summaryFilter === "PSC"
-            ) {
+                if (
+                    summaryFilter.includes("CANCELLED") &&
+                    item.status === "Cancelled"
+                ) {
 
-                summaryMatch =
-                    item.psc === "Not Yet";
+                    summaryMatch = true;
+
+                }
+
+                if (
+                    summaryFilter.includes("PSC") &&
+                    item.psc === "Not Yet"
+                ) {
+
+                    summaryMatch = true;
+
+                }
 
             }
 
@@ -849,7 +884,6 @@ Description: ${item.description}`
                 searchMatch &&
                 summaryMatch
             );
-
         });
 
     // ========================================
@@ -997,14 +1031,10 @@ Description: ${item.description}`
             ">
                 <SummaryCard
                     onClick={() =>
-                        setSummaryFilter(
-                            summaryFilter === "PSC"
-                                ? "ALL"
-                                : "PSC"
-                        )
+                        handleSummaryFilter("PSC")
                     }
                     active={
-                        summaryFilter === "PSC"
+                        summaryFilter.includes("PSC")
                     }
                     title="PSC Not Complete"
                     value={pscNotCompleteCount}
@@ -1016,14 +1046,10 @@ Description: ${item.description}`
 
                 <SummaryCard
                     onClick={() =>
-                        setSummaryFilter(
-                            summaryFilter === "OVERDUE"
-                                ? "ALL"
-                                : "OVERDUE"
-                        )
+                        handleSummaryFilter("OVERDUE")
                     }
                     active={
-                        summaryFilter === "OVERDUE"
+                        summaryFilter.includes("OVERDUE")
                     }
                     title="PR/PO Overdue"
                     value={overdueCount}
@@ -1035,14 +1061,10 @@ Description: ${item.description}`
 
                 <SummaryCard
                     onClick={() =>
-                        setSummaryFilter(
-                            summaryFilter === "ONGOING"
-                                ? "ALL"
-                                : "ONGOING"
-                        )
+                        handleSummaryFilter("ONGOING")
                     }
                     active={
-                        summaryFilter === "ONGOING"
+                        summaryFilter.includes("ONGOING")
                     }
                     title="PR/PO Ongoing"
                     value={ongoingCount}
@@ -1054,14 +1076,10 @@ Description: ${item.description}`
 
                 <SummaryCard
                     onClick={() =>
-                        setSummaryFilter(
-                            summaryFilter === "DONE"
-                                ? "ALL"
-                                : "DONE"
-                        )
+                        handleSummaryFilter("DONE")
                     }
                     active={
-                        summaryFilter === "DONE"
+                        summaryFilter.includes("DONE")
                     }
                     title="PR/PO Done"
                     value={doneCount}
@@ -1073,14 +1091,10 @@ Description: ${item.description}`
 
                 <SummaryCard
                     onClick={() =>
-                        setSummaryFilter(
-                            summaryFilter === "CANCELLED"
-                                ? "ALL"
-                                : "CANCELLED"
-                        )
+                        handleSummaryFilter("CANCELLED")
                     }
                     active={
-                        summaryFilter === "CANCELLED"
+                        summaryFilter.includes("CANCELLED")
                     }
                     title="PR/PO Cancelled"
                     value={cancelCount}
@@ -2052,9 +2066,9 @@ function SummaryCard({
             hover:scale-[1.02]
 
             ${active
-                ? "ring-2 ring-cyan-400"
-                : ""
-            }
+                    ? "ring-2 ring-cyan-400"
+                    : ""
+                }
 
             ${color === "red"
                     ? "border-red-500/30 bg-red-500/10"
