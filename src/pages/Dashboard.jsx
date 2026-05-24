@@ -59,6 +59,10 @@ export default function Dashboard() {
   const [selectedPage, setSelectedPage] =
     useState("project-list");
 
+  const [openPartsDevice,
+    setOpenPartsDevice] =
+    useState(false);
+
 
   // =========================
   // LOAD USER
@@ -445,48 +449,341 @@ flex flex-col">
 
           </div>
 
-          {/* PARTS */}
-          <button
-            className="group relative w-full h-[72px]
-            rounded-3xl
-            border border-white/5
-            bg-white/[0.03]
-            hover:bg-green-500/10
-            hover:border-green-500/20
-            transition-all duration-300
-            px-6 flex items-center justify-between"
-          >
+          {/* PARTS & DEVICE */}
+          <div>
 
-            <div className="flex items-center gap-5">
+            <button
+              onClick={() =>
+                setOpenPartsDevice(
+                  !openPartsDevice
+                )
+              }
+              className={`group relative w-full min-h-[72px]
+              rounded-3xl
+              border
+              transition-all duration-300
+              px-6 py-4 flex items-center justify-between
 
-              <div className="w-12 h-12 rounded-2xl
-              bg-black/30 border border-white/5
-              flex items-center justify-center
-              text-green-400">
+              ${openPartsDevice
+                  ? "bg-green-500/10 border-green-500/20"
+                  : "bg-white/[0.03] border-white/5"
+                }`}
+            >
 
-                <Boxes size={20} />
+              <div className="flex items-center gap-5">
+
+                <div className="w-12 h-12 rounded-2xl
+                bg-black/30 border border-white/5
+                flex items-center justify-center
+                text-green-400">
+
+                  <Boxes size={20} />
+
+                </div>
+
+                <div className="text-left">
+
+                  <p className="font-semibold text-[15px]">
+
+                    Parts & Device Management
+
+                  </p>
+
+                  <p className="text-xs text-slate-500 mt-1">
+
+                    Inventory System
+
+                  </p>
+
+                </div>
 
               </div>
 
-              <div className="text-left">
+              <ChevronDown
+                size={20}
+                className={`transition-all duration-300
+                ${openPartsDevice
+                    ? "rotate-180 text-green-400"
+                    : "text-slate-500"
+                  }`}
+              />
 
-                <p className="font-semibold text-[15px]">
+            </button>
 
-                  Parts & Device Management
+            {/* SUBMENU */}
+            <div
+              className={`overflow-hidden transition-all duration-500
+              ${openPartsDevice
+                  ? "max-h-[900px] mt-4"
+                  : "max-h-0"
+                }`}
+            >
 
-                </p>
+              <div className="ml-6 pl-6 border-l border-green-500/20 space-y-3">
 
-                <p className="text-xs text-slate-500 mt-1">
+                {/* PART LIST */}
+                <button
+                  onClick={() =>
+                    setSelectedPage(
+                      "part-list"
+                    )
+                  }
+                  className={`group w-full h-[60px]
+                  rounded-2xl
+                  border
+                  transition-all
+                  px-5 flex items-center gap-4
 
-                  Inventory System
+                  ${selectedPage ===
+                      "part-list"
+                      ? "bg-green-500/15 border-green-500/30"
+                      : "bg-white/[0.03] border-white/5 hover:bg-green-500/10 hover:border-green-500/20"
+                    }`}
+                >
 
-                </p>
+                  <PackageSearch
+                    size={18}
+                    className="text-green-400"
+                  />
+
+                  <div className="text-left">
+
+                    <p className="font-medium text-sm">
+
+                      Part List
+
+                    </p>
+
+                    <p className="text-xs text-slate-500 mt-1">
+
+                      Spare part inventory
+
+                    </p>
+
+                  </div>
+
+                </button>
+
+                {/* IN OUT STOCK */}
+                <button
+                  onClick={() =>
+                    setSelectedPage(
+                      "in-out-stock"
+                    )
+                  }
+                  className={`group w-full h-[60px]
+                  rounded-2xl
+                  border
+                  transition-all
+                  px-5 flex items-center gap-4
+
+                  ${selectedPage ===
+                      "in-out-stock"
+                      ? "bg-green-500/15 border-green-500/30"
+                      : "bg-white/[0.03] border-white/5 hover:bg-green-500/10 hover:border-green-500/20"
+                    }`}
+                >
+
+                  <ClipboardList
+                    size={18}
+                    className="text-green-400"
+                  />
+
+                  <div className="text-left">
+
+                    <p className="font-medium text-sm">
+
+                      In/Out Stock
+
+                    </p>
+
+                    <p className="text-xs text-slate-500 mt-1">
+
+                      Inventory movement
+
+                    </p>
+
+                  </div>
+
+                </button>
+
+                {/* STORAGE */}
+                <button
+                  onClick={() =>
+                    setSelectedPage(
+                      "storage"
+                    )
+                  }
+                  className={`group w-full h-[60px]
+                  rounded-2xl
+                  border
+                  transition-all
+                  px-5 flex items-center gap-4
+
+                  ${selectedPage ===
+                      "storage"
+                      ? "bg-green-500/15 border-green-500/30"
+                      : "bg-white/[0.03] border-white/5 hover:bg-green-500/10 hover:border-green-500/20"
+                    }`}
+                >
+
+                  <Boxes
+                    size={18}
+                    className="text-green-400"
+                  />
+
+                  <div className="text-left">
+
+                    <p className="font-medium text-sm">
+
+                      Storage
+
+                    </p>
+
+                    <p className="text-xs text-slate-500 mt-1">
+
+                      Rack & storage area
+
+                    </p>
+
+                  </div>
+
+                </button>
+
+                {/* EQUIPMENT */}
+                <button
+                  onClick={() =>
+                    setSelectedPage(
+                      "equipment-list"
+                    )
+                  }
+                  className={`group w-full h-[60px]
+                  rounded-2xl
+                  border
+                  transition-all
+                  px-5 flex items-center gap-4
+
+                  ${selectedPage ===
+                      "equipment-list"
+                      ? "bg-green-500/15 border-green-500/30"
+                      : "bg-white/[0.03] border-white/5 hover:bg-green-500/10 hover:border-green-500/20"
+                    }`}
+                >
+
+                  <Cpu
+                    size={18}
+                    className="text-green-400"
+                  />
+
+                  <div className="text-left">
+
+                    <p className="font-medium text-sm">
+
+                      Equipment List
+
+                    </p>
+
+                    <p className="text-xs text-slate-500 mt-1">
+
+                      Machine & device data
+
+                    </p>
+
+                  </div>
+
+                </button>
+
+                {/* CALIBRATION */}
+                <button
+                  onClick={() =>
+                    setSelectedPage(
+                      "calibration-plan"
+                    )
+                  }
+                  className={`group w-full h-[60px]
+                  rounded-2xl
+                  border
+                  transition-all
+                  px-5 flex items-center gap-4
+
+                  ${selectedPage ===
+                      "calibration-plan"
+                      ? "bg-green-500/15 border-green-500/30"
+                      : "bg-white/[0.03] border-white/5 hover:bg-green-500/10 hover:border-green-500/20"
+                    }`}
+                >
+
+                  <Settings
+                    size={18}
+                    className="text-green-400"
+                  />
+
+                  <div className="text-left">
+
+                    <p className="font-medium text-sm">
+
+                      Calibration Plan
+
+                    </p>
+
+                    <p className="text-xs text-slate-500 mt-1">
+
+                      Calibration schedule
+
+                    </p>
+
+                  </div>
+
+                </button>
+
+                {/* MAINTENANCE */}
+                <button
+                  onClick={() =>
+                    setSelectedPage(
+                      "maintenance-plan"
+                    )
+                  }
+                  className={`group w-full h-[60px]
+                  rounded-2xl
+                  border
+                  transition-all
+                  px-5 flex items-center gap-4
+
+                  ${selectedPage ===
+                      "maintenance-plan"
+                      ? "bg-green-500/15 border-green-500/30"
+                      : "bg-white/[0.03] border-white/5 hover:bg-green-500/10 hover:border-green-500/20"
+                    }`}
+                >
+
+                  <Workflow
+                    size={18}
+                    className="text-green-400"
+                  />
+
+                  <div className="text-left">
+
+                    <p className="font-medium text-sm">
+
+                      Maintenance Plan
+
+                    </p>
+
+                    <p className="text-xs text-slate-500 mt-1">
+
+                      PM & maintenance planning
+
+                    </p>
+
+                  </div>
+
+                </button>
 
               </div>
 
             </div>
 
-          </button>
+          </div>
 
           {/* ANALYTICAL */}
           <button
@@ -1009,6 +1306,192 @@ flex flex-col">
             {selectedPage ===
               "workflow-management" && (
                 <WorkflowManagement />
+              )}
+
+              {/* PART LIST */}
+              {selectedPage ===
+                "part-list" && (
+
+                  <div className="h-[500px]
+                  rounded-[36px]
+                  border border-white/5
+                  bg-white/[0.03]
+                  backdrop-blur-2xl
+                  flex items-center justify-center">
+
+                    <div className="text-center">
+
+                      <h1 className="text-5xl font-black text-white">
+
+                        Part List
+
+                      </h1>
+
+                      <p className="text-slate-500 mt-4">
+
+                        Module coming soon
+
+                      </p>
+
+                    </div>
+
+                  </div>
+
+              )}
+
+              {/* IN OUT */}
+              {selectedPage ===
+                "in-out-stock" && (
+
+                  <div className="h-[500px]
+                  rounded-[36px]
+                  border border-white/5
+                  bg-white/[0.03]
+                  backdrop-blur-2xl
+                  flex items-center justify-center">
+
+                    <div className="text-center">
+
+                      <h1 className="text-5xl font-black text-white">
+
+                        In / Out Stock
+
+                      </h1>
+
+                      <p className="text-slate-500 mt-4">
+
+                        Module coming soon
+
+                      </p>
+
+                    </div>
+
+                  </div>
+
+              )}
+
+              {/* STORAGE */}
+              {selectedPage ===
+                "storage" && (
+
+                  <div className="h-[500px]
+                  rounded-[36px]
+                  border border-white/5
+                  bg-white/[0.03]
+                  backdrop-blur-2xl
+                  flex items-center justify-center">
+
+                    <div className="text-center">
+
+                      <h1 className="text-5xl font-black text-white">
+
+                        Storage
+
+                      </h1>
+
+                      <p className="text-slate-500 mt-4">
+
+                        Module coming soon
+
+                      </p>
+
+                    </div>
+
+                  </div>
+
+              )}
+
+              {/* EQUIPMENT */}
+              {selectedPage ===
+                "equipment-list" && (
+
+                  <div className="h-[500px]
+                  rounded-[36px]
+                  border border-white/5
+                  bg-white/[0.03]
+                  backdrop-blur-2xl
+                  flex items-center justify-center">
+
+                    <div className="text-center">
+
+                      <h1 className="text-5xl font-black text-white">
+
+                        Equipment List
+
+                      </h1>
+
+                      <p className="text-slate-500 mt-4">
+
+                        Module coming soon
+
+                      </p>
+
+                    </div>
+
+                  </div>
+
+              )}
+
+              {/* CALIBRATION */}
+              {selectedPage ===
+                "calibration-plan" && (
+
+                  <div className="h-[500px]
+                  rounded-[36px]
+                  border border-white/5
+                  bg-white/[0.03]
+                  backdrop-blur-2xl
+                  flex items-center justify-center">
+
+                    <div className="text-center">
+
+                      <h1 className="text-5xl font-black text-white">
+
+                        Calibration Plan
+
+                      </h1>
+
+                      <p className="text-slate-500 mt-4">
+
+                        Module coming soon
+
+                      </p>
+
+                    </div>
+
+                  </div>
+
+              )}
+
+              {/* MAINTENANCE */}
+              {selectedPage ===
+                "maintenance-plan" && (
+
+                  <div className="h-[500px]
+                  rounded-[36px]
+                  border border-white/5
+                  bg-white/[0.03]
+                  backdrop-blur-2xl
+                  flex items-center justify-center">
+
+                    <div className="text-center">
+
+                      <h1 className="text-5xl font-black text-white">
+
+                        Maintenance Plan
+
+                      </h1>
+
+                      <p className="text-slate-500 mt-4">
+
+                        Module coming soon
+
+                      </p>
+
+                    </div>
+
+                  </div>
+
               )}
 
           </div>
