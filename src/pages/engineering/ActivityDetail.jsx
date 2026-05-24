@@ -2587,7 +2587,7 @@ export default function ActivityDetail({
                             overflow-y-auto
                             scrollbar-hide
                             gantt-main-scroll
-                            max-h-[75vh]
+                            max-h-[62vh]
                         "
                         >
                             <div className="min-w-[5500px]">
