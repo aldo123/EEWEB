@@ -102,7 +102,7 @@ export default function RequestList() {
             original_due: "",
             revised_due: "",
             status: "Ongoing",
-            psc: "Not Yet"
+            psc: "NA"
 
         });
 
@@ -273,7 +273,7 @@ export default function RequestList() {
 
                                                 : "Ongoing",
 
-                                        psc: "Not Yet"
+                                        psc: "NA"
 
                                     };
 
@@ -550,7 +550,7 @@ Description: ${item.description}`
                     item.status || "",
 
                 psc:
-                    item.psc || "Not Yet"
+                    item.psc || "NA"
 
             });
 
@@ -736,7 +736,7 @@ Description: ${item.description}`
                 original_due: "",
                 revised_due: "",
                 status: "Ongoing",
-                psc: "Not Yet"
+                psc: "NA"
 
             });
 
