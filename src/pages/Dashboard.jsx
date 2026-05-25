@@ -656,49 +656,6 @@ flex flex-col">
 
                 </button>
 
-                {/* EQUIPMENT */}
-                <button
-                  onClick={() =>
-                    setSelectedPage(
-                      "equipment-list"
-                    )
-                  }
-                  className={`group w-full h-[60px]
-                  rounded-2xl
-                  border
-                  transition-all
-                  px-5 flex items-center gap-4
-
-                  ${selectedPage ===
-                      "equipment-list"
-                      ? "bg-green-500/15 border-green-500/30"
-                      : "bg-white/[0.03] border-white/5 hover:bg-green-500/10 hover:border-green-500/20"
-                    }`}
-                >
-
-                  <Cpu
-                    size={18}
-                    className="text-green-400"
-                  />
-
-                  <div className="text-left">
-
-                    <p className="font-medium text-sm">
-
-                      Equipment List
-
-                    </p>
-
-                    <p className="text-xs text-slate-500 mt-1">
-
-                      Machine & device data
-
-                    </p>
-
-                  </div>
-
-                </button>
-
                 {/* CALIBRATION */}
                 <button
                   onClick={() =>
@@ -1407,41 +1364,11 @@ flex flex-col">
 
               )}
 
-            {/* EQUIPMENT */}
-            {selectedPage ===
-              "equipment-list" && (
-                <EquipmentList />
-              )}
 
             {/* CALIBRATION */}
             {selectedPage ===
               "calibration-plan" && (
-
-                <div className="h-[500px]
-                  rounded-[36px]
-                  border border-white/5
-                  bg-white/[0.03]
-                  backdrop-blur-2xl
-                  flex items-center justify-center">
-
-                  <div className="text-center">
-
-                    <h1 className="text-5xl font-black text-white">
-
-                      Calibration Plan
-
-                    </h1>
-
-                    <p className="text-slate-500 mt-4">
-
-                      Module coming soon
-
-                    </p>
-
-                  </div>
-
-                </div>
-
+                <EquipmentList />
               )}
 
             {/* MAINTENANCE */}
