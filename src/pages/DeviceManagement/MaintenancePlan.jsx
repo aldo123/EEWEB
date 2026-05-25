@@ -104,20 +104,33 @@ const getWeekFromDate = (dateString) => {
     const date =
         new Date(dateString);
 
-    const firstDay =
+    // COPY DATE
+    const target =
+        new Date(date.valueOf());
+
+    // ISO WEEK DATE
+    const dayNr =
+        (date.getDay() + 6) % 7;
+
+    target.setDate(
+        target.getDate() - dayNr + 3
+    );
+
+    const firstThursday =
         new Date(
-            date.getFullYear(),
+            target.getFullYear(),
             0,
-            1
+            4
         );
 
-    const pastDays =
-        (
-            date - firstDay
-        ) / 86400000;
+    const diff =
+        target - firstThursday;
 
-    return Math.ceil(
-        (pastDays + firstDay.getDay() + 1) / 7
+    return (
+        1 +
+        Math.round(
+            diff / 604800000
+        )
     );
 
 };
@@ -295,6 +308,9 @@ export default function MaintenancePlan() {
 
     const [responsibleFilter, setResponsibleFilter] =
         useState([]);
+
+    const [monthFilter, setMonthFilter] =
+        useState([]);
     // ======================================================
     // FILTER
     // ======================================================
@@ -433,6 +449,17 @@ export default function MaintenancePlan() {
                             item.equipmentType
                         );
 
+                    // =====================================
+                    // MONTH FILTER
+                    // =====================================
+
+                    const monthMatch =
+                        monthFilter.length === 0
+                        ||
+                        monthFilter.includes(
+                            item.month
+                        );
+
                     return (
                         searchMatch
                         &&
@@ -443,6 +470,8 @@ export default function MaintenancePlan() {
                         responsibleMatch
                         &&
                         equipmentMatch
+                        &&
+                        monthMatch
                     );
 
                 }
@@ -1380,91 +1409,594 @@ export default function MaintenancePlan() {
             </div>
 
             {/* ====================================================== */}
-            {/* SUMMARY */}
+            {/* ADVANCED SUMMARY */}
             {/* ====================================================== */}
 
             <div className="
-        grid
-        grid-cols-4
-        gap-4
-        mb-6
-      ">
+                w-full
+                grid
+                grid-cols-12
+                gap-4
+                mb-6
+                items-stretch
+            ">
 
-                <SummaryCard
-                    title="PM Overdue"
-                    value={overdueCount}
-                    color="red"
-                    icon={
-                        <AlertTriangle />
-                    }
-                    active={
-                        summaryFilter.includes(
-                            "OVERDUE"
-                        )
-                    }
-                    onClick={() =>
-                        handleSummaryFilter(
-                            "OVERDUE"
-                        )
-                    }
-                />
+                {/* ====================================================== */}
+                {/* TECHNICIAN PERFORMANCE */}
+                {/* ====================================================== */}
 
-                <SummaryCard
-                    title="PM Ongoing"
-                    value={ongoingCount}
-                    color="yellow"
-                    icon={
-                        <Clock3 />
-                    }
-                    active={
-                        summaryFilter.includes(
-                            "ONGOING"
-                        )
-                    }
-                    onClick={() =>
-                        handleSummaryFilter(
-                            "ONGOING"
-                        )
-                    }
-                />
+                <div className="
+                    col-span-5
+                    h-[320px]
+                    rounded-3xl
+                    border
+                    border-emerald-500/20
+                    bg-gradient-to-br
+                    from-emerald-500/10
+                    to-slate-900
+                    p-5
+                    overflow-hidden
+                    flex
+                    flex-col
+                ">
 
-                <SummaryCard
-                    title="PM Done"
-                    value={doneCount}
-                    color="emerald"
-                    icon={
-                        <CheckCircle2 />
-                    }
-                    active={
-                        summaryFilter.includes(
-                            "DONE"
-                        )
-                    }
-                    onClick={() =>
-                        handleSummaryFilter(
-                            "DONE"
-                        )
-                    }
-                />
+                    {/* HEADER */}
 
-                <SummaryCard
-                    title="PM Reject"
-                    value={rejectCount}
-                    color="purple"
-                    icon={
-                        <XCircle />
-                    }
-                    active={
-                        summaryFilter.includes(
-                            "REJECT"
-                        )
-                    }
-                    onClick={() =>
-                        handleSummaryFilter(
-                            "REJECT"
-                        )
-                    }
-                />
+                    <div className="
+                        flex
+                        items-center
+                        justify-between
+                        mb-4
+                        shrink-0
+                    ">
+
+                        <h1 className="
+                            text-lg
+                            font-bold
+                            text-white
+                        ">
+                            Technician Performance
+                        </h1>
+
+                        <Wrench
+                            size={18}
+                            className="text-emerald-400"
+                        />
+
+                    </div>
+
+                    {/* SCROLL AREA */}
+
+                    <div className="
+                        flex-1
+                        overflow-y-auto
+                        pr-2
+                    ">
+
+                        {
+                            uniqueResponsibles.map((person) => {
+
+                                const currentWeek =
+                                    getCurrentWeek();
+
+                                // ======================================
+                                // ALL DATA UNTIL CURRENT WEEK
+                                // ======================================
+
+                                const personData =
+                                    pmData.filter(
+                                        x =>
+                                            x.responsible === person
+                                            &&
+                                            Number(x.week) <= currentWeek
+                                    );
+
+                                // ======================================
+                                // TOTAL POINT SUMMARY
+                                // ======================================
+
+                                const totalPoint =
+                                    personData.reduce(
+                                        (sum, item) =>
+                                            sum + Number(item.pointSummary || 0),
+                                        0
+                                    );
+
+                                // ======================================
+                                // TOTAL TASK
+                                // ======================================
+
+                                const totalTask =
+                                    personData.length;
+
+                                // ======================================
+                                // PERFORMANCE
+                                // ======================================
+
+                                const percent =
+                                    totalTask > 0
+                                        ? Math.round(
+                                            (totalPoint / totalTask) * 100
+                                        )
+                                        : 0;
+
+                                return (
+
+                                    <div
+                                        key={person}
+                                        className={`
+                                    mb-4
+                                    cursor-pointer
+                                    transition
+                                    rounded-2xl
+                                    p-2
+
+                                    ${responsibleFilter.includes(person)
+                                                ? "bg-emerald-500/10 border border-emerald-400/40"
+                                                : "hover:bg-white/5 border border-transparent"
+                                            }
+                                `}
+                                        onClick={() => {
+
+                                            const currentWeek =
+                                                getCurrentWeek();
+
+                                            // buka semua week sebelumnya
+                                            const allWeeksUntilNow =
+                                                uniqueWeeks
+                                                    .filter(
+                                                        w => Number(w) <= currentWeek
+                                                    )
+                                                    .map(String);
+
+                                            setWeekFilter(
+                                                allWeeksUntilNow
+                                            );
+
+                                            setResponsibleFilter(prev => {
+
+                                                if (prev.includes(person)) {
+
+                                                    // kalau semua unselect
+                                                    const updated =
+                                                        prev.filter(
+                                                            x => x !== person
+                                                        );
+
+                                                    // balik default current week
+                                                    if (
+                                                        updated.length === 0
+                                                        &&
+                                                        monthFilter.length === 0
+                                                    ) {
+
+                                                        // balik default current week
+                                                        setWeekFilter([
+                                                            String(getCurrentWeek())
+                                                        ]);
+
+                                                    }
+
+                                                    else {
+
+                                                        // tetap buka semua week sebelumnya
+                                                        const currentWeek =
+                                                            getCurrentWeek();
+
+                                                        const allWeeksUntilNow =
+                                                            uniqueWeeks
+                                                                .filter(
+                                                                    w => Number(w) <= currentWeek
+                                                                )
+                                                                .map(String);
+
+                                                        setWeekFilter(
+                                                            allWeeksUntilNow
+                                                        );
+
+                                                    }
+
+                                                    return updated;
+
+                                                }
+
+                                                return [
+                                                    ...prev,
+                                                    person
+                                                ];
+
+                                            });
+
+                                        }}
+                                    >
+
+                                        <div className="
+                                flex
+                                justify-between
+                                text-xs
+                                mb-2
+                            ">
+
+                                            <span className="
+                                    text-white
+                                    font-medium
+                                ">
+                                                {person}
+                                            </span>
+
+                                            <span className="
+                                    text-emerald-300
+                                    font-bold
+                                ">
+                                                {percent}%
+                                            </span>
+
+                                        </div>
+
+                                        <div className="
+                                w-full
+                                h-3
+                                rounded-full
+                                bg-slate-800
+                                overflow-hidden
+                            ">
+
+                                            <div
+                                                className="
+                                        h-full
+                                        rounded-full
+                                        bg-gradient-to-r
+                                        from-emerald-400
+                                        to-yellow-400
+                                    "
+                                                style={{
+                                                    width: `${percent}%`
+                                                }}
+                                            />
+
+                                        </div>
+
+                                    </div>
+
+                                );
+
+                            })
+                        }
+
+                    </div>
+
+                </div>
+
+                {/* ====================================================== */}
+                {/* EXECUTION BY MONTH */}
+                {/* ====================================================== */}
+
+                <div className="
+                    col-span-4
+                    h-[320px]
+                    rounded-3xl
+                    border
+                    border-cyan-500/20
+                    bg-gradient-to-br
+                    from-cyan-500/10
+                    to-slate-900
+                    p-5
+                    overflow-hidden
+                    flex
+                    flex-col
+                ">
+
+                    <div className="
+                        flex
+                        items-center
+                        justify-between
+                        mb-5
+                        shrink-0
+                    ">
+
+                        <h1 className="
+                            text-lg
+                            font-bold
+                            text-white
+                        ">
+                            % Execution by Month
+                        </h1>
+
+                        <Clock3
+                            size={18}
+                            className="text-cyan-400"
+                        />
+
+                    </div>
+
+                    <div className="
+                        flex-1
+                        flex
+                        items-end
+                        gap-2
+                    ">
+
+                        {
+                            [
+                                "January",
+                                "February",
+                                "March",
+                                "April",
+                                "May",
+                                "June",
+                                "July",
+                                "August",
+                                "September",
+                                "October",
+                                "November",
+                                "December"
+                            ].map((month) => {
+
+                                const monthData =
+                                    pmData.filter(
+                                        x =>
+                                            x.month === month
+                                    );
+
+                                // ======================================
+                                // TOTAL POINT SUMMARY
+                                // ======================================
+
+                                const totalPoint =
+                                    monthData.reduce(
+                                        (sum, item) =>
+                                            sum + Number(item.pointSummary || 0),
+                                        0
+                                    );
+
+                                // ======================================
+                                // TOTAL TASK
+                                // ======================================
+
+                                const totalTask =
+                                    monthData.length;
+
+                                // ======================================
+                                // EXECUTION PERCENT
+                                // ======================================
+
+                                const percent =
+                                    totalTask > 0
+                                        ? Math.round(
+                                            (totalPoint / totalTask) * 100
+                                        )
+                                        : 0;
+
+                                return (
+
+                                    <div
+                                        key={month}
+                                        onClick={() => {
+
+                                            const currentWeek =
+                                                getCurrentWeek();
+
+                                            // buka semua week sebelumnya
+                                            const allWeeksUntilNow =
+                                                uniqueWeeks
+                                                    .filter(
+                                                        w => Number(w) <= currentWeek
+                                                    )
+                                                    .map(String);
+
+                                            setWeekFilter(
+                                                allWeeksUntilNow
+                                            );
+
+                                            setMonthFilter(prev => {
+
+                                                if (prev.includes(month)) {
+
+                                                    const updated =
+                                                        prev.filter(
+                                                            x => x !== month
+                                                        );
+
+                                                    // kalau semua unselect
+                                                    if (
+                                                        updated.length === 0
+                                                        &&
+                                                        responsibleFilter.length === 0
+                                                    ) {
+
+                                                        // balik default current week
+                                                        setWeekFilter([
+                                                            String(getCurrentWeek())
+                                                        ]);
+
+                                                    }
+
+                                                    else {
+
+                                                        // tetap buka semua week sebelumnya
+                                                        const currentWeek =
+                                                            getCurrentWeek();
+
+                                                        const allWeeksUntilNow =
+                                                            uniqueWeeks
+                                                                .filter(
+                                                                    w => Number(w) <= currentWeek
+                                                                )
+                                                                .map(String);
+
+                                                        setWeekFilter(
+                                                            allWeeksUntilNow
+                                                        );
+
+                                                    }
+
+                                                    return updated;
+
+                                                }
+
+                                                return [
+                                                    ...prev,
+                                                    month
+                                                ];
+
+                                            });
+
+                                        }}
+                                        className={`
+                                        flex-1
+                                        flex
+                                        flex-col
+                                        items-center
+                                        justify-end
+                                        gap-2
+                                        h-full
+                                        cursor-pointer
+                                        transition
+                                        rounded-2xl
+                                        p-1
+
+                                        ${monthFilter.includes(month)
+                                                ? "bg-cyan-500/10 ring-2 ring-cyan-400 scale-[1.03]"
+                                                : "hover:bg-white/5 hover:scale-[1.03]"
+                                            }
+                                    `}
+                                    >
+
+                                        <span className="
+                                            text-[10px]
+                                            text-cyan-300
+                                            font-bold
+                                        ">
+                                            {percent}%
+                                        </span>
+
+                                        <div
+                                            className="
+                                    w-full
+                                    flex-1
+                                    rounded-t-xl
+                                    bg-cyan-500/10
+                                    relative
+                                    overflow-hidden
+                                    flex
+                                    items-end
+                                "
+                                        >
+
+                                            <div
+                                                className="
+                                        w-full
+                                        rounded-t-xl
+                                        bg-gradient-to-t
+                                        from-blue-500
+                                        to-cyan-400
+                                    "
+                                                style={{
+                                                    height: `${percent}%`
+                                                }}
+                                            />
+
+                                        </div>
+
+                                        <span className="
+                                text-[9px]
+                                text-slate-400
+                            ">
+                                            {month.slice(0, 3)}
+                                        </span>
+
+                                    </div>
+
+                                );
+
+                            })
+                        }
+
+                    </div>
+
+                </div>
+
+                {/* ====================================================== */}
+                {/* STATUS CARD 2x2 */}
+                {/* ====================================================== */}
+
+                <div className="
+                    col-span-3
+                    h-[320px]
+                    grid
+                    grid-cols-2
+                    gap-3
+                ">
+
+                    <SummaryCard
+                        title="Overdue"
+                        value={overdueCount}
+                        color="red"
+                        icon={<AlertTriangle />}
+                        active={
+                            summaryFilter.includes(
+                                "OVERDUE"
+                            )
+                        }
+                        onClick={() =>
+                            handleSummaryFilter(
+                                "OVERDUE"
+                            )
+                        }
+                    />
+
+                    <SummaryCard
+                        title="Ongoing"
+                        value={ongoingCount}
+                        color="yellow"
+                        icon={<Clock3 />}
+                        active={
+                            summaryFilter.includes(
+                                "ONGOING"
+                            )
+                        }
+                        onClick={() =>
+                            handleSummaryFilter(
+                                "ONGOING"
+                            )
+                        }
+                    />
+
+                    <SummaryCard
+                        title="Done"
+                        value={doneCount}
+                        color="emerald"
+                        icon={<CheckCircle2 />}
+                        active={
+                            summaryFilter.includes(
+                                "DONE"
+                            )
+                        }
+                        onClick={() =>
+                            handleSummaryFilter(
+                                "DONE"
+                            )
+                        }
+                    />
+
+                    <SummaryCard
+                        title="Reject"
+                        value={rejectCount}
+                        color="purple"
+                        icon={<XCircle />}
+                        active={
+                            summaryFilter.includes(
+                                "REJECT"
+                            )
+                        }
+                        onClick={() =>
+                            handleSummaryFilter(
+                                "REJECT"
+                            )
+                        }
+                    />
+
+                </div>
 
             </div>
 
