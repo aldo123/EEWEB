@@ -182,6 +182,8 @@ export default function RequestList() {
                 e.target.files[0];
 
             if (!file) return;
+            // FORCE SAME FILE REIMPORT
+            e.target.value = null;
 
             const reader =
                 new FileReader();
@@ -209,12 +211,6 @@ export default function RequestList() {
                             XLSX.utils.sheet_to_json(
                                 sheet
                             );
-
-                        // ====================================
-                        // DUPLICATE INFO
-                        // ====================================
-
-                        const duplicateList = [];
 
                         // ====================================
                         // FORMAT DATA
@@ -340,34 +336,6 @@ export default function RequestList() {
 
                                     }
 
-                                    // ====================================
-                                    // DUPLICATE CHECK
-                                    // ====================================
-
-                                    const duplicateDb =
-                                        requests.find(
-                                            (x) =>
-
-                                                normalizeText(x.oa_pr) ===
-                                                normalizeText(item.oa_pr)
-
-                                                &&
-
-                                                normalizeText(x.description) ===
-                                                normalizeText(item.description)
-                                        );
-
-                                    if (duplicateDb) {
-
-                                        duplicateList.push(
-                                            `OA-PR: ${item.oa_pr}
-Description: ${item.description}`
-                                        );
-
-                                        return false;
-
-                                    }
-
                                     return true;
 
                                 });
@@ -380,53 +348,187 @@ Description: ${item.description}`
                             formatted.length === 0
                         ) {
 
-                            let message =
-                                "No new data imported.";
+                            alert(
+                                "No valid data to import"
+                            );
 
-                            if (
-                                duplicateList.length > 0
-                            ) {
-
-                                message +=
-                                    "\n\nDuplicate Data:\n\n" +
-                                    duplicateList.join(
-                                        "\n\n"
-                                    );
-
-                            }
-
-                            alert(message);
-
-                            e.target.value = "";
+                            e.target.value = null;
 
                             return;
 
                         }
 
                         // ====================================
-                        // INSERT DATABASE
+                        // LOAD EXISTING DATABASE
                         // ====================================
 
                         const {
-                            error
-                        } =
-                            await supabase
-                                .from("request_list")
-                                .insert(formatted);
+                            data: existingData,
+                            error: existingError
+                        } = await supabase
+                            .from("request_list")
+                            .select("*");
 
-                        if (error) {
+                        if (existingError) {
 
-                            console.log(error);
+                            console.log(existingError);
 
-                            alert(
-                                "Import failed"
-                            );
-
-                            e.target.value = "";
+                            alert("Failed load database");
 
                             return;
 
                         }
+
+                        // ====================================
+                        // CREATE MAP
+                        // ====================================
+
+                        const existingMap =
+                            new Map();
+
+                        existingData.forEach((row) => {
+
+                            const key =
+                                [
+                                    normalizeText(row.oa_pr),
+                                    normalizeText(row.description)
+                                ].join("_");
+
+                            existingMap.set(
+                                key,
+                                row
+                            );
+
+                        });
+
+                        // ====================================
+                        // SPLIT INSERT & UPDATE
+                        // ====================================
+
+                        const insertData = [];
+                        const updateData = [];
+
+                        formatted.forEach((row) => {
+
+                            const key =
+                                [
+                                    normalizeText(row.oa_pr),
+                                    normalizeText(row.description)
+                                ].join("_");
+
+                            const existing =
+                                existingMap.get(key);
+
+                            row.status =
+
+                                row.oa_pr &&
+                                    row.pr_no &&
+                                    row.po
+
+                                    ? "Done"
+                                    : "Ongoing";
+
+                            // ====================================
+                            // UPDATE EXISTING
+                            // ====================================
+
+                            if (existing) {
+
+                                let changed =
+                                    false;
+
+                                Object.keys(row).forEach((field) => {
+
+                                    const oldVal =
+                                        existing[field] ?? "";
+
+                                    const newVal =
+                                        row[field] ?? "";
+
+                                    if (
+                                        String(oldVal)
+                                        !==
+                                        String(newVal)
+                                    ) {
+
+                                        changed = true;
+
+                                    }
+
+                                });
+
+                                if (changed) {
+
+                                    updateData.push({
+                                        id: existing.id,
+                                        ...row
+                                    });
+
+                                }
+
+                            }
+
+                            // ====================================
+                            // INSERT NEW
+                            // ====================================
+
+                            else {
+
+                                insertData.push(row);
+
+                            }
+
+                        });
+
+                        // ====================================
+                        // INSERT NEW DATA
+                        // ====================================
+
+                        if (insertData.length > 0) {
+
+                            const {
+                                error: insertError
+                            } = await supabase
+                                .from("request_list")
+                                .insert(insertData);
+
+                            if (insertError) {
+
+                                console.log(insertError);
+
+                            }
+
+                        }
+
+                        // ====================================
+                        // UPDATE EXISTING DATA
+                        // ====================================
+
+                        for (const row of updateData) {
+
+                            const {
+                                id,
+                                ...payload
+                            } = row;
+
+                            const {
+                                error: updateError
+                            } = await supabase
+                                .from("request_list")
+                                .update(payload)
+                                .eq("id", id);
+
+                            if (updateError) {
+
+                                console.log(updateError);
+
+                            }
+
+                        }
+
+                        // ====================================
+                        // RELOAD DATA
+                        // ====================================
 
                         await loadRequests();
 
@@ -435,21 +537,13 @@ Description: ${item.description}`
                         // ====================================
 
                         let successMessage =
-                            `Import success: ${formatted.length} row`;
+                            `
+                        Import Success
 
-                        if (
-                            duplicateList.length > 0
-                        ) {
+                        Insert : ${insertData.length}
+                        Update : ${updateData.length}
+                        `;
 
-                            successMessage +=
-                                `\n\nSkipped Duplicate: ${duplicateList.length}\n\n`;
-
-                            successMessage +=
-                                duplicateList.join(
-                                    "\n\n"
-                                );
-
-                        }
 
                         alert(successMessage);
 
@@ -457,7 +551,7 @@ Description: ${item.description}`
                         // RESET INPUT FILE
                         // ====================================
 
-                        e.target.value = "";
+                        e.target.value = null;
 
                     }
 
@@ -469,7 +563,7 @@ Description: ${item.description}`
                             "Excel read failed"
                         );
 
-                        e.target.value = "";
+                        e.target.value = null;
 
                     }
 
@@ -481,6 +575,56 @@ Description: ${item.description}`
 
         };
 
+
+    // ========================================
+    // DELETE ALL
+    // ========================================
+
+    const handleDeleteAll =
+        async () => {
+
+            const confirmDelete =
+                window.confirm(
+                    "DELETE ALL REQUEST LIST DATA ?"
+                );
+
+            if (!confirmDelete)
+                return;
+
+            const secondConfirm =
+                window.confirm(
+                    "THIS ACTION CANNOT BE UNDONE !!!"
+                );
+
+            if (!secondConfirm)
+                return;
+
+            const {
+                error
+            } = await supabase
+                .from("request_list")
+                .delete()
+                .neq("id", 0);
+
+            if (error) {
+
+                console.log(error);
+
+                alert(
+                    "Delete all failed"
+                );
+
+                return;
+
+            }
+
+            await loadRequests();
+
+            alert(
+                "All request deleted"
+            );
+
+        };
     // ========================================
     // DELETE
     // ========================================
@@ -1009,7 +1153,7 @@ Description: ${item.description}`
 
                 </div>
 
-               
+
 
             </div>
 
@@ -1205,7 +1349,29 @@ Description: ${item.description}`
                     />
 
                 </label>
+                <button
+                    onClick={
+                        handleDeleteAll
+                    }
+                    className="
+                        h-12
+                        px-5
+                        rounded-2xl
+                        bg-red-600
+                        hover:bg-red-500
+                        flex
+                        items-center
+                        gap-2
+                        font-bold
+                        whitespace-nowrap
+                    "
+                >
 
+                    <Trash2 size={18} />
+
+                    Delete All
+
+                </button>
             </div>
 
             {/* ======================================== */}
