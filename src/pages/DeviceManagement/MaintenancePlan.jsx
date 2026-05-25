@@ -95,6 +95,32 @@ const getCurrentWeek = () => {
 
 };
 
+const getWeekFromDate = (dateString) => {
+
+    if (!dateString)
+        return null;
+
+    const date =
+        new Date(dateString);
+
+    const firstDay =
+        new Date(
+            date.getFullYear(),
+            0,
+            1
+        );
+
+    const pastDays =
+        (
+            date - firstDay
+        ) / 86400000;
+
+    return Math.ceil(
+        (pastDays + firstDay.getDay() + 1) / 7
+    );
+
+};
+
 // ======================================================
 // MAIN COMPONENT
 // ======================================================
@@ -118,7 +144,7 @@ export default function MaintenancePlan() {
         useState([
             "ONGOING",
             "OVERDUE",
-            "DONE",
+            "REJECT",
         ]);
 
     const [showAddModal,
@@ -505,6 +531,8 @@ export default function MaintenancePlan() {
 
             if (!file)
                 return;
+            // FORCE SAME FILE RE-IMPORT
+            e.target.value = null;
 
             const reader =
                 new FileReader();
@@ -591,8 +619,16 @@ export default function MaintenancePlan() {
 
                                 weekCompleted:
                                     item["Week Completed"]
-                                        ? Number(item["Week completed"])
-                                        : null,
+                                        ? Number(item["Week Completed"])
+                                        : (
+                                            item["Date completed"]
+                                                ? getWeekFromDate(
+                                                    excelDateToJSDate(
+                                                        item["Date completed"]
+                                                    )
+                                                )
+                                                : null
+                                        ),
 
                                 pointSummary:
                                     item["Point Summary"]
@@ -603,17 +639,238 @@ export default function MaintenancePlan() {
 
                         });
                         console.log(formatted);
-                        const {
-                            error,
-                        } =
-                            await supabase
-                                .from(
-                                    "preventive-maintenance"
-                                )
+                        // =========================================
+                        // LOAD EXISTING DATA
+                        // =========================================
 
-                                .insert(
-                                    formatted
-                                );
+                        const {
+                            data: existingData,
+                            error: existingError
+                        } = await supabase
+                            .from("preventive-maintenance")
+                            .select(`
+                                id,
+                                equipmentType,
+                                machine,
+                                item,
+                                criteria,
+                                actionTask,
+                                week,
+                                responsible,
+                                month,
+                                frequency,
+                                closedAt,
+                                status,
+                                weekCompleted,
+                                pointSummary
+                            `);
+
+                        if (existingError) {
+
+                            console.log(existingError);
+
+                            alert("Failed load existing data");
+
+                            return;
+
+                        }
+
+                        // =========================================
+                        // CREATE MAP EXISTING
+                        // =========================================
+
+                        const existingMap =
+                            new Map();
+
+                        existingData.forEach((row) => {
+
+                            const key =
+                                [
+                                    normalizeText(row.equipmentType),
+                                    normalizeText(row.machine),
+                                    normalizeText(row.item),
+                                    normalizeText(row.criteria),
+                                    normalizeText(row.actionTask),
+                                    row.week,
+                                ].join("_");
+
+                            existingMap.set(
+                                key,
+                                row
+                            );
+
+                        });
+
+                        // =========================================
+                        // SPLIT INSERT & UPDATE
+                        // =========================================
+
+                        const insertData = [];
+                        const updateData = [];
+
+                        formatted.forEach((row) => {
+
+                            const key =
+                                [
+                                    normalizeText(row.equipmentType),
+                                    normalizeText(row.machine),
+                                    normalizeText(row.item),
+                                    normalizeText(row.criteria),
+                                    normalizeText(row.actionTask),
+                                    row.week,
+                                ].join("_");
+
+                            const existing =
+                                existingMap.get(key);
+
+                            // =====================================
+                            // AUTO WEEK COMPLETED
+                            // =====================================
+
+                            if (row.closedAt) {
+
+                                row.weekCompleted =
+                                    getWeekFromDate(
+                                        row.closedAt
+                                    );
+
+                                if (
+                                    Number(row.weekCompleted)
+                                    ===
+                                    Number(row.week)
+                                ) {
+
+                                    row.status =
+                                        "Done";
+
+                                    row.pointSummary = 1;
+
+                                }
+
+                                else {
+
+                                    row.status =
+                                        "Reject";
+
+                                    row.pointSummary = 0;
+
+                                }
+
+                            }
+
+                            else {
+
+                                row.weekCompleted =
+                                    null;
+
+                                row.status =
+                                    "Ongoing";
+
+                                row.pointSummary =
+                                    0;
+
+                            }
+
+                            // =====================================
+                            // UPDATE EXISTING
+                            // =====================================
+
+                            if (existing) {
+
+                                let changed =
+                                    false;
+
+                                Object.keys(row).forEach((field) => {
+
+                                    const oldVal =
+                                        existing[field] ?? "";
+
+                                    const newVal =
+                                        row[field] ?? "";
+
+                                    if (
+                                        String(oldVal)
+                                        !==
+                                        String(newVal)
+                                    ) {
+
+                                        changed = true;
+
+                                    }
+
+                                });
+
+                                if (changed) {
+
+                                    updateData.push({
+                                        id: existing.id,
+                                        ...row,
+                                    });
+
+                                }
+
+                            }
+
+                            // =====================================
+                            // INSERT NEW
+                            // =====================================
+
+                            else {
+
+                                insertData.push(row);
+
+                            }
+
+                        });
+
+                        console.log("INSERT:", insertData.length);
+                        console.log("UPDATE:", updateData.length);
+
+                        // =========================================
+                        // INSERT NEW DATA
+                        // =========================================
+
+                        if (insertData.length > 0) {
+
+                            const {
+                                error: insertError
+                            } = await supabase
+                                .from("preventive-maintenance")
+                                .insert(insertData);
+
+                            if (insertError) {
+
+                                console.log(insertError);
+
+                            }
+
+                        }
+
+                        // =========================================
+                        // UPDATE EXISTING DATA
+                        // =========================================
+
+                        for (const row of updateData) {
+
+                            const {
+                                id,
+                                ...updatePayload
+                            } = row;
+
+                            const {
+                                error: updateError
+                            } = await supabase
+                                .from("preventive-maintenance")
+                                .update(updatePayload)
+                                .eq("id", id);
+
+                            if (updateError) {
+
+                                console.log(updateError);
+
+                            }
+
+                        }
 
                         if (error) {
 
@@ -634,7 +891,7 @@ export default function MaintenancePlan() {
                         alert(
                             "Import success"
                         );
-
+                        e.target.value = null;
                     }
 
                     catch (err) {
@@ -646,7 +903,7 @@ export default function MaintenancePlan() {
                         alert(
                             "Excel read failed"
                         );
-
+                        e.target.value = null;
                     }
 
                 };
@@ -719,6 +976,72 @@ export default function MaintenancePlan() {
     const handleSaveEdit =
         async () => {
 
+            const currentWeek =
+                getCurrentWeek();
+
+            let updatedData =
+            {
+                ...editForm
+            };
+
+            // =========================================
+            // AUTO WEEK COMPLETED
+            // =========================================
+
+            if (
+                updatedData.closedAt
+            ) {
+
+                const completedWeek =
+                    getWeekFromDate(
+                        updatedData.closedAt
+                    );
+
+                updatedData.weekCompleted =
+                    completedWeek;
+
+                // =====================================
+                // STATUS LOGIC
+                // =====================================
+
+                if (
+                    completedWeek ===
+                    Number(updatedData.week)
+                ) {
+
+                    updatedData.status =
+                        "Done";
+
+                    updatedData.pointSummary =
+                        1;
+
+                }
+
+                else {
+
+                    updatedData.status =
+                        "Reject";
+
+                    updatedData.pointSummary =
+                        0;
+
+                }
+
+            }
+
+            else {
+
+                updatedData.weekCompleted =
+                    null;
+
+                updatedData.status =
+                    "Ongoing";
+
+                updatedData.pointSummary =
+                    0;
+
+            }
+
             const {
                 error,
             } =
@@ -727,7 +1050,7 @@ export default function MaintenancePlan() {
                         "preventive-maintenance"
                     )
                     .update(
-                        editForm
+                        updatedData
                     )
                     .eq(
                         "id",
@@ -791,6 +1114,56 @@ export default function MaintenancePlan() {
             );
 
             loadPMData();
+
+        };
+
+    // ======================================================
+    // DELETE ALL PM DATA
+    // ======================================================
+
+    const handleDeleteAllPM =
+        async () => {
+
+            const confirmDelete =
+                window.confirm(
+                    "DELETE ALL preventive-maintenance data ?"
+                );
+
+            if (!confirmDelete)
+                return;
+
+            const secondConfirm =
+                window.confirm(
+                    "THIS ACTION CANNOT BE UNDONE !!!"
+                );
+
+            if (!secondConfirm)
+                return;
+
+            const {
+                error
+            } = await supabase
+                .from("preventive-maintenance")
+                .delete()
+                .neq("id", 0);
+
+            if (error) {
+
+                console.log(error);
+
+                alert(
+                    "Delete all failed"
+                );
+
+                return;
+
+            }
+
+            alert(
+                "All PM data deleted"
+            );
+
+            await loadPMData();
 
         };
 
@@ -1494,18 +1867,18 @@ export default function MaintenancePlan() {
                 {/* IMPORT */}
 
                 <label className="
-        h-12
-        px-5
-        rounded-2xl
-        bg-emerald-500
-        hover:bg-emerald-400
-        flex
-        items-center
-        gap-2
-        font-bold
-        cursor-pointer
-        whitespace-nowrap
-    ">
+                    h-12
+                    px-5
+                    rounded-2xl
+                    bg-emerald-500
+                    hover:bg-emerald-400
+                    flex
+                    items-center
+                    gap-2
+                    font-bold
+                    cursor-pointer
+                    whitespace-nowrap
+                ">
 
                     <Upload size={18} />
 
@@ -1521,7 +1894,31 @@ export default function MaintenancePlan() {
                     />
 
                 </label>
+                {/* DELETE ALL */}
 
+                <button
+                    onClick={
+                        handleDeleteAllPM
+                    }
+                    className="
+                        h-12
+                        px-5
+                        rounded-2xl
+                        bg-red-600
+                        hover:bg-red-500
+                        flex
+                        items-center
+                        gap-2
+                        font-bold
+                        whitespace-nowrap
+                    "
+                >
+
+                    <Trash2 size={18} />
+
+                    Delete All
+
+                </button>
             </div>
 
             {/* ====================================================== */}
@@ -1840,7 +2237,211 @@ export default function MaintenancePlan() {
                 </table>
 
             </div>
+            {/* ====================================================== */}
+            {/* EDIT MODAL */}
+            {/* ====================================================== */}
 
+            {
+                editingItem && (
+
+                    <div className="
+            fixed
+            inset-0
+            z-[999]
+            bg-black/70
+            backdrop-blur-sm
+            flex
+            items-center
+            justify-center
+            p-6
+        ">
+
+                        <div className="
+                w-full
+                max-w-4xl
+                rounded-[32px]
+                border
+                border-cyan-500/20
+                bg-[#071226]
+                p-8
+                max-h-[90vh]
+                overflow-auto
+            ">
+
+                            {/* HEADER */}
+
+                            <div className="
+                    flex
+                    items-center
+                    justify-between
+                    mb-8
+                ">
+
+                                <div>
+
+                                    <h1 className="
+                            text-3xl
+                            font-black
+                            text-white
+                        ">
+                                        Edit PM Data
+                                    </h1>
+
+                                    <p className="
+                            text-slate-400
+                            mt-1
+                        ">
+                                        Update preventive maintenance data
+                                    </p>
+
+                                </div>
+
+                                <button
+                                    onClick={() =>
+                                        setEditingItem(null)
+                                    }
+                                    className="
+                            w-10
+                            h-10
+                            rounded-xl
+                            bg-red-500/20
+                            border
+                            border-red-500/30
+                            text-red-400
+                            font-bold
+                        "
+                                >
+                                    X
+                                </button>
+
+                            </div>
+
+                            {/* FORM */}
+
+                            <div className="
+                    grid
+                    grid-cols-2
+                    gap-5
+                ">
+
+                                {
+                                    [
+                                        "equipmentType",
+                                        "machine",
+                                        "item",
+                                        "criteria",
+                                        "actionTask",
+                                        "time",
+                                        "frequency",
+                                        "annualMaintenance",
+                                        "week",
+                                        "month",
+                                        "responsible",
+                                        "closedAt"
+                                    ].map((field) => (
+
+                                        <div
+                                            key={field}
+                                            className="
+                                    flex
+                                    flex-col
+                                    gap-2
+                                "
+                                        >
+
+                                            <label className="
+                                    text-sm
+                                    text-slate-300
+                                    capitalize
+                                ">
+                                                {field}
+                                            </label>
+
+                                            <input
+                                                type={
+                                                    field === "closedAt"
+                                                        ? "date"
+                                                        : "text"
+                                                }
+                                                value={
+                                                    editForm[field] || ""
+                                                }
+                                                onChange={(e) =>
+                                                    setEditForm({
+                                                        ...editForm,
+                                                        [field]:
+                                                            e.target.value
+                                                    })
+                                                }
+                                                className="
+                                        h-12
+                                        rounded-2xl
+                                        bg-slate-900/60
+                                        border
+                                        border-slate-700
+                                        px-4
+                                        outline-none
+                                        text-white
+                                    "
+                                            />
+
+                                        </div>
+
+                                    ))
+                                }
+
+                            </div>
+
+                            {/* ACTION */}
+
+                            <div className="
+                    flex
+                    justify-end
+                    gap-3
+                    mt-8
+                ">
+
+                                <button
+                                    onClick={() =>
+                                        setEditingItem(null)
+                                    }
+                                    className="
+                            h-12
+                            px-6
+                            rounded-2xl
+                            border
+                            border-slate-700
+                            text-slate-300
+                        "
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    onClick={
+                                        handleSaveEdit
+                                    }
+                                    className="
+                            h-12
+                            px-6
+                            rounded-2xl
+                            bg-cyan-500
+                            hover:bg-cyan-400
+                            text-white
+                            font-bold
+                        "
+                                >
+                                    Save Changes
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                )
+            }
         </div>
 
     );
@@ -1934,7 +2535,6 @@ function SummaryCard({
                 </div>
 
             </div>
-
         </div>
 
     );
