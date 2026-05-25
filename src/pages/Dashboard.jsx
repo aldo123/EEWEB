@@ -47,6 +47,9 @@ import RequestList
 import MaintenancePlan
   from "../pages/DeviceManagement/MaintenancePlan";
 
+import EquipmentList
+  from "../pages/DeviceManagement/EquipmentList";
+
 export default function Dashboard() {
 
   const [user, setUser] =
@@ -1407,32 +1410,7 @@ flex flex-col">
             {/* EQUIPMENT */}
             {selectedPage ===
               "equipment-list" && (
-
-                <div className="h-[500px]
-                  rounded-[36px]
-                  border border-white/5
-                  bg-white/[0.03]
-                  backdrop-blur-2xl
-                  flex items-center justify-center">
-
-                  <div className="text-center">
-
-                    <h1 className="text-5xl font-black text-white">
-
-                      Equipment List
-
-                    </h1>
-
-                    <p className="text-slate-500 mt-4">
-
-                      Module coming soon
-
-                    </p>
-
-                  </div>
-
-                </div>
-
+                <EquipmentList />
               )}
 
             {/* CALIBRATION */}
