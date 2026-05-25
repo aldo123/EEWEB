@@ -10,6 +10,7 @@ import * as XLSX from "xlsx";
 
 import {
     Upload,
+    Download,
     Search,
     Trash2,
     Pencil,
@@ -63,6 +64,56 @@ const normalizeText = (
     return String(value || "")
         .trim()
         .toLowerCase();
+
+};
+
+// ========================================
+// FORMAT RUPIAH
+// ========================================
+
+const formatRupiah = (
+    value
+) => {
+
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+
+        return "0";
+
+    }
+
+    const number =
+        Number(
+            String(value)
+                .replace(/\./g, "")
+                .replace(/,/g, "")
+        );
+
+    return number.toLocaleString(
+        "id-ID"
+    );
+
+};
+
+// ========================================
+// PARSE NUMBER
+// ========================================
+
+const parseNumber = (
+    value
+) => {
+
+    if (!value)
+        return 0;
+
+    return Number(
+        String(value)
+            .replace(/\./g, "")
+            .replace(/,/g, "")
+    ) || 0;
 
 };
 
@@ -250,16 +301,34 @@ export default function RequestList() {
                                             item["Description"] || "",
 
                                         qty:
-                                            item["Qty"] || "",
+                                            parseNumber(
+                                                item["Qty"]
+                                            ),
 
                                         oum:
                                             item["OUM"] || "",
 
                                         price:
-                                            item["Price"] || "",
+                                            formatRupiah(
+                                                parseNumber(
+                                                    item["Price"]
+                                                )
+                                            ),
 
                                         total_cost:
-                                            item["Total Cost"] || "",
+                                            formatRupiah(
+
+                                                parseNumber(
+                                                    item["Qty"]
+                                                )
+
+                                                *
+
+                                                parseNumber(
+                                                    item["Price"]
+                                                )
+
+                                            ),
 
                                         vendor_code:
                                             item["Code Vendor"] || "",
@@ -575,6 +644,146 @@ export default function RequestList() {
 
         };
 
+    // ========================================
+    // EXPORT EXCEL
+    // ========================================
+
+    const handleExportExcel =
+        () => {
+
+            // ====================================
+            // FORMAT EXPORT
+            // ====================================
+
+            const exportData =
+                requests.map((item) => {
+
+                    return {
+
+                        "OA-PR#":
+                            item.oa_pr || "",
+
+                        "PR.NO":
+                            item.pr_no || "",
+
+                        "PO":
+                            item.po || "",
+
+                        "IO":
+                            item.io || "",
+
+                        "Cost center":
+                            item.cost_center || "",
+
+                        "Description":
+                            item.description || "",
+
+                        "Qty":
+                            item.qty || "",
+
+                        "OUM":
+                            item.oum || "",
+
+                        "Price":
+                            item.price || "",
+
+                        "Total Cost":
+                            item.total_cost || "",
+
+                        "Code Vendor":
+                            item.vendor_code || "",
+
+                        "Vendor":
+                            item.vendor || "",
+
+                        "Category":
+                            item.category || "",
+
+                        "Additional Information":
+                            item.additional_info || "",
+
+                        "PIC":
+                            item.pic || "",
+
+                        "Support":
+                            item.support || "",
+
+                        "Original due date":
+                            item.original_due || "",
+
+                        "Revised due date":
+                            item.revised_due || "",
+
+                        "Status":
+                            item.status || ""
+
+                    };
+
+                });
+
+            // ====================================
+            // CREATE WORKBOOK
+            // ====================================
+
+            const worksheet =
+                XLSX.utils.json_to_sheet(
+                    exportData
+                );
+
+            const workbook =
+                XLSX.utils.book_new();
+
+            XLSX.utils.book_append_sheet(
+
+                workbook,
+                worksheet,
+                "Request List"
+
+            );
+
+            // ====================================
+            // AUTO COLUMN WIDTH
+            // ====================================
+
+            worksheet["!cols"] = [
+
+                { wch: 18 }, // OA-PR#
+                { wch: 15 }, // PR.NO
+                { wch: 15 }, // PO
+                { wch: 12 }, // IO
+                { wch: 15 }, // Cost center
+                { wch: 45 }, // Description
+                { wch: 10 }, // Qty
+                { wch: 10 }, // OUM
+                { wch: 15 }, // Price
+                { wch: 18 }, // Total Cost
+                { wch: 15 }, // Vendor Code
+                { wch: 28 }, // Vendor
+                { wch: 18 }, // Category
+                { wch: 30 }, // Additional Info
+                { wch: 15 }, // PIC
+                { wch: 12 }, // Support
+                { wch: 18 }, // Original Due
+                { wch: 18 }, // Revised Due
+                { wch: 15 }  // Status
+
+            ];
+
+            // ====================================
+            // EXPORT FILE
+            // ====================================
+
+            XLSX.writeFile(
+
+                workbook,
+
+                `REQUEST_LIST_${new Date()
+                    .toISOString()
+                    .split("T")[0]}.xlsx`
+
+            );
+
+        };
 
     // ========================================
     // DELETE ALL
@@ -733,6 +942,14 @@ export default function RequestList() {
     const handleSaveEdit =
         async () => {
 
+            const autoTotal =
+
+                parseNumber(editForm.qty)
+
+                *
+
+                parseNumber(editForm.price);
+
             const updatedStatus =
 
                 editForm.oa_pr &&
@@ -751,6 +968,18 @@ export default function RequestList() {
                     .update({
 
                         ...editForm,
+
+                        price:
+                            formatRupiah(
+                                parseNumber(
+                                    editForm.price
+                                )
+                            ),
+
+                        total_cost:
+                            formatRupiah(
+                                autoTotal
+                            ),
 
                         status:
                             updatedStatus
@@ -855,6 +1084,14 @@ export default function RequestList() {
 
             }
 
+            const autoTotal =
+
+                parseNumber(addForm.qty)
+
+                *
+
+                parseNumber(addForm.price);
+
             const status =
 
                 addForm.oa_pr &&
@@ -873,6 +1110,17 @@ export default function RequestList() {
                     .insert([{
 
                         ...addForm,
+                        price:
+                            formatRupiah(
+                                parseNumber(
+                                    addForm.price
+                                )
+                            ),
+
+                        total_cost:
+                            formatRupiah(
+                                autoTotal
+                            ),
 
                         status
 
@@ -960,6 +1208,18 @@ export default function RequestList() {
                 ||
 
                 item.pic
+                    ?.toLowerCase()
+                    .includes(keyword)
+
+                ||
+
+                item.additional_info
+                    ?.toLowerCase()
+                    .includes(keyword)
+
+                ||
+
+                item.cost_center
                     ?.toLowerCase()
                     .includes(keyword)
 
@@ -1349,6 +1609,30 @@ export default function RequestList() {
                     />
 
                 </label>
+
+                <button
+                    onClick={
+                        handleExportExcel
+                    }
+                    className="
+                        h-12
+                        px-5
+                        rounded-2xl
+                        bg-blue-600
+                        hover:bg-blue-500
+                        flex
+                        items-center
+                        gap-2
+                        font-bold
+                        whitespace-nowrap
+                    "
+                >
+
+                    <Download size={18} />
+
+                    Export Excel
+
+                </button>
                 <button
                     onClick={
                         handleDeleteAll
@@ -1533,11 +1817,11 @@ export default function RequestList() {
                                             </td>
 
                                             <td className="p-3">
-                                                {item.price}
+                                                {formatRupiah(item.price)}
                                             </td>
 
                                             <td className="p-3">
-                                                {item.total_cost}
+                                                {formatRupiah(item.total_cost)}
                                             </td>
 
                                             <td className="p-3">

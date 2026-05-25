@@ -8,6 +8,7 @@ import {
     Search,
     Plus,
     Upload,
+    Download,
     Pencil,
     Trash2,
     AlertTriangle,
@@ -913,6 +914,129 @@ export default function MaintenancePlan() {
             );
 
         };
+
+    // ========================================
+    // EXPORT EXCEL
+    // ========================================
+
+    const handleExportExcel = () => {
+
+        // ====================================
+        // FORMAT EXPORT
+        // ====================================
+
+        const exportData =
+            filteredData.map((item) => {
+
+                return {
+
+                    "Equipment Type":
+                        item.equipmentType || "",
+
+                    "Machine":
+                        item.machine || "",
+
+                    "Item":
+                        item.item || "",
+
+                    "Criteria":
+                        item.criteria || "",
+
+                    "Action Task":
+                        item.actionTask || "",
+
+                    "Time":
+                        item.time || "",
+
+                    "Frequency":
+                        item.frequency || "",
+
+                    "Annual":
+                        item.annualMaintenance || "",
+
+                    "Week":
+                        item.week || "",
+
+                    "Month":
+                        item.month || "",
+
+                    "Responsible":
+                        item.responsible || "",
+
+                    "Status":
+                        item.status || "",
+
+                    "Date Completed":
+                        item.closedAt || "",
+
+                    "Week Completed":
+                        item.weekCompleted || "",
+
+                    "Point Summary":
+                        item.pointsSummary || ""
+
+                };
+
+            });
+
+        // ====================================
+        // CREATE WORKBOOK
+        // ====================================
+
+        const worksheet =
+            XLSX.utils.json_to_sheet(
+                exportData
+            );
+
+        const workbook =
+            XLSX.utils.book_new();
+
+        XLSX.utils.book_append_sheet(
+            workbook,
+            worksheet,
+            "Preventive Maintenance"
+        );
+
+        // ====================================
+        // AUTO COLUMN WIDTH
+        // ====================================
+
+        worksheet["!cols"] = [
+
+            { wch: 25 }, // Equipment Type
+            { wch: 30 }, // Machine
+            { wch: 25 }, // Item
+            { wch: 20 }, // Criteria
+            { wch: 60 }, // Action Task
+            { wch: 10 }, // Time
+            { wch: 12 }, // Frequency
+            { wch: 12 }, // Annual
+            { wch: 10 }, // Week
+            { wch: 15 }, // Month
+            { wch: 18 }, // Responsible
+            { wch: 15 }, // Status
+            { wch: 18 }, // Date Completed
+            { wch: 18 }, // Week Completed
+            { wch: 15 }  // Point Summary
+
+        ];
+
+        // ====================================
+        // EXPORT FILE
+        // ====================================
+
+        XLSX.writeFile(
+
+            workbook,
+
+            `PREVENTIVE_MAINTENANCE_${new Date()
+                .toISOString()
+                .split("T")[0]
+            }.xlsx`
+
+        );
+
+    };
 
     // ======================================================
     // DELETE
@@ -1894,6 +2018,31 @@ export default function MaintenancePlan() {
                     />
 
                 </label>
+
+                <button
+                    onClick={
+                        handleExportExcel
+                    }
+                    className="
+                        h-12
+                        px-5
+                        rounded-2xl
+                        bg-blue-600
+                        hover:bg-blue-500
+                        flex
+                        items-center
+                        gap-2
+                        font-bold
+                        whitespace-nowrap
+                    "
+                >
+
+                    <Download size={18} />
+
+                    Export Excel
+
+                </button>
+
                 {/* DELETE ALL */}
 
                 <button
