@@ -34,6 +34,10 @@ export default function ActivityDetail({
         setLoading] =
         useState(true);
 
+    const [hideInfoColumn,
+        setHideInfoColumn] =
+        useState(false);
+
     const [showAddTask,
         setShowAddTask] =
         useState(false);
@@ -2009,7 +2013,7 @@ export default function ActivityDetail({
 
                         </div>
 
-                        
+
 
                         <button
                             onClick={() =>
@@ -2369,13 +2373,46 @@ export default function ActivityDetail({
 
             </div>
 
-            <div className="flex gap-6 items-start">
+            <div className="flex flex-col gap-4">
 
-                {/* LEFT TABLE */}
-                <div className=" min-w-0">
+                {/* HIDE BUTTON */}
+                <div className="flex justify-end">
 
-                    {/* TASK TABLE */}
-                    <div className="relative
+                    <button
+                        onClick={() =>
+                            setHideInfoColumn(
+                                !hideInfoColumn
+                            )
+                        }
+                        className="
+            h-12
+            px-5
+            rounded-2xl
+            border
+            border-cyan-500/20
+            bg-cyan-500/10
+            text-cyan-400
+            font-bold
+            hover:bg-cyan-500/20
+            transition-all
+            "
+                    >
+
+                        {hideInfoColumn
+                            ? "Unhide Info Column"
+                            : "Hide Info Column"}
+
+                    </button>
+
+                </div>
+
+                <div className="flex gap-6 items-start">
+
+                    {/* LEFT TABLE */}
+                    <div className=" min-w-0">
+
+                        {/* TASK TABLE */}
+                        <div className="relative
         rounded-[36px]
             border border-cyan-500/10
             bg-gradient-to-br
@@ -2385,8 +2422,8 @@ export default function ActivityDetail({
             overflow-hidden
             shadow-[0_0_60px_rgba(0,255,255,0.05)]">
 
-                        {/* GLOW */}
-                        <div className="absolute
+                            {/* GLOW */}
+                            <div className="absolute
                 top-[-120px]
                 left-[20%]
                 w-[300px]
@@ -2395,33 +2432,33 @@ export default function ActivityDetail({
                 bg-cyan-500/10
                 blur-[140px]" />
 
-                        <div
-                            ref={ganttScrollRef}
-                            className="
+                            <div
+                                ref={ganttScrollRef}
+                                className="
                             overflow-x-auto
                             overflow-y-auto
                             scrollbar-hide
                             gantt-main-scroll
                             max-h-[62vh]
                         "
-                        >
-                            <div className="min-w-[5500px]">
-                                {/* TOP SCROLLBAR */}
-                                <div
-                                    className="
+                            >
+                                <div className="min-w-[5500px]">
+                                    {/* TOP SCROLLBAR */}
+                                    <div
+                                        className="
                                         overflow-x-auto
                                         overflow-y-hidden
                                         h-[18px]
                                         gantt-top-scroll
                                     "
-                                >
+                                    >
 
-                                    <div className="w-[5400px] h-[1px]" />
+                                        <div className="w-[5400px] h-[1px]" />
 
-                                </div>
-                                {/* TABLE HEADER */}
-                                <div
-                                    className="
+                                    </div>
+                                    {/* TABLE HEADER */}
+                                    <div
+                                        className="
                                     flex
                                     min-w-[5500px]
                                     sticky
@@ -2429,56 +2466,80 @@ export default function ActivityDetail({
                                     z-50
                                     h-[42px]
                                     "
-                                >
-                                    <div
-                                        className="
+                                    >
+                                        <div
+                                            className={`
                                             grid
-                                            grid-cols-[70px_300px_140px_180px_120px_120px_120px_120px_180px]
+
+                                            ${hideInfoColumn
+
+                                                ? "grid-cols-[70px_300px_120px_120px_180px]"
+
+                                                : "grid-cols-[70px_300px_140px_180px_120px_120px_120px_120px_180px]"
+                                            }
+
                                             shrink-0
                                             sticky
                                             left-0
                                             z-20
                                             bg-[#111827]
-                                        ">
+                                        `}
+                                        >
 
-                                        <div className="px-4 h-full flex items-center">
-                                            No
+                                            <div className="px-4 h-full flex items-center">
+                                                No
+                                            </div>
+
+                                            <div className="px-4 h-full flex items-center">
+                                                Task
+                                            </div>
+
+                                            {!hideInfoColumn && (
+
+                                            <div className="px-4 h-full flex items-center">
+                                                Remark
+                                            </div>
+
+                                            )}
+
+                                            {!hideInfoColumn && (
+
+                                            <div className="px-4 h-full flex items-center">
+                                                Assigned To
+                                            </div>
+
+                                            )}
+
+                                            {!hideInfoColumn && (
+
+                                            <div className="px-4 h-full flex items-center">
+                                                Status
+                                            </div>
+
+                                            )}
+
+                                            {!hideInfoColumn && (
+
+                                            <div className="px-4 h-full flex items-center">
+                                                Total Delay
+                                            </div>
+
+                                            )}
+
+                                            <div className="px-4 h-full flex items-center">
+                                                Start Date
+                                            </div>
+
+                                            <div className="px-4 h-full flex items-center">
+                                                End Date
+                                            </div>
+
+                                            <div className="px-4 h-full flex items-center">
+                                                Action
+                                            </div>
                                         </div>
 
-                                        <div className="px-4 h-full flex items-center">
-                                            Task
-                                        </div>
-
-                                        <div className="px-4 h-full flex items-center">
-                                            Remark
-                                        </div>
-
-                                        <div className="px-4 h-full flex items-center">
-                                            Assigned To
-                                        </div>
-
-                                        <div className="px-4 h-full flex items-center">
-                                            Status
-                                        </div>
-
-                                        <div className="px-4 h-full flex items-center">
-                                            Total Delay
-                                        </div>
-
-                                        <div className="px-4 h-full flex items-center">
-                                            Start Date
-                                        </div>
-
-                                        <div className="px-4 h-full flex items-center">
-                                            End Date
-                                        </div>
-
-                                        <div className="px-4 h-full flex items-center">
-                                            Action
-                                        </div>
-                                    </div>
-
-                                    <div className="
+                                        <div className="
                                         border-l
                                         border-white/10
                                         overflow-hidden
@@ -2486,23 +2547,23 @@ export default function ActivityDetail({
                                         w-[4160px]
                                     ">
 
-                                        <div className="flex h-full w-[4160px]">
+                                            <div className="flex h-full w-[4160px]">
 
-                                            {weeks.map((week) => {
+                                                {weeks.map((week) => {
 
-                                                const currentWeek =
-                                                    getWeekNumber(
-                                                        new Date()
-                                                    );
+                                                    const currentWeek =
+                                                        getWeekNumber(
+                                                            new Date()
+                                                        );
 
-                                                const isCurrentWeek =
-                                                    week === currentWeek;
+                                                    const isCurrentWeek =
+                                                        week === currentWeek;
 
-                                                return (
+                                                    return (
 
-                                                    <div
-                                                        key={week}
-                                                        className={`
+                                                        <div
+                                                            key={week}
+                                                            className={`
                                                         w-[80px]
                                                         shrink-0
                                                         border-r
@@ -2515,54 +2576,54 @@ export default function ActivityDetail({
 
                                                         ${isCurrentWeek
 
-                                                                ? "text-green-400 bg-green-500/10 shadow-[0_0_20px_rgba(0,255,120,0.25)]"
+                                                                    ? "text-green-400 bg-green-500/10 shadow-[0_0_20px_rgba(0,255,120,0.25)]"
 
-                                                                : "text-cyan-400"
-                                                            }
+                                                                    : "text-cyan-400"
+                                                                }
                                                         `}
-                                                    >
+                                                        >
 
-                                                        W{week}
+                                                            W{week}
 
-                                                    </div>
+                                                        </div>
 
-                                                );
+                                                    );
 
-                                            })}
+                                                })}
+
+                                            </div>
 
                                         </div>
-
                                     </div>
-                                </div>
 
-                                {/* EMPTY */}
-                                {!loading &&
-                                    taskHeaders.length === 0 && (
+                                    {/* EMPTY */}
+                                    {!loading &&
+                                        taskHeaders.length === 0 && (
 
-                                        <div className="p-16
+                                            <div className="p-16
                     text-center
                     text-slate-500">
 
-                                            No task created yet
+                                                No task created yet
 
-                                        </div>
+                                            </div>
 
-                                    )}
+                                        )}
 
-                                {/* TASK HEADER ROW */}
-                                {filteredHeaders.map(
-                                    (
-                                        header,
-                                        index
-                                    ) => (
+                                    {/* TASK HEADER ROW */}
+                                    {filteredHeaders.map(
+                                        (
+                                            header,
+                                            index
+                                        ) => (
 
-                                        <div
-                                            key={header.id}
-                                        >
-
-                                            {/* HEADER ROW */}
                                             <div
-                                                className="
+                                                key={header.id}
+                                            >
+
+                                                {/* HEADER ROW */}
+                                                <div
+                                                    className="
                                                 flex
                                                 min-w-[5500px]
                                                 sticky
@@ -2578,56 +2639,68 @@ export default function ActivityDetail({
                                                 hover:brightness-110
                                                 transition-all
                                             "
-                                            >
-                                                <div
-                                                    className="
+                                                >
+                                                    <div
+                                                    className={`
                                                     grid
-                                                    grid-cols-[70px_300px_140px_180px_120px_120px_120px_120px_180px]
+
+                                                    ${hideInfoColumn
+
+                                                    ? "grid-cols-[70px_300px_120px_120px_180px]"
+
+                                                    : "grid-cols-[70px_300px_140px_180px_120px_120px_120px_120px_180px]"
+                                                    }
+
                                                     shrink-0
                                                     sticky
                                                     left-0
                                                     z-10
                                                     bg-[#0f172a]
-                                                ">
+                                                    `}
+                                                    >
 
-                                                    {/* NO */}
-                                                    <div className="px-4 h-full flex items-center">
+                                                        {/* NO */}
+                                                        <div className="px-4 h-full flex items-center">
 
-                                                        {index + 1}
+                                                            {index + 1}
 
-                                                    </div>
+                                                        </div>
 
-                                                    {/* TITLE */}
-                                                    <div className="p-4
+                                                        {/* TITLE */}
+                                                        <div className="p-4
                                                         text-lg
                                                         font-black
                                                         tracking-wide
                                                         text-white
                                                         drop-shadow-[0_0_12px_rgba(255,255,255,0.3)]">
 
-                                                        {header.title}
+                                                            {header.title}
 
-                                                    </div>
+                                                        </div>
 
-                                                    {/* PROGRESS */}
-                                                    <div className="px-4 h-full flex items-center">
+                                                        {!hideInfoColumn && (
 
-                                                        {(() => {
+                                                        <>
 
-                                                            const {
-                                                                progress,
-                                                                color,
-                                                                shadow
-                                                            } = getHeaderProgressInfo(
-                                                                header.id
-                                                            );
+                                                        {/* PROGRESS */}
+                                                        <div className="px-4 h-full flex items-center">
 
-                                                            return (
+                                                            {(() => {
 
-                                                                <div className="w-full">
+                                                                const {
+                                                                    progress,
+                                                                    color,
+                                                                    shadow
+                                                                } = getHeaderProgressInfo(
+                                                                    header.id
+                                                                );
 
-                                                                    {/* MODERN BIG PROGRESS BAR */}
-                                                                    <div className="
+                                                                return (
+
+                                                                    <div className="w-full">
+
+                                                                        {/* MODERN BIG PROGRESS BAR */}
+                                                                        <div className="
                                                             relative
                                                             w-full
                                                             h-7
@@ -2638,9 +2711,9 @@ export default function ActivityDetail({
                                                             shadow-inner
                                                             backdrop-blur-xl">
 
-                                                                        {/* ACTIVE BAR */}
-                                                                        <div
-                                                                            className="
+                                                                            {/* ACTIVE BAR */}
+                                                                            <div
+                                                                                className="
                                                                 absolute
                                                                 left-0
                                                                 top-0
@@ -2656,190 +2729,193 @@ export default function ActivityDetail({
                                                                 items-center
                                                                 justify-center
                                                                 shadow-[0_0_20px_rgba(99,102,241,0.35)]"
-                                                                            style={{
-                                                                                width: `${progress}%`
-                                                                            }}
-                                                                        >
+                                                                                style={{
+                                                                                    width: `${progress}%`
+                                                                                }}
+                                                                            >
 
-                                                                            {/* PERCENT TEXT INSIDE */}
-                                                                            <span className="
+                                                                                {/* PERCENT TEXT INSIDE */}
+                                                                                <span className="
                                                                     text-[11px]
                                                                     font-black
                                                                     tracking-wide
                                                                     text-white
                                                                     drop-shadow-lg">
 
-                                                                                {progress}%
+                                                                                    {progress}%
 
-                                                                            </span>
+                                                                                </span>
 
-                                                                        </div>
+                                                                            </div>
 
-                                                                        {/* EMPTY STATE */}
-                                                                        {progress === 0 && (
+                                                                            {/* EMPTY STATE */}
+                                                                            {progress === 0 && (
 
-                                                                            <div className="
+                                                                                <div className="
                                                                     absolute
                                                                     inset-0
                                                                     flex
                                                                     items-center
                                                                     justify-center">
 
-                                                                                <span className="
+                                                                                    <span className="
                                                                         text-[11px]
                                                                         font-bold
                                                                         text-slate-500">
 
-                                                                                    0%
+                                                                                        0%
 
-                                                                                </span>
+                                                                                    </span>
 
-                                                                            </div>
+                                                                                </div>
 
-                                                                        )}
+                                                                            )}
+
+                                                                        </div>
 
                                                                     </div>
 
-                                                                </div>
-
-                                                            );
-
-                                                        })()}
-
-                                                    </div>
-
-                                                    {/* ASSIGNED */}
-                                                    <div className="px-4 h-full flex items-center">
-
-                                                        {
-                                                            header.assigned_to ||
-                                                            "-"
-                                                        }
-
-                                                    </div>
-
-                                                    <div className="px-4 h-full flex items-center">
-
-                                                        {(() => {
-
-                                                            const status =
-                                                                getHeaderStatus(
-                                                                    header
                                                                 );
 
-                                                            let color =
-                                                                "text-cyan-400";
+                                                            })()}
 
-                                                            if (status === "DONE") {
+                                                        </div>
 
-                                                                color =
-                                                                    "text-green-400";
+                                                        {/* ASSIGNED */}
+                                                        <div className="px-4 h-full flex items-center">
 
+                                                            {
+                                                                header.assigned_to ||
+                                                                "-"
                                                             }
 
-                                                            else if (
-                                                                status === "DELAY"
-                                                            ) {
+                                                        </div>
 
-                                                                color =
-                                                                    "text-red-400";
+                                                        <div className="px-4 h-full flex items-center">
 
-                                                            }
+                                                            {(() => {
 
-                                                            else if (
-                                                                status === "PROGRESS"
-                                                            ) {
+                                                                const status =
+                                                                    getHeaderStatus(
+                                                                        header
+                                                                    );
 
-                                                                color =
-                                                                    "text-amber-400";
+                                                                let color =
+                                                                    "text-cyan-400";
 
-                                                            }
+                                                                if (status === "DONE") {
 
-                                                            return (
+                                                                    color =
+                                                                        "text-green-400";
 
-                                                                <span className={`font-bold ${color}`}>
+                                                                }
 
-                                                                    {status.charAt(0) +
-                                                                        status.slice(1).toLowerCase()}
+                                                                else if (
+                                                                    status === "DELAY"
+                                                                ) {
 
-                                                                </span>
+                                                                    color =
+                                                                        "text-red-400";
 
-                                                            );
+                                                                }
 
-                                                        })()}
+                                                                else if (
+                                                                    status === "PROGRESS"
+                                                                ) {
 
-                                                    </div>
+                                                                    color =
+                                                                        "text-amber-400";
 
-                                                    <div className="px-4 h-full flex items-center">
+                                                                }
 
-                                                        {(() => {
+                                                                return (
 
-                                                            const {
-                                                                headerDelay
-                                                            } =
-                                                                calculateHeaderDelay(
-                                                                    header
+                                                                    <span className={`font-bold ${color}`}>
+
+                                                                        {status.charAt(0) +
+                                                                            status.slice(1).toLowerCase()}
+
+                                                                    </span>
+
                                                                 );
 
-                                                            return headerDelay > 0 ? (
+                                                            })()}
 
-                                                                <span className="
+                                                        </div>
+
+                                                        <div className="px-4 h-full flex items-center">
+
+                                                            {(() => {
+
+                                                                const {
+                                                                    headerDelay
+                                                                } =
+                                                                    calculateHeaderDelay(
+                                                                        header
+                                                                    );
+
+                                                                return headerDelay > 0 ? (
+
+                                                                    <span className="
                                             font-black
                                             text-red-400">
 
-                                                                    {headerDelay} Day
+                                                                        {headerDelay} Day
 
-                                                                </span>
+                                                                    </span>
 
-                                                            ) : (
+                                                                ) : (
 
-                                                                <span className="
+                                                                    <span className="
                                             text-green-400
                                             font-bold">
 
-                                                                    0 Day
+                                                                        0 Day
 
-                                                                </span>
+                                                                    </span>
 
-                                                            );
+                                                                );
 
-                                                        })()}
+                                                            })()}
 
-                                                    </div>
+                                                        </div>
+                                                        </>
 
-                                                    {/* START */}
-                                                    <div className="px-4 h-full flex items-center">
+                                                        )}
 
-                                                        {
-                                                            header.start_date ||
-                                                            "-"
-                                                        }
+                                                        {/* START */}
+                                                        <div className="px-4 h-full flex items-center">
 
-                                                    </div>
+                                                            {
+                                                                header.start_date ||
+                                                                "-"
+                                                            }
 
-                                                    {/* END */}
-                                                    <div className="px-4 h-full flex items-center">
+                                                        </div>
 
-                                                        {
-                                                            header.end_date ||
-                                                            "-"
-                                                        }
+                                                        {/* END */}
+                                                        <div className="px-4 h-full flex items-center">
 
-                                                    </div>
+                                                            {
+                                                                header.end_date ||
+                                                                "-"
+                                                            }
 
-                                                    {/* ACTION */}
-                                                    <div className="p-4
+                                                        </div>
+
+                                                        {/* ACTION */}
+                                                        <div className="p-4
                                             flex items-center
                                             gap-2">
 
-                                                        {/* HIDE / UNHIDE */}
-                                                        <button
-                                                            onClick={() =>
-                                                                handleToggleCollapse(
-                                                                    header.id
-                                                                )
-                                                            }
-                                                            className="h-10
+                                                            {/* HIDE / UNHIDE */}
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleToggleCollapse(
+                                                                        header.id
+                                                                    )
+                                                                }
+                                                                className="h-10
                                                 w-10
                                                 rounded-xl
                                                 bg-white/5
@@ -2849,44 +2925,44 @@ export default function ActivityDetail({
                                                 justify-center
                                                 hover:bg-white/10
                                                 transition-all"
-                                                        >
+                                                            >
 
-                                                            {collapsedHeaders.includes(
-                                                                header.id
-                                                            ) ? (
+                                                                {collapsedHeaders.includes(
+                                                                    header.id
+                                                                ) ? (
 
-                                                                <ChevronRight
-                                                                    size={16}
-                                                                />
+                                                                    <ChevronRight
+                                                                        size={16}
+                                                                    />
 
-                                                            ) : (
+                                                                ) : (
 
-                                                                <ChevronDown
-                                                                    size={16}
-                                                                />
+                                                                    <ChevronDown
+                                                                        size={16}
+                                                                    />
 
-                                                            )}
+                                                                )}
 
-                                                        </button>
+                                                            </button>
 
-                                                        <button
+                                                            <button
 
-                                                            disabled={
-                                                                calculateHeaderDelay(
-                                                                    header
-                                                                ).headerDelay > 0 &&
+                                                                disabled={
+                                                                    calculateHeaderDelay(
+                                                                        header
+                                                                    ).headerDelay > 0 &&
 
-                                                                currentUser?.role !==
-                                                                "Manager"
-                                                            }
+                                                                    currentUser?.role !==
+                                                                    "Manager"
+                                                                }
 
-                                                            onClick={() =>
-                                                                handleEditHeader(
-                                                                    header
-                                                                )
-                                                            }
+                                                                onClick={() =>
+                                                                    handleEditHeader(
+                                                                        header
+                                                                    )
+                                                                }
 
-                                                            className={`h-10
+                                                                className={`h-10
                                                 w-10
                                                 rounded-xl
                                                 bg-amber-500/10
@@ -2897,39 +2973,39 @@ export default function ActivityDetail({
                                                 transition-all
 
                                         ${calculateHeaderDelay(
-                                                                header
-                                                            ).headerDelay > 0 &&
-
-                                                                    currentUser?.role !==
-                                                                    "Manager"
-
-                                                                    ? "opacity-30 cursor-not-allowed"
-
-                                                                    : "hover:bg-amber-500/20 hover:shadow-[0_0_15px_rgba(0,255,255,0.35)]"
-                                                                }
-    `}
-                                                        >
-
-                                                            <Pencil
-                                                                size={16}
-                                                            />
-
-                                                        </button>
-
-                                                        {/* ADD SUB TASK */}
-                                                        <button
-                                                            onClick={() => {
-
-                                                                setSelectedHeader(
                                                                     header
-                                                                );
+                                                                ).headerDelay > 0 &&
 
-                                                                setShowAddSubTask(
-                                                                    true
-                                                                );
+                                                                        currentUser?.role !==
+                                                                        "Manager"
 
-                                                            }}
-                                                            className="h-10
+                                                                        ? "opacity-30 cursor-not-allowed"
+
+                                                                        : "hover:bg-amber-500/20 hover:shadow-[0_0_15px_rgba(0,255,255,0.35)]"
+                                                                    }
+    `}
+                                                            >
+
+                                                                <Pencil
+                                                                    size={16}
+                                                                />
+
+                                                            </button>
+
+                                                            {/* ADD SUB TASK */}
+                                                            <button
+                                                                onClick={() => {
+
+                                                                    setSelectedHeader(
+                                                                        header
+                                                                    );
+
+                                                                    setShowAddSubTask(
+                                                                        true
+                                                                    );
+
+                                                                }}
+                                                                className="h-10
                                                 w-10
                                                 rounded-xl
                                                 bg-cyan-500/10
@@ -2939,24 +3015,24 @@ export default function ActivityDetail({
                                                 justify-center
                                                 hover:bg-cyan-500/20
                                                 transition-all"
-                                                        >
+                                                            >
 
-                                                            <Plus
-                                                                size={16}
-                                                            />
+                                                                <Plus
+                                                                    size={16}
+                                                                />
 
-                                                        </button>
+                                                            </button>
 
-                                                        {/* DELETE */}
-                                                        <button
+                                                            {/* DELETE */}
+                                                            <button
 
 
-                                                            onClick={() =>
-                                                                handleDeleteHeader(
-                                                                    header.id
-                                                                )
-                                                            }
-                                                            className="h-10
+                                                                onClick={() =>
+                                                                    handleDeleteHeader(
+                                                                        header.id
+                                                                    )
+                                                                }
+                                                                className="h-10
                                                 w-10
                                                 rounded-xl
                                                 bg-red-500/10
@@ -2967,19 +3043,19 @@ export default function ActivityDetail({
                                                 hover:bg-red-500/20
                                                 hover:shadow-[0_0_15px_rgba(255,0,0,0.35)]
                                                 transition-all"
-                                                        >
+                                                            >
 
-                                                            <Trash2
-                                                                size={16}
-                                                            />
+                                                                <Trash2
+                                                                    size={16}
+                                                                />
 
-                                                        </button>
+                                                            </button>
 
+                                                        </div>
                                                     </div>
-                                                </div>
 
-                                                {/* GANTT HEADER */}
-                                                <div className="
+                                                    {/* GANTT HEADER */}
+                                                    <div className="
                                                         relative
                                                         border-l
                                                         border-white/10
@@ -2989,54 +3065,54 @@ export default function ActivityDetail({
                                                         w-[4160px]
                                                     ">
 
-                                                    <div className="
+                                                        <div className="
                                                         relative
                                                         w-[4160px]
                                                         h-full
                                                         gantt-body
                                                     ">
 
-                                                        {/* GRID */}
-                                                        <div className="
+                                                            {/* GRID */}
+                                                            <div className="
                                                     absolute
                                                     inset-0
                                                     flex
                                                     ">
 
-                                                            {weeks.map((week) => (
+                                                                {weeks.map((week) => (
 
-                                                                <div
-                                                                    key={week}
-                                                                    className="
+                                                                    <div
+                                                                        key={week}
+                                                                        className="
                                                             w-[80px]
                                                             shrink-0
                                                             border-r
                                                             border-white/5
                                                             "
-                                                                />
+                                                                    />
 
-                                                            ))}
+                                                                ))}
 
-                                                        </div>
+                                                            </div>
 
-                                                        {/* BAR */}
-                                                        {header.start_date &&
-                                                            header.end_date && (() => {
+                                                            {/* BAR */}
+                                                            {header.start_date &&
+                                                                header.end_date && (() => {
 
-                                                                const startWeek =
-                                                                    getWeekNumber(
-                                                                        header.start_date
-                                                                    );
+                                                                    const startWeek =
+                                                                        getWeekNumber(
+                                                                            header.start_date
+                                                                        );
 
-                                                                const endWeek =
-                                                                    getWeekNumber(
-                                                                        header.end_date
-                                                                    );
+                                                                    const endWeek =
+                                                                        getWeekNumber(
+                                                                            header.end_date
+                                                                        );
 
-                                                                return (
+                                                                    return (
 
-                                                                    <div
-                                                                        className="
+                                                                        <div
+                                                                            className="
                                                                 absolute
                                                                 top-1/2
                                                                 -translate-y-1/2
@@ -3047,110 +3123,110 @@ export default function ActivityDetail({
                                                                 to-blue-500
                                                                 shadow-[0_0_20px_rgba(0,255,255,0.35)]
                                                                 "
-                                                                        style={{
+                                                                            style={{
 
-                                                                            left:
-                                                                                `${(startWeek - 1) * 80}px`,
+                                                                                left:
+                                                                                    `${(startWeek - 1) * 80}px`,
 
-                                                                            width:
-                                                                                `${(endWeek - startWeek + 1) * 80}px`
+                                                                                width:
+                                                                                    `${(endWeek - startWeek + 1) * 80}px`
 
-                                                                        }}
-                                                                    />
+                                                                            }}
+                                                                        />
 
-                                                                );
+                                                                    );
 
-                                                            })()}
+                                                                })()}
+
+                                                        </div>
 
                                                     </div>
-
                                                 </div>
-                                            </div>
 
-                                            {!collapsedHeaders.includes(
-                                                header.id
-                                            ) &&
-                                                subTaskList
-                                                    .filter(
-                                                        (x) =>
-                                                            x.header_id ===
-                                                            header.id
-                                                    )
-                                                    .sort((a, b) => {
+                                                {!collapsedHeaders.includes(
+                                                    header.id
+                                                ) &&
+                                                    subTaskList
+                                                        .filter(
+                                                            (x) =>
+                                                                x.header_id ===
+                                                                header.id
+                                                        )
+                                                        .sort((a, b) => {
 
-                                                        // ======================
-                                                        // WORKFLOW ORDER
-                                                        // ======================
+                                                            // ======================
+                                                            // WORKFLOW ORDER
+                                                            // ======================
 
-                                                        const workflowOrder = [
+                                                            const workflowOrder = [
 
-                                                            "Design",
-                                                            "RFQ",
-                                                            "PR",
-                                                            "PO",
-                                                            "Shipping",
-                                                            "Installation",
-                                                            "Debugging",
-                                                            "Validation",
-                                                            "Pilot Run",
-                                                            "SOP"
+                                                                "Design",
+                                                                "RFQ",
+                                                                "PR",
+                                                                "PO",
+                                                                "Shipping",
+                                                                "Installation",
+                                                                "Debugging",
+                                                                "Validation",
+                                                                "Pilot Run",
+                                                                "SOP"
 
-                                                        ];
+                                                            ];
 
-                                                        const activityA =
-                                                            workflowOrder.indexOf(
-                                                                a.activity
-                                                            );
+                                                            const activityA =
+                                                                workflowOrder.indexOf(
+                                                                    a.activity
+                                                                );
 
-                                                        const activityB =
-                                                            workflowOrder.indexOf(
-                                                                b.activity
-                                                            );
+                                                            const activityB =
+                                                                workflowOrder.indexOf(
+                                                                    b.activity
+                                                                );
 
-                                                        // ======================
-                                                        // SORT ACTIVITY
-                                                        // ======================
+                                                            // ======================
+                                                            // SORT ACTIVITY
+                                                            // ======================
 
-                                                        if (activityA !== activityB) {
+                                                            if (activityA !== activityB) {
 
-                                                            return activityA - activityB;
+                                                                return activityA - activityB;
 
-                                                        }
+                                                            }
 
-                                                        // ======================
-                                                        // PLAN FIRST
-                                                        // ======================
+                                                            // ======================
+                                                            // PLAN FIRST
+                                                            // ======================
 
-                                                        if (
-                                                            a.remark === "PLAN" &&
-                                                            b.remark === "ACTUAL"
-                                                        ) {
+                                                            if (
+                                                                a.remark === "PLAN" &&
+                                                                b.remark === "ACTUAL"
+                                                            ) {
 
-                                                            return -1;
+                                                                return -1;
 
-                                                        }
+                                                            }
 
-                                                        if (
-                                                            a.remark === "ACTUAL" &&
-                                                            b.remark === "PLAN"
-                                                        ) {
+                                                            if (
+                                                                a.remark === "ACTUAL" &&
+                                                                b.remark === "PLAN"
+                                                            ) {
 
-                                                            return 1;
+                                                                return 1;
 
-                                                        }
+                                                            }
 
-                                                        return 0;
+                                                            return 0;
 
-                                                    })
-                                                    .map(
-                                                        (
-                                                            sub,
-                                                            subIndex
-                                                        ) => (
+                                                        })
+                                                        .map(
+                                                            (
+                                                                sub,
+                                                                subIndex
+                                                            ) => (
 
-                                                            <div
-                                                                key={sub.id}
-                                                                className="
+                                                                <div
+                                                                    key={sub.id}
+                                                                    className="
                                                                 flex
                                                                 min-w-[5500px]
                                                                 bg-gradient-to-r
@@ -3163,127 +3239,260 @@ export default function ActivityDetail({
                                                                 border-b border-white/5
                                                                 text-white
                                                                 "
-                                                            >
-                                                                <div
-                                                                    className="
-    grid
-    grid-cols-[70px_300px_140px_180px_120px_120px_120px_120px_180px]
-    shrink-0
-    sticky
-    left-0
-    z-10
-    bg-[#081018]
-">
-                                                                    <div className="p-4
+                                                                >
+                                                                    <div
+                                                                        className={`
+                                                                        grid
+
+                                                                        ${hideInfoColumn
+
+                                                                        ? "grid-cols-[70px_300px_120px_120px_180px]"
+
+                                                                        : "grid-cols-[70px_300px_140px_180px_120px_120px_120px_120px_180px]"
+                                                                        }
+
+                                                                        shrink-0
+                                                                        sticky
+                                                                        left-0
+                                                                        z-10
+                                                                        bg-[#081018]
+                                                                        `}
+                                                                        >
+                                                                        <div className="p-4
                                                         text-slate-400">
 
-                                                                        {index + 1}.
-                                                                        {subIndex + 1}
+                                                                            {index + 1}.
+                                                                            {subIndex + 1}
 
-                                                                    </div>
+                                                                        </div>
 
-                                                                    <div className="p-4
+                                                                        <div className="p-4
                                                 pl-14
                                                 font-semibold
                                                 text-slate-200
                                                 tracking-wide">
 
-                                                                        └ {sub.activity}
+                                                                            └ {sub.activity}
 
-                                                                    </div>
+                                                                        </div>
 
-                                                                    {/* REMARK */}
-                                                                    <div className={`p-4 font-bold ${sub.remark === "PLAN"
-                                                                        ? "text-cyan-400"
-                                                                        : "text-green-400"
-                                                                        }`}>
+                                                                        {!hideInfoColumn && (
 
-                                                                        {sub.remark}
+                                                                        <>
+                                                                        {/* REMARK */}
+                                                                        <div className={`p-4 font-bold ${sub.remark === "PLAN"
+                                                                            ? "text-cyan-400"
+                                                                            : "text-green-400"
+                                                                            }`}>
 
-                                                                    </div>
+                                                                            {sub.remark}
 
-                                                                    <div className="p-4 text-cyan-400">
+                                                                        </div>
 
-                                                                        {
-                                                                            sub.assigned_to
-                                                                        }
+                                                                        <div className="p-4 text-cyan-400">
 
-                                                                    </div>
-
-                                                                    <div className="px-4 h-full flex items-center">
-
-                                                                        {(() => {
-
-                                                                            // ======================
-                                                                            // PLAN = NO STATUS
-                                                                            // ======================
-
-                                                                            if (
-                                                                                sub.remark === "PLAN"
-                                                                            ) {
-
-                                                                                return (
-                                                                                    <span className="text-slate-600">
-                                                                                    </span>
-                                                                                );
-
+                                                                            {
+                                                                                sub.assigned_to
                                                                             }
 
-                                                                            // ======================
-                                                                            // FIND PLAN TASK
-                                                                            // ======================
+                                                                        </div>
 
-                                                                            const planTask =
-                                                                                subTaskList.find(
-                                                                                    (x) =>
+                                                                        <div className="px-4 h-full flex items-center">
 
-                                                                                        x.header_id ===
-                                                                                        sub.header_id &&
+                                                                            {(() => {
 
-                                                                                        x.activity ===
-                                                                                        sub.activity &&
+                                                                                // ======================
+                                                                                // PLAN = NO STATUS
+                                                                                // ======================
 
-                                                                                        x.remark ===
-                                                                                        "PLAN"
+                                                                                if (
+                                                                                    sub.remark === "PLAN"
+                                                                                ) {
+
+                                                                                    return (
+                                                                                        <span className="text-slate-600">
+                                                                                        </span>
+                                                                                    );
+
+                                                                                }
+
+                                                                                // ======================
+                                                                                // FIND PLAN TASK
+                                                                                // ======================
+
+                                                                                const planTask =
+                                                                                    subTaskList.find(
+                                                                                        (x) =>
+
+                                                                                            x.header_id ===
+                                                                                            sub.header_id &&
+
+                                                                                            x.activity ===
+                                                                                            sub.activity &&
+
+                                                                                            x.remark ===
+                                                                                            "PLAN"
+                                                                                    );
+
+                                                                                const today =
+                                                                                    new Date();
+
+                                                                                today.setHours(
+                                                                                    0,
+                                                                                    0,
+                                                                                    0,
+                                                                                    0
                                                                                 );
 
-                                                                            const today =
-                                                                                new Date();
+                                                                                // ======================
+                                                                                // DONE
+                                                                                // ======================
 
-                                                                            today.setHours(
-                                                                                0,
-                                                                                0,
-                                                                                0,
-                                                                                0
-                                                                            );
+                                                                                if (
+                                                                                    sub.end_date
+                                                                                ) {
 
-                                                                            // ======================
-                                                                            // DONE
-                                                                            // ======================
+                                                                                    return (
 
-                                                                            if (
-                                                                                sub.end_date
-                                                                            ) {
+                                                                                        <span className="font-bold text-green-400">
+
+                                                                                            Done
+
+                                                                                        </span>
+
+                                                                                    );
+
+                                                                                }
+
+                                                                                // ======================
+                                                                                // DELAY
+                                                                                // ======================
+
+                                                                                if (
+                                                                                    planTask?.end_date
+                                                                                ) {
+
+                                                                                    const planEnd =
+                                                                                        new Date(
+                                                                                            planTask.end_date
+                                                                                        );
+
+                                                                                    planEnd.setHours(
+                                                                                        0,
+                                                                                        0,
+                                                                                        0,
+                                                                                        0
+                                                                                    );
+
+                                                                                    if (
+                                                                                        today > planEnd
+                                                                                    ) {
+
+                                                                                        return (
+
+                                                                                            <span className="font-bold text-red-400">
+
+                                                                                                Delay
+
+                                                                                            </span>
+
+                                                                                        );
+
+                                                                                    }
+
+                                                                                }
+
+                                                                                // ======================
+                                                                                // PROGRESS
+                                                                                // ======================
+
+                                                                                if (
+                                                                                    sub.start_date
+                                                                                ) {
+
+                                                                                    return (
+
+                                                                                        <span className="font-bold text-amber-400">
+
+                                                                                            Progress
+
+                                                                                        </span>
+
+                                                                                    );
+
+                                                                                }
+
+                                                                                // ======================
+                                                                                // OPEN
+                                                                                // ======================
 
                                                                                 return (
 
-                                                                                    <span className="font-bold text-green-400">
+                                                                                    <span className="font-bold text-cyan-400">
 
-                                                                                        Done
+                                                                                        Open
 
                                                                                     </span>
 
                                                                                 );
 
-                                                                            }
+                                                                            })()}
 
-                                                                            // ======================
-                                                                            // DELAY
-                                                                            // ======================
+                                                                        </div>
 
-                                                                            if (
-                                                                                planTask?.end_date
-                                                                            ) {
+                                                                        {/* TOTAL DELAY */}
+                                                                        <div className="px-4 h-full flex items-center">
+
+                                                                            {(() => {
+
+                                                                                // PLAN NO DELAY
+                                                                                if (
+                                                                                    sub.remark === "PLAN"
+                                                                                ) {
+
+                                                                                    return (
+                                                                                        <span className="text-slate-600">
+
+                                                                                        </span>
+                                                                                    );
+
+                                                                                }
+
+                                                                                const planTask =
+                                                                                    subTaskList.find(
+                                                                                        (x) =>
+
+                                                                                            x.header_id ===
+                                                                                            sub.header_id &&
+
+                                                                                            x.activity ===
+                                                                                            sub.activity &&
+
+                                                                                            x.remark ===
+                                                                                            "PLAN"
+                                                                                    );
+
+                                                                                if (
+                                                                                    !planTask?.end_date
+                                                                                ) {
+
+                                                                                    return (
+                                                                                        <span className="text-green-400 font-bold">
+                                                                                            0 Day
+                                                                                        </span>
+                                                                                    );
+
+                                                                                }
+
+                                                                                const today =
+                                                                                    new Date();
+
+                                                                                today.setHours(
+                                                                                    0,
+                                                                                    0,
+                                                                                    0,
+                                                                                    0
+                                                                                );
 
                                                                                 const planEnd =
                                                                                     new Date(
@@ -3297,15 +3506,53 @@ export default function ActivityDetail({
                                                                                     0
                                                                                 );
 
+                                                                                let actualEnd =
+                                                                                    today;
+
                                                                                 if (
-                                                                                    today > planEnd
+                                                                                    sub.end_date
                                                                                 ) {
+
+                                                                                    actualEnd =
+                                                                                        new Date(
+                                                                                            sub.end_date
+                                                                                        );
+
+                                                                                    actualEnd.setHours(
+                                                                                        0,
+                                                                                        0,
+                                                                                        0,
+                                                                                        0
+                                                                                    );
+
+                                                                                }
+
+                                                                                if (
+                                                                                    actualEnd >
+                                                                                    planEnd
+                                                                                ) {
+
+                                                                                    const diff =
+                                                                                        Math.floor(
+                                                                                            (
+                                                                                                actualEnd -
+                                                                                                planEnd
+                                                                                            ) /
+                                                                                            (
+                                                                                                1000 *
+                                                                                                60 *
+                                                                                                60 *
+                                                                                                24
+                                                                                            )
+                                                                                        );
 
                                                                                     return (
 
-                                                                                        <span className="font-bold text-red-400">
+                                                                                        <span className="
+                                                                font-black
+                                                                text-red-400">
 
-                                                                                            Delay
+                                                                                            {diff} Day
 
                                                                                         </span>
 
@@ -3313,210 +3560,54 @@ export default function ActivityDetail({
 
                                                                                 }
 
-                                                                            }
-
-                                                                            // ======================
-                                                                            // PROGRESS
-                                                                            // ======================
-
-                                                                            if (
-                                                                                sub.start_date
-                                                                            ) {
-
-                                                                                return (
-
-                                                                                    <span className="font-bold text-amber-400">
-
-                                                                                        Progress
-
-                                                                                    </span>
-
-                                                                                );
-
-                                                                            }
-
-                                                                            // ======================
-                                                                            // OPEN
-                                                                            // ======================
-
-                                                                            return (
-
-                                                                                <span className="font-bold text-cyan-400">
-
-                                                                                    Open
-
-                                                                                </span>
-
-                                                                            );
-
-                                                                        })()}
-
-                                                                    </div>
-
-                                                                    {/* TOTAL DELAY */}
-                                                                    <div className="px-4 h-full flex items-center">
-
-                                                                        {(() => {
-
-                                                                            // PLAN NO DELAY
-                                                                            if (
-                                                                                sub.remark === "PLAN"
-                                                                            ) {
-
-                                                                                return (
-                                                                                    <span className="text-slate-600">
-
-                                                                                    </span>
-                                                                                );
-
-                                                                            }
-
-                                                                            const planTask =
-                                                                                subTaskList.find(
-                                                                                    (x) =>
-
-                                                                                        x.header_id ===
-                                                                                        sub.header_id &&
-
-                                                                                        x.activity ===
-                                                                                        sub.activity &&
-
-                                                                                        x.remark ===
-                                                                                        "PLAN"
-                                                                                );
-
-                                                                            if (
-                                                                                !planTask?.end_date
-                                                                            ) {
-
-                                                                                return (
-                                                                                    <span className="text-green-400 font-bold">
-                                                                                        0 Day
-                                                                                    </span>
-                                                                                );
-
-                                                                            }
-
-                                                                            const today =
-                                                                                new Date();
-
-                                                                            today.setHours(
-                                                                                0,
-                                                                                0,
-                                                                                0,
-                                                                                0
-                                                                            );
-
-                                                                            const planEnd =
-                                                                                new Date(
-                                                                                    planTask.end_date
-                                                                                );
-
-                                                                            planEnd.setHours(
-                                                                                0,
-                                                                                0,
-                                                                                0,
-                                                                                0
-                                                                            );
-
-                                                                            let actualEnd =
-                                                                                today;
-
-                                                                            if (
-                                                                                sub.end_date
-                                                                            ) {
-
-                                                                                actualEnd =
-                                                                                    new Date(
-                                                                                        sub.end_date
-                                                                                    );
-
-                                                                                actualEnd.setHours(
-                                                                                    0,
-                                                                                    0,
-                                                                                    0,
-                                                                                    0
-                                                                                );
-
-                                                                            }
-
-                                                                            if (
-                                                                                actualEnd >
-                                                                                planEnd
-                                                                            ) {
-
-                                                                                const diff =
-                                                                                    Math.floor(
-                                                                                        (
-                                                                                            actualEnd -
-                                                                                            planEnd
-                                                                                        ) /
-                                                                                        (
-                                                                                            1000 *
-                                                                                            60 *
-                                                                                            60 *
-                                                                                            24
-                                                                                        )
-                                                                                    );
-
                                                                                 return (
 
                                                                                     <span className="
-                                                                font-black
-                                                                text-red-400">
+                                                            text-green-400
+                                                            font-bold">
 
-                                                                                        {diff} Day
+                                                                                        0 Day
 
                                                                                     </span>
 
                                                                                 );
 
+                                                                            })()}
+
+                                                                        </div>
+
+                                                                        </>
+
+)}
+
+                                                                        <div className="px-4 h-full flex items-center">
+
+                                                                            {
+                                                                                sub.start_date
                                                                             }
 
-                                                                            return (
+                                                                        </div>
 
-                                                                                <span className="
-                                                            text-green-400
-                                                            font-bold">
+                                                                        <div className="px-4 h-full flex items-center">
 
-                                                                                    0 Day
+                                                                            {
+                                                                                sub.end_date
+                                                                            }
 
-                                                                                </span>
+                                                                        </div>
 
-                                                                            );
-
-                                                                        })()}
-
-                                                                    </div>
-
-                                                                    <div className="px-4 h-full flex items-center">
-
-                                                                        {
-                                                                            sub.start_date
-                                                                        }
-
-                                                                    </div>
-
-                                                                    <div className="px-4 h-full flex items-center">
-
-                                                                        {
-                                                                            sub.end_date
-                                                                        }
-
-                                                                    </div>
-
-                                                                    <div className="p-4
+                                                                        <div className="p-4
                                                         flex items-center
                                                         gap-2">
 
-                                                                        {/* EDIT */}
-                                                                        <button
-                                                                            onClick={() =>
-                                                                                handleEditSubTask(
-                                                                                    sub
-                                                                                )
-                                                                            }
-                                                                            className="h-9
+                                                                            {/* EDIT */}
+                                                                            <button
+                                                                                onClick={() =>
+                                                                                    handleEditSubTask(
+                                                                                        sub
+                                                                                    )
+                                                                                }
+                                                                                className="h-9
                                                                 w-9
                                                                 rounded-lg
                                                                 bg-amber-500/10
@@ -3524,28 +3615,28 @@ export default function ActivityDetail({
                                                                 text-amber-400
                                                                 flex items-center
                                                                 justify-center"
-                                                                        >
+                                                                            >
 
-                                                                            <Pencil
-                                                                                size={14}
-                                                                            />
+                                                                                <Pencil
+                                                                                    size={14}
+                                                                                />
 
-                                                                        </button>
+                                                                            </button>
 
-                                                                        {/* DELETE */}
-                                                                        <button
-                                                                            disabled={
-                                                                                sub.activity === "Validation" ||
-                                                                                sub.activity === "Pilot Run" ||
-                                                                                sub.activity === "SOP"
-                                                                            }
+                                                                            {/* DELETE */}
+                                                                            <button
+                                                                                disabled={
+                                                                                    sub.activity === "Validation" ||
+                                                                                    sub.activity === "Pilot Run" ||
+                                                                                    sub.activity === "SOP"
+                                                                                }
 
-                                                                            onClick={() =>
-                                                                                handleDeleteSubTask(
-                                                                                    sub
-                                                                                )
-                                                                            }
-                                                                            className="h-9
+                                                                                onClick={() =>
+                                                                                    handleDeleteSubTask(
+                                                                                        sub
+                                                                                    )
+                                                                                }
+                                                                                className="h-9
                                                                 w-9
                                                                 rounded-lg
                                                                 bg-red-500/10
@@ -3553,18 +3644,18 @@ export default function ActivityDetail({
                                                                 text-red-400
                                                                 flex items-center
                                                                 justify-center"
-                                                                        >
+                                                                            >
 
-                                                                            <Trash2
-                                                                                size={14}
-                                                                            />
+                                                                                <Trash2
+                                                                                    size={14}
+                                                                                />
 
-                                                                        </button>
+                                                                            </button>
 
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                                {/* GANTT SUBTASK */}
-                                                                <div className="
+                                                                    {/* GANTT SUBTASK */}
+                                                                    <div className="
                                                                         relative
                                                                         border-l
                                                                         border-white/10
@@ -3574,54 +3665,54 @@ export default function ActivityDetail({
                                                                         w-[4160px]
                                                                     ">
 
-                                                                    <div className="
+                                                                        <div className="
                                                                             relative
                                                                             w-[4160px]
                                                                             h-full
                                                                             gantt-body
                                                                         ">
 
-                                                                        {/* GRID */}
-                                                                        <div className="
+                                                                            {/* GRID */}
+                                                                            <div className="
                                                                     absolute
                                                                     inset-0
                                                                     flex
                                                                     ">
 
-                                                                            {weeks.map((week) => (
+                                                                                {weeks.map((week) => (
 
-                                                                                <div
-                                                                                    key={week}
-                                                                                    className="
+                                                                                    <div
+                                                                                        key={week}
+                                                                                        className="
                                                                             w-[80px]
                                                                             shrink-0
                                                                             border-r
                                                                             border-white/5
                                                                             "
-                                                                                />
+                                                                                    />
 
-                                                                            ))}
+                                                                                ))}
 
-                                                                        </div>
+                                                                            </div>
 
-                                                                        {/* BAR */}
-                                                                        {sub.start_date &&
-                                                                            sub.end_date && (() => {
+                                                                            {/* BAR */}
+                                                                            {sub.start_date &&
+                                                                                sub.end_date && (() => {
 
-                                                                                const startWeek =
-                                                                                    getWeekNumber(
-                                                                                        sub.start_date
-                                                                                    );
+                                                                                    const startWeek =
+                                                                                        getWeekNumber(
+                                                                                            sub.start_date
+                                                                                        );
 
-                                                                                const endWeek =
-                                                                                    getWeekNumber(
-                                                                                        sub.end_date
-                                                                                    );
+                                                                                    const endWeek =
+                                                                                        getWeekNumber(
+                                                                                            sub.end_date
+                                                                                        );
 
-                                                                                return (
+                                                                                    return (
 
-                                                                                    <div
-                                                                                        className={`
+                                                                                        <div
+                                                                                            className={`
                                                                                 absolute
                                                                                 top-1/2
                                                                                 -translate-y-1/2
@@ -3629,63 +3720,63 @@ export default function ActivityDetail({
                                                                                 rounded-lg
 
                                                                                 ${sub.remark === "PLAN"
-                                                                                                ? "bg-cyan-500"
-                                                                                                : "bg-green-500"
-                                                                                            }
+                                                                                                    ? "bg-cyan-500"
+                                                                                                    : "bg-green-500"
+                                                                                                }
                                                                                 `}
-                                                                                        style={{
+                                                                                            style={{
 
-                                                                                            left:
-                                                                                                `${(startWeek - 1) * 80}px`,
+                                                                                                left:
+                                                                                                    `${(startWeek - 1) * 80}px`,
 
-                                                                                            width:
-                                                                                                `${(endWeek - startWeek + 1) * 80}px`
+                                                                                                width:
+                                                                                                    `${(endWeek - startWeek + 1) * 80}px`
 
-                                                                                        }}
-                                                                                    />
+                                                                                            }}
+                                                                                        />
 
-                                                                                );
+                                                                                    );
 
-                                                                            })()}
+                                                                                })()}
+
+                                                                        </div>
 
                                                                     </div>
-
                                                                 </div>
-                                                            </div>
 
-                                                        )
-                                                    )}
+                                                            )
+                                                        )}
 
-                                        </div>
+                                            </div>
 
-                                    )
-                                )}
+                                        )
+                                    )}
 
-                                {/* LOADING */}
-                                {loading && (
+                                    {/* LOADING */}
+                                    {loading && (
 
-                                    <div className="p-16
+                                        <div className="p-16
                     text-center
                     text-slate-500">
 
-                                        Loading task...
+                                            Loading task...
 
-                                    </div>
+                                        </div>
 
-                                )}
+                                    )}
+
+                                </div>
 
                             </div>
-
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* ADD SUB TASK MODAL */}
-            {
-                showAddSubTask && (
+                {/* ADD SUB TASK MODAL */}
+                {
+                    showAddSubTask && (
 
-                    <div className="fixed inset-0
+                        <div className="fixed inset-0
                 z-50
                 bg-black/60
                 backdrop-blur-sm
@@ -3693,7 +3784,7 @@ export default function ActivityDetail({
                 justify-center
                 p-6">
 
-                        <div className="w-full
+                            <div className="w-full
                     max-w-xl
                     rounded-[32px]
                     border border-cyan-500/10
@@ -3702,103 +3793,103 @@ export default function ActivityDetail({
                     shadow-[0_0_60px_rgba(0,255,255,0.08)]
                     p-8">
 
-                            <h1 className="text-3xl
+                                <h1 className="text-3xl
                         font-black
                         text-white">
 
-                                {editingSubTask
-                                    ? "Edit Sub Task"
-                                    : "Add Sub Task"}
+                                    {editingSubTask
+                                        ? "Edit Sub Task"
+                                        : "Add Sub Task"}
 
-                            </h1>
+                                </h1>
 
-                            <div className="mt-8 space-y-5">
-                                {
-                                    !editingSubTask ? (
-                                        <div className="
+                                <div className="mt-8 space-y-5">
+                                    {
+                                        !editingSubTask ? (
+                                            <div className="
     grid
     grid-cols-2
     gap-3
 ">
 
-                                            {workflowOptions.map(
-                                                (item) => {
+                                                {workflowOptions.map(
+                                                    (item) => {
 
-                                                    const checked =
-                                                        selectedWorkflow.includes(
-                                                            item
-                                                        );
+                                                        const checked =
+                                                            selectedWorkflow.includes(
+                                                                item
+                                                            );
 
-                                                    return (
+                                                        return (
 
-                                                        <button
-                                                            key={item}
-                                                            type="button"
-                                                            onClick={() => {
+                                                            <button
+                                                                key={item}
+                                                                type="button"
+                                                                onClick={() => {
 
-                                                                // ======================
-                                                                // EXISTING ACTIVITY
-                                                                // ======================
+                                                                    // ======================
+                                                                    // EXISTING ACTIVITY
+                                                                    // ======================
 
-                                                                const existingActivities =
-                                                                    subTaskList
-                                                                        .filter(
-                                                                            (x) =>
-                                                                                x.header_id ===
-                                                                                selectedHeader?.id
-                                                                        )
-                                                                        .map(
-                                                                            (x) => x.activity
-                                                                        );
-
-                                                                // ======================
-                                                                // LOCK PR & SOP
-                                                                // ======================
-
-                                                                const isMandatory =
-                                                                    (
-                                                                        item === "Validation" || item === "Pilot Run" ||
-                                                                        item === "SOP"
-                                                                    ) &&
-
-                                                                    !existingActivities.includes(item);
-
-                                                                // ======================
-                                                                // CANNOT UNCHECK
-                                                                // ======================
-
-                                                                if (
-                                                                    isMandatory &&
-                                                                    selectedWorkflow.includes(item)
-                                                                ) {
-
-                                                                    return;
-
-                                                                }
-
-                                                                setSelectedWorkflow(
-                                                                    (prev) => {
-
-                                                                        if (
-                                                                            prev.includes(item)
-                                                                        ) {
-
-                                                                            return prev.filter(
-                                                                                (x) => x !== item
+                                                                    const existingActivities =
+                                                                        subTaskList
+                                                                            .filter(
+                                                                                (x) =>
+                                                                                    x.header_id ===
+                                                                                    selectedHeader?.id
+                                                                            )
+                                                                            .map(
+                                                                                (x) => x.activity
                                                                             );
 
-                                                                        }
+                                                                    // ======================
+                                                                    // LOCK PR & SOP
+                                                                    // ======================
 
-                                                                        return [
-                                                                            ...prev,
-                                                                            item
-                                                                        ];
+                                                                    const isMandatory =
+                                                                        (
+                                                                            item === "Validation" || item === "Pilot Run" ||
+                                                                            item === "SOP"
+                                                                        ) &&
+
+                                                                        !existingActivities.includes(item);
+
+                                                                    // ======================
+                                                                    // CANNOT UNCHECK
+                                                                    // ======================
+
+                                                                    if (
+                                                                        isMandatory &&
+                                                                        selectedWorkflow.includes(item)
+                                                                    ) {
+
+                                                                        return;
 
                                                                     }
-                                                                );
 
-                                                            }}
-                                                            className={`
+                                                                    setSelectedWorkflow(
+                                                                        (prev) => {
+
+                                                                            if (
+                                                                                prev.includes(item)
+                                                                            ) {
+
+                                                                                return prev.filter(
+                                                                                    (x) => x !== item
+                                                                                );
+
+                                                                            }
+
+                                                                            return [
+                                                                                ...prev,
+                                                                                item
+                                                                            ];
+
+                                                                        }
+                                                                    );
+
+                                                                }}
+                                                                className={`
                     h-14
                     rounded-2xl
                     border
@@ -3807,84 +3898,84 @@ export default function ActivityDetail({
 
                     ${checked
 
-                                                                    ? `
+                                                                        ? `
                         border-cyan-400
                         bg-cyan-500/20
                         text-cyan-300
                         shadow-[0_0_20px_rgba(0,255,255,0.25)]
                         `
 
-                                                                    : `
+                                                                        : `
                         border-white/10
                         bg-white/5
                         text-slate-400
                         hover:border-cyan-500/30
                         `
-                                                                }
+                                                                    }
                     `}
-                                                        >
+                                                            >
 
-                                                            {item}
+                                                                {item}
 
-                                                        </button>
+                                                            </button>
 
-                                                    );
+                                                        );
 
-                                                }
-                                            )}
+                                                    }
+                                                )}
 
-                                        </div>
-                                    ) : (
+                                            </div>
+                                        ) : (
 
-                                        <>
+                                            <>
 
-                                            <div className="
+                                                <div className="
         rounded-2xl
         border border-cyan-500/20
         bg-cyan-500/10
         p-4
     ">
 
-                                                <p className="
+                                                    <p className="
             text-cyan-400
             text-sm
         ">
-                                                    Activity
-                                                </p>
+                                                        Activity
+                                                    </p>
 
-                                                <h1 className="
+                                                    <h1 className="
             text-white
             font-black
             text-2xl
         ">
-                                                    {editingSubTask.activity}
-                                                </h1>
+                                                        {editingSubTask.activity}
+                                                    </h1>
 
-                                                <p className="
+                                                    <p className="
             text-green-400
             font-bold
             mt-2
         ">
-                                                    {editingSubTask.remark}
-                                                </p>
+                                                        {editingSubTask.remark}
+                                                    </p>
 
-                                            </div>
+                                                </div>
 
-                                            <select
-                                                value={
-                                                    subTask.assigned_to
-                                                }
-                                                onChange={(e) =>
-                                                    setSubTask({
+                                                <select
+                                                    value={
+                                                        subTask.assigned_to
+                                                    }
+                                                    onChange={(e) =>
+                                                        setSubTask({
 
-                                                        ...subTask,
+                                                            ...subTask,
 
-                                                        assigned_to:
-                                                            e.target.value
+                                                            assigned_to:
+                                                                e.target.value
 
-                                                    })
-                                                }
-                                                className="
+                                                        })
+                                                    }
+                                                    className="
         w-full
         h-14
         rounded-2xl
@@ -3894,42 +3985,42 @@ export default function ActivityDetail({
         text-white
         outline-none
         "
-                                            >
+                                                >
 
-                                                <option value="">
-                                                    Select Owner
-                                                </option>
-
-                                                {userList.map((user) => (
-
-                                                    <option
-                                                        key={user.username}
-                                                        value={user.name}
-                                                        className="bg-[#07111f]"
-                                                    >
-
-                                                        {user.name} - {user.role}
-
+                                                    <option value="">
+                                                        Select Owner
                                                     </option>
 
-                                                ))}
+                                                    {userList.map((user) => (
 
-                                            </select>
+                                                        <option
+                                                            key={user.username}
+                                                            value={user.name}
+                                                            className="bg-[#07111f]"
+                                                        >
 
-                                            <input
-                                                type="date"
-                                                value={subTask.start_date}
-                                                onChange={(e) =>
-                                                    setSubTask({
+                                                            {user.name} - {user.role}
 
-                                                        ...subTask,
+                                                        </option>
 
-                                                        start_date:
-                                                            e.target.value
+                                                    ))}
 
-                                                    })
-                                                }
-                                                className="
+                                                </select>
+
+                                                <input
+                                                    type="date"
+                                                    value={subTask.start_date}
+                                                    onChange={(e) =>
+                                                        setSubTask({
+
+                                                            ...subTask,
+
+                                                            start_date:
+                                                                e.target.value
+
+                                                        })
+                                                    }
+                                                    className="
         w-full
         h-14
         rounded-2xl
@@ -3938,22 +4029,22 @@ export default function ActivityDetail({
         px-5
         text-white
         "
-                                            />
+                                                />
 
-                                            <input
-                                                type="date"
-                                                value={subTask.end_date}
-                                                onChange={(e) =>
-                                                    setSubTask({
+                                                <input
+                                                    type="date"
+                                                    value={subTask.end_date}
+                                                    onChange={(e) =>
+                                                        setSubTask({
 
-                                                        ...subTask,
+                                                            ...subTask,
 
-                                                        end_date:
-                                                            e.target.value
+                                                            end_date:
+                                                                e.target.value
 
-                                                    })
-                                                }
-                                                className="
+                                                        })
+                                                    }
+                                                    className="
         w-full
         h-14
         rounded-2xl
@@ -3962,13 +4053,289 @@ export default function ActivityDetail({
         px-5
         text-white
         "
-                                            />
+                                                />
 
-                                        </>
-                                    )}
+                                            </>
+                                        )}
 
 
 
+                                    <div className="mt-8
+                        flex justify-end
+                        gap-3">
+
+                                        <button
+                                            onClick={() => {
+
+                                                setShowAddSubTask(false);
+
+                                                // RESET EDIT
+                                                setEditingSubTask(null);
+
+                                                // RESET HEADER
+                                                setSelectedHeader(null);
+
+                                                // RESET FORM
+                                                setSubTask({
+
+                                                    activity: "",
+                                                    assigned_to: "",
+                                                    start_date: "",
+                                                    end_date: "",
+
+                                                });
+                                                setSelectedWorkflow([]);
+
+                                            }}
+                                            className="h-14
+                                px-6
+                                rounded-2xl
+                                border border-white/10
+                                text-white"
+                                        >
+
+                                            Cancel
+
+                                        </button>
+
+                                        <button
+                                            onClick={
+                                                handleSaveSubTask
+                                            }
+                                            className="h-14
+                                px-6
+                                rounded-2xl
+                                bg-gradient-to-r
+                                from-cyan-500
+                                to-green-500
+                                text-white
+                                font-bold"
+                                        >
+
+                                            Save Sub Task
+
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </div>
+                    )
+                }
+
+                {/* ADD TASK MODAL */}
+                {
+                    showAddTask && (
+
+                        <div className="fixed inset-0
+                z-50
+                bg-black/60
+                backdrop-blur-sm
+                flex items-center
+                justify-center
+                p-6">
+
+                            <div className="w-full
+                    max-w-xl
+                    rounded-[32px]
+                    border border-cyan-500/10
+                    bg-[#07111f]
+                    p-8">
+
+                                {/* TITLE */}
+                                <h1 className="text-3xl
+                        font-black
+                        text-white">
+
+                                    {
+                                        editingHeader
+                                            ? "Edit Task Header"
+                                            : "Create Task Header"
+                                    }
+
+                                </h1>
+
+                                {/* FORM */}
+                                <div className="mt-8
+                        space-y-5">
+
+                                    {/* TASK TITLE */}
+                                    <div>
+
+                                        <label className="text-sm
+                                text-slate-400">
+
+                                            Task Title
+
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            value={
+                                                taskHeader.title
+                                            }
+                                            onChange={(e) =>
+                                                setTaskHeader({
+
+                                                    ...taskHeader,
+
+                                                    title:
+                                                        e.target.value
+
+                                                })
+                                            }
+                                            className="mt-2
+                                    w-full
+                                    h-14
+                                    rounded-2xl
+                                    border border-white/10
+                                    bg-white/5
+                                    px-5
+                                    text-white
+                                    outline-none"
+                                            placeholder="Create The Task"
+                                        />
+
+                                    </div>
+
+                                    {/* ASSIGNED */}
+                                    <div>
+
+                                        <label className="text-sm
+                                text-slate-400">
+
+                                            Assigned To
+
+                                        </label>
+
+                                        <select
+                                            value={
+                                                taskHeader.assigned_to
+                                            }
+                                            onChange={(e) =>
+                                                setTaskHeader({
+
+                                                    ...taskHeader,
+
+                                                    assigned_to:
+                                                        e.target.value
+
+                                                })
+                                            }
+                                            className="mt-2
+                                    w-full
+                                    h-14
+                                    rounded-2xl
+                                    border border-white/10
+                                    bg-white/5
+                                    px-5
+                                    text-white
+                                    outline-none"
+                                        >
+
+                                            <option value="">
+                                                Select Owner
+                                            </option>
+
+                                            {userList.map((user) => (
+
+                                                <option
+                                                    key={user.username}
+                                                    value={user.name}
+                                                    className="bg-[#07111f]"
+                                                >
+
+                                                    {user.name} - {user.role}
+
+                                                </option>
+
+                                            ))}
+
+                                        </select>
+
+                                    </div>
+
+                                    {/* START DATE */}
+                                    <div>
+
+                                        <label className="text-sm
+                                text-slate-400">
+
+                                            Start Date
+
+                                        </label>
+
+                                        <input
+                                            type="date"
+                                            value={
+                                                taskHeader.start_date
+                                            }
+                                            onChange={(e) =>
+                                                setTaskHeader({
+
+                                                    ...taskHeader,
+
+                                                    start_date:
+                                                        e.target.value
+
+                                                })
+                                            }
+                                            className="mt-2
+                                    w-full
+                                    h-14
+                                    rounded-2xl
+                                    border border-white/10
+                                    bg-white/5
+                                    px-5
+                                    text-white
+                                    outline-none"
+                                        />
+
+                                    </div>
+
+                                    {/* END DATE */}
+                                    <div>
+
+                                        <label className="text-sm
+                                text-slate-400">
+
+                                            End Date
+
+                                        </label>
+
+                                        <input
+                                            type="date"
+                                            value={
+                                                taskHeader.end_date
+                                            }
+                                            onChange={(e) =>
+                                                setTaskHeader({
+
+                                                    ...taskHeader,
+
+                                                    end_date:
+                                                        e.target.value
+
+                                                })
+                                            }
+                                            className="mt-2
+                                    w-full
+                                    h-14
+                                    rounded-2xl
+                                    border border-white/10
+                                    bg-white/5
+                                    px-5
+                                    text-white
+                                    outline-none"
+                                        />
+
+                                    </div>
+
+                                </div>
+
+                                {/* BUTTON */}
                                 <div className="mt-8
                         flex justify-end
                         gap-3">
@@ -3976,18 +4343,15 @@ export default function ActivityDetail({
                                     <button
                                         onClick={() => {
 
-                                            setShowAddSubTask(false);
+                                            setShowAddTask(false);
 
                                             // RESET EDIT
-                                            setEditingSubTask(null);
-
-                                            // RESET HEADER
-                                            setSelectedHeader(null);
+                                            setEditingHeader(null);
 
                                             // RESET FORM
-                                            setSubTask({
+                                            setTaskHeader({
 
-                                                activity: "",
+                                                title: "",
                                                 assigned_to: "",
                                                 start_date: "",
                                                 end_date: "",
@@ -4009,7 +4373,7 @@ export default function ActivityDetail({
 
                                     <button
                                         onClick={
-                                            handleSaveSubTask
+                                            handleSaveTaskHeader
                                         }
                                         className="h-14
                                 px-6
@@ -4021,7 +4385,11 @@ export default function ActivityDetail({
                                 font-bold"
                                     >
 
-                                        Save Sub Task
+                                        {
+                                            editingHeader
+                                                ? "Update Task"
+                                                : "Save Task"
+                                        }
 
                                     </button>
 
@@ -4030,287 +4398,12 @@ export default function ActivityDetail({
                             </div>
 
                         </div>
-                    </div>
-                )
-            }
 
-            {/* ADD TASK MODAL */}
-            {
-                showAddTask && (
+                    )
+                }
 
-                    <div className="fixed inset-0
-                z-50
-                bg-black/60
-                backdrop-blur-sm
-                flex items-center
-                justify-center
-                p-6">
 
-                        <div className="w-full
-                    max-w-xl
-                    rounded-[32px]
-                    border border-cyan-500/10
-                    bg-[#07111f]
-                    p-8">
-
-                            {/* TITLE */}
-                            <h1 className="text-3xl
-                        font-black
-                        text-white">
-
-                                {
-                                    editingHeader
-                                        ? "Edit Task Header"
-                                        : "Create Task Header"
-                                }
-
-                            </h1>
-
-                            {/* FORM */}
-                            <div className="mt-8
-                        space-y-5">
-
-                                {/* TASK TITLE */}
-                                <div>
-
-                                    <label className="text-sm
-                                text-slate-400">
-
-                                        Task Title
-
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        value={
-                                            taskHeader.title
-                                        }
-                                        onChange={(e) =>
-                                            setTaskHeader({
-
-                                                ...taskHeader,
-
-                                                title:
-                                                    e.target.value
-
-                                            })
-                                        }
-                                        className="mt-2
-                                    w-full
-                                    h-14
-                                    rounded-2xl
-                                    border border-white/10
-                                    bg-white/5
-                                    px-5
-                                    text-white
-                                    outline-none"
-                                        placeholder="Create The Task"
-                                    />
-
-                                </div>
-
-                                {/* ASSIGNED */}
-                                <div>
-
-                                    <label className="text-sm
-                                text-slate-400">
-
-                                        Assigned To
-
-                                    </label>
-
-                                    <select
-                                        value={
-                                            taskHeader.assigned_to
-                                        }
-                                        onChange={(e) =>
-                                            setTaskHeader({
-
-                                                ...taskHeader,
-
-                                                assigned_to:
-                                                    e.target.value
-
-                                            })
-                                        }
-                                        className="mt-2
-                                    w-full
-                                    h-14
-                                    rounded-2xl
-                                    border border-white/10
-                                    bg-white/5
-                                    px-5
-                                    text-white
-                                    outline-none"
-                                    >
-
-                                        <option value="">
-                                            Select Owner
-                                        </option>
-
-                                        {userList.map((user) => (
-
-                                            <option
-                                                key={user.username}
-                                                value={user.name}
-                                                className="bg-[#07111f]"
-                                            >
-
-                                                {user.name} - {user.role}
-
-                                            </option>
-
-                                        ))}
-
-                                    </select>
-
-                                </div>
-
-                                {/* START DATE */}
-                                <div>
-
-                                    <label className="text-sm
-                                text-slate-400">
-
-                                        Start Date
-
-                                    </label>
-
-                                    <input
-                                        type="date"
-                                        value={
-                                            taskHeader.start_date
-                                        }
-                                        onChange={(e) =>
-                                            setTaskHeader({
-
-                                                ...taskHeader,
-
-                                                start_date:
-                                                    e.target.value
-
-                                            })
-                                        }
-                                        className="mt-2
-                                    w-full
-                                    h-14
-                                    rounded-2xl
-                                    border border-white/10
-                                    bg-white/5
-                                    px-5
-                                    text-white
-                                    outline-none"
-                                    />
-
-                                </div>
-
-                                {/* END DATE */}
-                                <div>
-
-                                    <label className="text-sm
-                                text-slate-400">
-
-                                        End Date
-
-                                    </label>
-
-                                    <input
-                                        type="date"
-                                        value={
-                                            taskHeader.end_date
-                                        }
-                                        onChange={(e) =>
-                                            setTaskHeader({
-
-                                                ...taskHeader,
-
-                                                end_date:
-                                                    e.target.value
-
-                                            })
-                                        }
-                                        className="mt-2
-                                    w-full
-                                    h-14
-                                    rounded-2xl
-                                    border border-white/10
-                                    bg-white/5
-                                    px-5
-                                    text-white
-                                    outline-none"
-                                    />
-
-                                </div>
-
-                            </div>
-
-                            {/* BUTTON */}
-                            <div className="mt-8
-                        flex justify-end
-                        gap-3">
-
-                                <button
-                                    onClick={() => {
-
-                                        setShowAddTask(false);
-
-                                        // RESET EDIT
-                                        setEditingHeader(null);
-
-                                        // RESET FORM
-                                        setTaskHeader({
-
-                                            title: "",
-                                            assigned_to: "",
-                                            start_date: "",
-                                            end_date: "",
-
-                                        });
-                                        setSelectedWorkflow([]);
-
-                                    }}
-                                    className="h-14
-                                px-6
-                                rounded-2xl
-                                border border-white/10
-                                text-white"
-                                >
-
-                                    Cancel
-
-                                </button>
-
-                                <button
-                                    onClick={
-                                        handleSaveTaskHeader
-                                    }
-                                    className="h-14
-                                px-6
-                                rounded-2xl
-                                bg-gradient-to-r
-                                from-cyan-500
-                                to-green-500
-                                text-white
-                                font-bold"
-                                >
-
-                                    {
-                                        editingHeader
-                                            ? "Update Task"
-                                            : "Save Task"
-                                    }
-
-                                </button>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                )
-            }
-
+            </div >
         </div >
 
     );
