@@ -237,6 +237,19 @@ export default function ActivityDetail({
             )
         );
 
+    // =========================
+    // ROLE ACCESS
+    // =========================
+
+    const isManager =
+        currentUser?.role === "Manager";
+
+    const isProjectEngineer =
+        project?.ee === currentUser?.name;
+
+    const canManageTask =
+        isManager ||
+        isProjectEngineer;
 
     // =========================
     // LOAD TASK HEADER
@@ -2030,9 +2043,40 @@ export default function ActivityDetail({
 
 
                         <button
-                            onClick={() =>
-                                setShowAddTask(true)
-                            }
+                            onClick={() => {
+
+                                // ======================
+                                // ROLE VALIDATION
+                                // ======================
+
+                                const isManager =
+                                    currentUser?.role === "Manager";
+
+                                const isProjectEngineer =
+                                    project?.ee === currentUser?.name;
+
+                                // ======================
+                                // ONLY ENGINEER PROJECT
+                                // OR MANAGER
+                                // ======================
+
+                                if (
+                                    !isManager &&
+                                    !isProjectEngineer
+                                ) {
+
+                                    alert(
+                                        "Task Header hanya bisa ditambahkan oleh Engineer Owner atau Manager"
+                                    );
+
+                                    return;
+
+                                }
+
+                                setShowAddTask(true);
+
+                            }}
+
                             className="h-14
                             px-6
                             rounded-2xl
@@ -2970,11 +3014,21 @@ export default function ActivityDetail({
                                                                     "Manager"
                                                                 }
 
-                                                                onClick={() =>
-                                                                    handleEditHeader(
-                                                                        header
-                                                                    )
-                                                                }
+                                                                onClick={() => {
+
+                                                                    if (!canManageTask) {
+
+                                                                        alert(
+                                                                            "Only Owner Engineer or Manager can edit task"
+                                                                        );
+
+                                                                        return;
+
+                                                                    }
+
+                                                                    handleEditHeader(header);
+
+                                                                }}
 
                                                                 className={`h-10
                                                 w-10
@@ -3010,6 +3064,16 @@ export default function ActivityDetail({
                                                             <button
                                                                 onClick={() => {
 
+                                                                    if (!canManageTask) {
+
+                                                                        alert(
+                                                                            "Only Owner Engineer or Manager can add sub task"
+                                                                        );
+
+                                                                        return;
+
+                                                                    }
+
                                                                     setSelectedHeader(
                                                                         header
                                                                     );
@@ -3041,11 +3105,23 @@ export default function ActivityDetail({
                                                             <button
 
 
-                                                                onClick={() =>
+                                                                onClick={() => {
+
+                                                                    if (!canManageTask) {
+
+                                                                        alert(
+                                                                            "Only Owner Engineer or Manager can delete task"
+                                                                        );
+
+                                                                        return;
+
+                                                                    }
+
                                                                     handleDeleteHeader(
                                                                         header.id
-                                                                    )
-                                                                }
+                                                                    );
+
+                                                                }}
                                                                 className="h-10
                                                 w-10
                                                 rounded-xl
@@ -3616,11 +3692,23 @@ export default function ActivityDetail({
 
                                                                             {/* EDIT */}
                                                                             <button
-                                                                                onClick={() =>
+                                                                                onClick={() => {
+
+                                                                                    if (!canManageTask) {
+
+                                                                                        alert(
+                                                                                            "Only Owner Engineer or Manager can edit sub task"
+                                                                                        );
+
+                                                                                        return;
+
+                                                                                    }
+
                                                                                     handleEditSubTask(
                                                                                         sub
-                                                                                    )
-                                                                                }
+                                                                                    );
+
+                                                                                }}
                                                                                 className="h-9
                                                                 w-9
                                                                 rounded-lg
@@ -3645,11 +3733,23 @@ export default function ActivityDetail({
                                                                                     sub.activity === "SOP"
                                                                                 }
 
-                                                                                onClick={() =>
+                                                                                onClick={() => {
+
+                                                                                    if (!canManageTask) {
+
+                                                                                        alert(
+                                                                                            "Only Owner Engineer or Manager can delete sub task"
+                                                                                        );
+
+                                                                                        return;
+
+                                                                                    }
+
                                                                                     handleDeleteSubTask(
                                                                                         sub
-                                                                                    )
-                                                                                }
+                                                                                    );
+
+                                                                                }}
                                                                                 className="h-9
                                                                 w-9
                                                                 rounded-lg
