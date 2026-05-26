@@ -36,7 +36,7 @@ export default function ActivityDetail({
 
     const [hideInfoColumn,
         setHideInfoColumn] =
-        useState(false);
+        useState(true);
 
     const [showAddTask,
         setShowAddTask] =
@@ -181,6 +181,24 @@ export default function ActivityDetail({
     const [collapsedHeaders,
         setCollapsedHeaders] =
         useState([]);
+
+    // =========================
+    // AUTO COLLAPSE DEFAULT
+    // =========================
+
+    useEffect(() => {
+
+        if (taskHeaders.length > 0) {
+
+            setCollapsedHeaders(
+                taskHeaders.map(
+                    (x) => x.id
+                )
+            );
+
+        }
+
+    }, [taskHeaders]);
 
     const [editingHeader,
         setEditingHeader] =
@@ -2473,10 +2491,10 @@ export default function ActivityDetail({
 
                                             ${hideInfoColumn
 
-                                                ? "grid-cols-[70px_300px_120px_120px_180px]"
+                                                    ? "grid-cols-[70px_300px_120px_120px_180px]"
 
-                                                : "grid-cols-[70px_300px_140px_180px_120px_120px_120px_120px_180px]"
-                                            }
+                                                    : "grid-cols-[70px_300px_140px_180px_120px_120px_120px_120px_180px]"
+                                                }
 
                                             shrink-0
                                             sticky
@@ -2496,33 +2514,33 @@ export default function ActivityDetail({
 
                                             {!hideInfoColumn && (
 
-                                            <div className="px-4 h-full flex items-center">
-                                                Remark
-                                            </div>
+                                                <div className="px-4 h-full flex items-center">
+                                                    Remark
+                                                </div>
 
                                             )}
 
                                             {!hideInfoColumn && (
 
-                                            <div className="px-4 h-full flex items-center">
-                                                Assigned To
-                                            </div>
+                                                <div className="px-4 h-full flex items-center">
+                                                    Assigned To
+                                                </div>
 
                                             )}
 
                                             {!hideInfoColumn && (
 
-                                            <div className="px-4 h-full flex items-center">
-                                                Status
-                                            </div>
+                                                <div className="px-4 h-full flex items-center">
+                                                    Status
+                                                </div>
 
                                             )}
 
                                             {!hideInfoColumn && (
 
-                                            <div className="px-4 h-full flex items-center">
-                                                Total Delay
-                                            </div>
+                                                <div className="px-4 h-full flex items-center">
+                                                    Total Delay
+                                                </div>
 
                                             )}
 
@@ -2641,15 +2659,15 @@ export default function ActivityDetail({
                                             "
                                                 >
                                                     <div
-                                                    className={`
+                                                        className={`
                                                     grid
 
                                                     ${hideInfoColumn
 
-                                                    ? "grid-cols-[70px_300px_120px_120px_180px]"
+                                                                ? "grid-cols-[70px_300px_120px_120px_180px]"
 
-                                                    : "grid-cols-[70px_300px_140px_180px_120px_120px_120px_120px_180px]"
-                                                    }
+                                                                : "grid-cols-[70px_300px_140px_180px_120px_120px_120px_120px_180px]"
+                                                            }
 
                                                     shrink-0
                                                     sticky
@@ -2680,27 +2698,27 @@ export default function ActivityDetail({
 
                                                         {!hideInfoColumn && (
 
-                                                        <>
+                                                            <>
 
-                                                        {/* PROGRESS */}
-                                                        <div className="px-4 h-full flex items-center">
+                                                                {/* PROGRESS */}
+                                                                <div className="px-4 h-full flex items-center">
 
-                                                            {(() => {
+                                                                    {(() => {
 
-                                                                const {
-                                                                    progress,
-                                                                    color,
-                                                                    shadow
-                                                                } = getHeaderProgressInfo(
-                                                                    header.id
-                                                                );
+                                                                        const {
+                                                                            progress,
+                                                                            color,
+                                                                            shadow
+                                                                        } = getHeaderProgressInfo(
+                                                                            header.id
+                                                                        );
 
-                                                                return (
+                                                                        return (
 
-                                                                    <div className="w-full">
+                                                                            <div className="w-full">
 
-                                                                        {/* MODERN BIG PROGRESS BAR */}
-                                                                        <div className="
+                                                                                {/* MODERN BIG PROGRESS BAR */}
+                                                                                <div className="
                                                             relative
                                                             w-full
                                                             h-7
@@ -2711,9 +2729,9 @@ export default function ActivityDetail({
                                                             shadow-inner
                                                             backdrop-blur-xl">
 
-                                                                            {/* ACTIVE BAR */}
-                                                                            <div
-                                                                                className="
+                                                                                    {/* ACTIVE BAR */}
+                                                                                    <div
+                                                                                        className="
                                                                 absolute
                                                                 left-0
                                                                 top-0
@@ -2729,157 +2747,157 @@ export default function ActivityDetail({
                                                                 items-center
                                                                 justify-center
                                                                 shadow-[0_0_20px_rgba(99,102,241,0.35)]"
-                                                                                style={{
-                                                                                    width: `${progress}%`
-                                                                                }}
-                                                                            >
+                                                                                        style={{
+                                                                                            width: `${progress}%`
+                                                                                        }}
+                                                                                    >
 
-                                                                                {/* PERCENT TEXT INSIDE */}
-                                                                                <span className="
+                                                                                        {/* PERCENT TEXT INSIDE */}
+                                                                                        <span className="
                                                                     text-[11px]
                                                                     font-black
                                                                     tracking-wide
                                                                     text-white
                                                                     drop-shadow-lg">
 
-                                                                                    {progress}%
+                                                                                            {progress}%
 
-                                                                                </span>
+                                                                                        </span>
 
-                                                                            </div>
+                                                                                    </div>
 
-                                                                            {/* EMPTY STATE */}
-                                                                            {progress === 0 && (
+                                                                                    {/* EMPTY STATE */}
+                                                                                    {progress === 0 && (
 
-                                                                                <div className="
+                                                                                        <div className="
                                                                     absolute
                                                                     inset-0
                                                                     flex
                                                                     items-center
                                                                     justify-center">
 
-                                                                                    <span className="
+                                                                                            <span className="
                                                                         text-[11px]
                                                                         font-bold
                                                                         text-slate-500">
 
-                                                                                        0%
+                                                                                                0%
 
-                                                                                    </span>
+                                                                                            </span>
+
+                                                                                        </div>
+
+                                                                                    )}
 
                                                                                 </div>
 
-                                                                            )}
+                                                                            </div>
 
-                                                                        </div>
+                                                                        );
 
-                                                                    </div>
+                                                                    })()}
 
-                                                                );
+                                                                </div>
 
-                                                            })()}
+                                                                {/* ASSIGNED */}
+                                                                <div className="px-4 h-full flex items-center">
 
-                                                        </div>
+                                                                    {
+                                                                        header.assigned_to ||
+                                                                        "-"
+                                                                    }
 
-                                                        {/* ASSIGNED */}
-                                                        <div className="px-4 h-full flex items-center">
+                                                                </div>
 
-                                                            {
-                                                                header.assigned_to ||
-                                                                "-"
-                                                            }
+                                                                <div className="px-4 h-full flex items-center">
 
-                                                        </div>
+                                                                    {(() => {
 
-                                                        <div className="px-4 h-full flex items-center">
+                                                                        const status =
+                                                                            getHeaderStatus(
+                                                                                header
+                                                                            );
 
-                                                            {(() => {
+                                                                        let color =
+                                                                            "text-cyan-400";
 
-                                                                const status =
-                                                                    getHeaderStatus(
-                                                                        header
-                                                                    );
+                                                                        if (status === "DONE") {
 
-                                                                let color =
-                                                                    "text-cyan-400";
+                                                                            color =
+                                                                                "text-green-400";
 
-                                                                if (status === "DONE") {
+                                                                        }
 
-                                                                    color =
-                                                                        "text-green-400";
+                                                                        else if (
+                                                                            status === "DELAY"
+                                                                        ) {
 
-                                                                }
+                                                                            color =
+                                                                                "text-red-400";
 
-                                                                else if (
-                                                                    status === "DELAY"
-                                                                ) {
+                                                                        }
 
-                                                                    color =
-                                                                        "text-red-400";
+                                                                        else if (
+                                                                            status === "PROGRESS"
+                                                                        ) {
 
-                                                                }
+                                                                            color =
+                                                                                "text-amber-400";
 
-                                                                else if (
-                                                                    status === "PROGRESS"
-                                                                ) {
+                                                                        }
 
-                                                                    color =
-                                                                        "text-amber-400";
+                                                                        return (
 
-                                                                }
+                                                                            <span className={`font-bold ${color}`}>
 
-                                                                return (
+                                                                                {status.charAt(0) +
+                                                                                    status.slice(1).toLowerCase()}
 
-                                                                    <span className={`font-bold ${color}`}>
+                                                                            </span>
 
-                                                                        {status.charAt(0) +
-                                                                            status.slice(1).toLowerCase()}
+                                                                        );
 
-                                                                    </span>
+                                                                    })()}
 
-                                                                );
+                                                                </div>
 
-                                                            })()}
+                                                                <div className="px-4 h-full flex items-center">
 
-                                                        </div>
+                                                                    {(() => {
 
-                                                        <div className="px-4 h-full flex items-center">
+                                                                        const {
+                                                                            headerDelay
+                                                                        } =
+                                                                            calculateHeaderDelay(
+                                                                                header
+                                                                            );
 
-                                                            {(() => {
+                                                                        return headerDelay > 0 ? (
 
-                                                                const {
-                                                                    headerDelay
-                                                                } =
-                                                                    calculateHeaderDelay(
-                                                                        header
-                                                                    );
-
-                                                                return headerDelay > 0 ? (
-
-                                                                    <span className="
+                                                                            <span className="
                                             font-black
                                             text-red-400">
 
-                                                                        {headerDelay} Day
+                                                                                {headerDelay} Day
 
-                                                                    </span>
+                                                                            </span>
 
-                                                                ) : (
+                                                                        ) : (
 
-                                                                    <span className="
+                                                                            <span className="
                                             text-green-400
                                             font-bold">
 
-                                                                        0 Day
+                                                                                0 Day
 
-                                                                    </span>
+                                                                            </span>
 
-                                                                );
+                                                                        );
 
-                                                            })()}
+                                                                    })()}
 
-                                                        </div>
-                                                        </>
+                                                                </div>
+                                                            </>
 
                                                         )}
 
@@ -3246,10 +3264,10 @@ export default function ActivityDetail({
 
                                                                         ${hideInfoColumn
 
-                                                                        ? "grid-cols-[70px_300px_120px_120px_180px]"
+                                                                                ? "grid-cols-[70px_300px_120px_120px_180px]"
 
-                                                                        : "grid-cols-[70px_300px_140px_180px_120px_120px_120px_120px_180px]"
-                                                                        }
+                                                                                : "grid-cols-[70px_300px_140px_180px_120px_120px_120px_120px_180px]"
+                                                                            }
 
                                                                         shrink-0
                                                                         sticky
@@ -3257,7 +3275,7 @@ export default function ActivityDetail({
                                                                         z-10
                                                                         bg-[#081018]
                                                                         `}
-                                                                        >
+                                                                    >
                                                                         <div className="p-4
                                                         text-slate-400">
 
@@ -3278,307 +3296,307 @@ export default function ActivityDetail({
 
                                                                         {!hideInfoColumn && (
 
-                                                                        <>
-                                                                        {/* REMARK */}
-                                                                        <div className={`p-4 font-bold ${sub.remark === "PLAN"
-                                                                            ? "text-cyan-400"
-                                                                            : "text-green-400"
-                                                                            }`}>
+                                                                            <>
+                                                                                {/* REMARK */}
+                                                                                <div className={`p-4 font-bold ${sub.remark === "PLAN"
+                                                                                    ? "text-cyan-400"
+                                                                                    : "text-green-400"
+                                                                                    }`}>
 
-                                                                            {sub.remark}
+                                                                                    {sub.remark}
 
-                                                                        </div>
+                                                                                </div>
 
-                                                                        <div className="p-4 text-cyan-400">
+                                                                                <div className="p-4 text-cyan-400">
 
-                                                                            {
-                                                                                sub.assigned_to
-                                                                            }
+                                                                                    {
+                                                                                        sub.assigned_to
+                                                                                    }
 
-                                                                        </div>
+                                                                                </div>
 
-                                                                        <div className="px-4 h-full flex items-center">
+                                                                                <div className="px-4 h-full flex items-center">
 
-                                                                            {(() => {
+                                                                                    {(() => {
 
-                                                                                // ======================
-                                                                                // PLAN = NO STATUS
-                                                                                // ======================
+                                                                                        // ======================
+                                                                                        // PLAN = NO STATUS
+                                                                                        // ======================
 
-                                                                                if (
-                                                                                    sub.remark === "PLAN"
-                                                                                ) {
+                                                                                        if (
+                                                                                            sub.remark === "PLAN"
+                                                                                        ) {
 
-                                                                                    return (
-                                                                                        <span className="text-slate-600">
-                                                                                        </span>
-                                                                                    );
+                                                                                            return (
+                                                                                                <span className="text-slate-600">
+                                                                                                </span>
+                                                                                            );
 
-                                                                                }
+                                                                                        }
 
-                                                                                // ======================
-                                                                                // FIND PLAN TASK
-                                                                                // ======================
+                                                                                        // ======================
+                                                                                        // FIND PLAN TASK
+                                                                                        // ======================
 
-                                                                                const planTask =
-                                                                                    subTaskList.find(
-                                                                                        (x) =>
+                                                                                        const planTask =
+                                                                                            subTaskList.find(
+                                                                                                (x) =>
 
-                                                                                            x.header_id ===
-                                                                                            sub.header_id &&
+                                                                                                    x.header_id ===
+                                                                                                    sub.header_id &&
 
-                                                                                            x.activity ===
-                                                                                            sub.activity &&
+                                                                                                    x.activity ===
+                                                                                                    sub.activity &&
 
-                                                                                            x.remark ===
-                                                                                            "PLAN"
-                                                                                    );
+                                                                                                    x.remark ===
+                                                                                                    "PLAN"
+                                                                                            );
 
-                                                                                const today =
-                                                                                    new Date();
+                                                                                        const today =
+                                                                                            new Date();
 
-                                                                                today.setHours(
-                                                                                    0,
-                                                                                    0,
-                                                                                    0,
-                                                                                    0
-                                                                                );
-
-                                                                                // ======================
-                                                                                // DONE
-                                                                                // ======================
-
-                                                                                if (
-                                                                                    sub.end_date
-                                                                                ) {
-
-                                                                                    return (
-
-                                                                                        <span className="font-bold text-green-400">
-
-                                                                                            Done
-
-                                                                                        </span>
-
-                                                                                    );
-
-                                                                                }
-
-                                                                                // ======================
-                                                                                // DELAY
-                                                                                // ======================
-
-                                                                                if (
-                                                                                    planTask?.end_date
-                                                                                ) {
-
-                                                                                    const planEnd =
-                                                                                        new Date(
-                                                                                            planTask.end_date
+                                                                                        today.setHours(
+                                                                                            0,
+                                                                                            0,
+                                                                                            0,
+                                                                                            0
                                                                                         );
 
-                                                                                    planEnd.setHours(
-                                                                                        0,
-                                                                                        0,
-                                                                                        0,
-                                                                                        0
-                                                                                    );
+                                                                                        // ======================
+                                                                                        // DONE
+                                                                                        // ======================
 
-                                                                                    if (
-                                                                                        today > planEnd
-                                                                                    ) {
+                                                                                        if (
+                                                                                            sub.end_date
+                                                                                        ) {
+
+                                                                                            return (
+
+                                                                                                <span className="font-bold text-green-400">
+
+                                                                                                    Done
+
+                                                                                                </span>
+
+                                                                                            );
+
+                                                                                        }
+
+                                                                                        // ======================
+                                                                                        // DELAY
+                                                                                        // ======================
+
+                                                                                        if (
+                                                                                            planTask?.end_date
+                                                                                        ) {
+
+                                                                                            const planEnd =
+                                                                                                new Date(
+                                                                                                    planTask.end_date
+                                                                                                );
+
+                                                                                            planEnd.setHours(
+                                                                                                0,
+                                                                                                0,
+                                                                                                0,
+                                                                                                0
+                                                                                            );
+
+                                                                                            if (
+                                                                                                today > planEnd
+                                                                                            ) {
+
+                                                                                                return (
+
+                                                                                                    <span className="font-bold text-red-400">
+
+                                                                                                        Delay
+
+                                                                                                    </span>
+
+                                                                                                );
+
+                                                                                            }
+
+                                                                                        }
+
+                                                                                        // ======================
+                                                                                        // PROGRESS
+                                                                                        // ======================
+
+                                                                                        if (
+                                                                                            sub.start_date
+                                                                                        ) {
+
+                                                                                            return (
+
+                                                                                                <span className="font-bold text-amber-400">
+
+                                                                                                    Progress
+
+                                                                                                </span>
+
+                                                                                            );
+
+                                                                                        }
+
+                                                                                        // ======================
+                                                                                        // OPEN
+                                                                                        // ======================
 
                                                                                         return (
 
-                                                                                            <span className="font-bold text-red-400">
+                                                                                            <span className="font-bold text-cyan-400">
 
-                                                                                                Delay
+                                                                                                Open
 
                                                                                             </span>
 
                                                                                         );
 
-                                                                                    }
+                                                                                    })()}
 
-                                                                                }
+                                                                                </div>
 
-                                                                                // ======================
-                                                                                // PROGRESS
-                                                                                // ======================
+                                                                                {/* TOTAL DELAY */}
+                                                                                <div className="px-4 h-full flex items-center">
 
-                                                                                if (
-                                                                                    sub.start_date
-                                                                                ) {
+                                                                                    {(() => {
 
-                                                                                    return (
+                                                                                        // PLAN NO DELAY
+                                                                                        if (
+                                                                                            sub.remark === "PLAN"
+                                                                                        ) {
 
-                                                                                        <span className="font-bold text-amber-400">
+                                                                                            return (
+                                                                                                <span className="text-slate-600">
 
-                                                                                            Progress
+                                                                                                </span>
+                                                                                            );
 
-                                                                                        </span>
+                                                                                        }
 
-                                                                                    );
+                                                                                        const planTask =
+                                                                                            subTaskList.find(
+                                                                                                (x) =>
 
-                                                                                }
+                                                                                                    x.header_id ===
+                                                                                                    sub.header_id &&
 
-                                                                                // ======================
-                                                                                // OPEN
-                                                                                // ======================
+                                                                                                    x.activity ===
+                                                                                                    sub.activity &&
 
-                                                                                return (
+                                                                                                    x.remark ===
+                                                                                                    "PLAN"
+                                                                                            );
 
-                                                                                    <span className="font-bold text-cyan-400">
+                                                                                        if (
+                                                                                            !planTask?.end_date
+                                                                                        ) {
 
-                                                                                        Open
+                                                                                            return (
+                                                                                                <span className="text-green-400 font-bold">
+                                                                                                    0 Day
+                                                                                                </span>
+                                                                                            );
 
-                                                                                    </span>
+                                                                                        }
 
-                                                                                );
+                                                                                        const today =
+                                                                                            new Date();
 
-                                                                            })()}
+                                                                                        today.setHours(
+                                                                                            0,
+                                                                                            0,
+                                                                                            0,
+                                                                                            0
+                                                                                        );
 
-                                                                        </div>
+                                                                                        const planEnd =
+                                                                                            new Date(
+                                                                                                planTask.end_date
+                                                                                            );
 
-                                                                        {/* TOTAL DELAY */}
-                                                                        <div className="px-4 h-full flex items-center">
+                                                                                        planEnd.setHours(
+                                                                                            0,
+                                                                                            0,
+                                                                                            0,
+                                                                                            0
+                                                                                        );
 
-                                                                            {(() => {
+                                                                                        let actualEnd =
+                                                                                            today;
 
-                                                                                // PLAN NO DELAY
-                                                                                if (
-                                                                                    sub.remark === "PLAN"
-                                                                                ) {
-
-                                                                                    return (
-                                                                                        <span className="text-slate-600">
-
-                                                                                        </span>
-                                                                                    );
-
-                                                                                }
-
-                                                                                const planTask =
-                                                                                    subTaskList.find(
-                                                                                        (x) =>
-
-                                                                                            x.header_id ===
-                                                                                            sub.header_id &&
-
-                                                                                            x.activity ===
-                                                                                            sub.activity &&
-
-                                                                                            x.remark ===
-                                                                                            "PLAN"
-                                                                                    );
-
-                                                                                if (
-                                                                                    !planTask?.end_date
-                                                                                ) {
-
-                                                                                    return (
-                                                                                        <span className="text-green-400 font-bold">
-                                                                                            0 Day
-                                                                                        </span>
-                                                                                    );
-
-                                                                                }
-
-                                                                                const today =
-                                                                                    new Date();
-
-                                                                                today.setHours(
-                                                                                    0,
-                                                                                    0,
-                                                                                    0,
-                                                                                    0
-                                                                                );
-
-                                                                                const planEnd =
-                                                                                    new Date(
-                                                                                        planTask.end_date
-                                                                                    );
-
-                                                                                planEnd.setHours(
-                                                                                    0,
-                                                                                    0,
-                                                                                    0,
-                                                                                    0
-                                                                                );
-
-                                                                                let actualEnd =
-                                                                                    today;
-
-                                                                                if (
-                                                                                    sub.end_date
-                                                                                ) {
-
-                                                                                    actualEnd =
-                                                                                        new Date(
+                                                                                        if (
                                                                                             sub.end_date
-                                                                                        );
+                                                                                        ) {
 
-                                                                                    actualEnd.setHours(
-                                                                                        0,
-                                                                                        0,
-                                                                                        0,
-                                                                                        0
-                                                                                    );
+                                                                                            actualEnd =
+                                                                                                new Date(
+                                                                                                    sub.end_date
+                                                                                                );
 
-                                                                                }
+                                                                                            actualEnd.setHours(
+                                                                                                0,
+                                                                                                0,
+                                                                                                0,
+                                                                                                0
+                                                                                            );
 
-                                                                                if (
-                                                                                    actualEnd >
-                                                                                    planEnd
-                                                                                ) {
+                                                                                        }
 
-                                                                                    const diff =
-                                                                                        Math.floor(
-                                                                                            (
-                                                                                                actualEnd -
-                                                                                                planEnd
-                                                                                            ) /
-                                                                                            (
-                                                                                                1000 *
-                                                                                                60 *
-                                                                                                60 *
-                                                                                                24
-                                                                                            )
-                                                                                        );
+                                                                                        if (
+                                                                                            actualEnd >
+                                                                                            planEnd
+                                                                                        ) {
 
-                                                                                    return (
+                                                                                            const diff =
+                                                                                                Math.floor(
+                                                                                                    (
+                                                                                                        actualEnd -
+                                                                                                        planEnd
+                                                                                                    ) /
+                                                                                                    (
+                                                                                                        1000 *
+                                                                                                        60 *
+                                                                                                        60 *
+                                                                                                        24
+                                                                                                    )
+                                                                                                );
 
-                                                                                        <span className="
+                                                                                            return (
+
+                                                                                                <span className="
                                                                 font-black
                                                                 text-red-400">
 
-                                                                                            {diff} Day
+                                                                                                    {diff} Day
 
-                                                                                        </span>
+                                                                                                </span>
 
-                                                                                    );
+                                                                                            );
 
-                                                                                }
+                                                                                        }
 
-                                                                                return (
+                                                                                        return (
 
-                                                                                    <span className="
+                                                                                            <span className="
                                                             text-green-400
                                                             font-bold">
 
-                                                                                        0 Day
+                                                                                                0 Day
 
-                                                                                    </span>
+                                                                                            </span>
 
-                                                                                );
+                                                                                        );
 
-                                                                            })()}
+                                                                                    })()}
 
-                                                                        </div>
+                                                                                </div>
 
-                                                                        </>
+                                                                            </>
 
-)}
+                                                                        )}
 
                                                                         <div className="px-4 h-full flex items-center">
 
@@ -4034,16 +4052,95 @@ export default function ActivityDetail({
                                                 <input
                                                     type="date"
                                                     value={subTask.end_date}
-                                                    onChange={(e) =>
+                                                    onChange={(e) => {
+
+                                                        const newEndDate =
+                                                            e.target.value;
+
                                                         setSubTask({
 
                                                             ...subTask,
 
                                                             end_date:
-                                                                e.target.value
+                                                                newEndDate
 
-                                                        })
-                                                    }
+                                                        });
+
+                                                        // ======================
+                                                        // AUTO NEXT START DATE
+                                                        // ======================
+
+                                                        if (
+                                                            editingSubTask &&
+                                                            editingSubTask.remark === "PLAN"
+                                                        ) {
+
+                                                            const workflowOrder = [
+
+                                                                "Design",
+                                                                "RFQ",
+                                                                "PR",
+                                                                "PO",
+                                                                "Shipping",
+                                                                "Installation",
+                                                                "Debugging",
+                                                                "Validation",
+                                                                "Pilot Run",
+                                                                "SOP"
+
+                                                            ];
+
+                                                            const currentIndex =
+                                                                workflowOrder.indexOf(
+                                                                    editingSubTask.activity
+                                                                );
+
+                                                            const nextActivity =
+                                                                workflowOrder[
+                                                                currentIndex + 1
+                                                                ];
+
+                                                            if (!nextActivity) return;
+
+                                                            // FIND NEXT PLAN TASK
+                                                            const nextPlanTask =
+                                                                subTaskList.find(
+                                                                    (x) =>
+
+                                                                        x.header_id ===
+                                                                        editingSubTask.header_id &&
+
+                                                                        x.activity ===
+                                                                        nextActivity &&
+
+                                                                        x.remark === "PLAN"
+                                                                );
+
+                                                            if (!nextPlanTask) return;
+
+                                                            // AUTO UPDATE NEXT START DATE
+                                                            setTimeout(async () => {
+
+                                                                await supabase
+                                                                    .from("sub_tasks")
+                                                                    .update({
+
+                                                                        start_date:
+                                                                            newEndDate
+
+                                                                    })
+                                                                    .eq(
+                                                                        "id",
+                                                                        nextPlanTask.id
+                                                                    );
+
+                                                                await loadSubTasks();
+
+                                                            }, 100);
+
+                                                        }
+
+                                                    }}
                                                     className="
         w-full
         h-14
