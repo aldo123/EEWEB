@@ -1165,6 +1165,26 @@ export default function ProjectList() {
                     <button
                         onClick={() => {
 
+                            // ======================
+                            // ROLE VALIDATION
+                            // ======================
+
+                            if (
+                                currentUser?.role !== "Manager"
+                            ) {
+
+                                alert(
+                                    "Project hanya bisa ditambahkan oleh Manager role"
+                                );
+
+                                return;
+
+                            }
+
+                            // ======================
+                            // OPEN MODAL
+                            // ======================
+
                             setEditMode(false);
 
                             setFormData({
@@ -1184,7 +1204,8 @@ export default function ProjectList() {
                         from-green-500 to-emerald-600
                         shadow-[0_0_30px_rgba(34,197,94,.25)]
                         flex items-center gap-3
-                        text-sm font-bold transition-all"
+                        text-sm font-bold transition-all
+                        hover:scale-[1.02]"
                     >
 
                         <Plus size={16} />
@@ -1428,16 +1449,38 @@ export default function ProjectList() {
 
                                     <div className="flex items-center gap-2">
 
+                                        {/* DELETE */}
                                         <button
                                             onClick={(e) => {
+
                                                 e.stopPropagation();
+
+                                                // ======================
+                                                // ROLE VALIDATION
+                                                // ======================
+
+                                                if (
+                                                    currentUser?.role !== "Manager"
+                                                ) {
+
+                                                    alert(
+                                                        "Delete project hanya bisa dilakukan oleh Manager role"
+                                                    );
+
+                                                    return;
+
+                                                }
+
                                                 handleDeleteProject(item.id)
+
                                             }}
 
                                             className="w-10 h-10 rounded-xl
                                             bg-red-500/10
                                             border border-red-500/20
-                                            flex items-center justify-center"
+                                            flex items-center justify-center
+                                            hover:scale-105
+                                            transition-all"
                                         >
 
                                             <Trash2
@@ -1447,10 +1490,31 @@ export default function ProjectList() {
 
                                         </button>
 
+                                        {/* EDIT */}
                                         <button
                                             onClick={(e) => {
 
                                                 e.stopPropagation();
+
+                                                // ======================
+                                                // ROLE VALIDATION
+                                                // ======================
+
+                                                if (
+                                                    currentUser?.role !== "Manager"
+                                                ) {
+
+                                                    alert(
+                                                        "Edit project hanya bisa dilakukan oleh Manager role"
+                                                    );
+
+                                                    return;
+
+                                                }
+
+                                                // ======================
+                                                // OPEN EDIT MODAL
+                                                // ======================
 
                                                 setEditMode(true);
 
@@ -1467,10 +1531,13 @@ export default function ProjectList() {
                                                 setOpenModal(true);
 
                                             }}
+
                                             className="w-10 h-10 rounded-xl
                                             bg-yellow-500/10
                                             border border-yellow-500/20
-                                            flex items-center justify-center"
+                                            flex items-center justify-center
+                                            hover:scale-105
+                                            transition-all"
                                         >
 
                                             <Pencil
