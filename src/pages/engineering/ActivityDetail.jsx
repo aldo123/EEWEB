@@ -377,13 +377,9 @@ export default function ActivityDetail({
                 } = await supabase
                     .from("users")
                     .select("*")
-                    .neq(
+                    .in(
                         "role",
-                        "Manager"
-                    )
-                    .neq(
-                        "role",
-                        "Production"
+                        ["Engineer", "Admin"]
                     )
                     .order(
                         "name",

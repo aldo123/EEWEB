@@ -67,6 +67,13 @@ export default function ProjectList() {
         useState(null);
 
     // =========================
+    // PROJECT FILTER
+    // =========================
+    const [projectFilter,
+        setProjectFilter] =
+        useState("ALL");
+
+    // =========================
     // LOAD PROJECTS
     // =========================
     const loadProjects = async () => {
@@ -230,6 +237,16 @@ export default function ProjectList() {
         loadUsers();
 
     }, []);
+
+    // =========================
+    // CURRENT USER
+    // =========================
+    const currentUser =
+        JSON.parse(
+            localStorage.getItem(
+                "user"
+            )
+        );
 
 
 
@@ -417,13 +434,20 @@ export default function ProjectList() {
     // =========================
     // FILTER PROJECT
     // =========================
+    // =========================
+    // FILTER PROJECT
+    // =========================
     const filteredProjects =
         projects.filter((item) => {
 
             const keyword =
                 search.toLowerCase();
 
-            return (
+            // ======================
+            // SEARCH FILTER
+            // ======================
+
+            const matchSearch = (
 
                 item.title
                     ?.toLowerCase()
@@ -453,6 +477,35 @@ export default function ProjectList() {
                     ?.toLowerCase()
                     .includes(keyword)
 
+            );
+
+            // ======================
+            // MY PROJECT FILTER
+            // ======================
+
+            let matchProject = true;
+
+            if (
+                projectFilter === "MY"
+            ) {
+
+                matchProject = (
+
+                    item.tpm ===
+                    currentUser?.name
+
+                    ||
+
+                    item.ee ===
+                    currentUser?.name
+
+                );
+
+            }
+
+            return (
+                matchSearch &&
+                matchProject
             );
 
         });
@@ -690,8 +743,8 @@ export default function ProjectList() {
                 bg-[radial-gradient(circle_at_top_right,rgba(0,255,200,0.08),transparent_22%),radial-gradient(circle_at_bottom_left,rgba(0,140,255,0.08),transparent_28%),linear-gradient(to_bottom,#020617,#031126,#020617)]
             ">
 
-                {/* BACKGROUND EFFECT */}
-                <div className="
+            {/* BACKGROUND EFFECT */}
+            <div className="
                     absolute
                     top-[-200px]
                     right-[-150px]
@@ -706,7 +759,7 @@ export default function ProjectList() {
                     pointer-events-none
                 "></div>
 
-                <div className="
+            <div className="
                     absolute
                     bottom-[-250px]
                     left-[-150px]
@@ -1023,6 +1076,88 @@ export default function ProjectList() {
                             outline-none
                             focus:border-green-500/20"
                         />
+
+                    </div>
+
+                    {/* FILTER BUTTON */}
+                    <div className="
+                    flex
+                    items-center
+                    gap-3
+                    shrink-0
+                    ">
+
+                        {/* MY PROJECT */}
+                        <button
+                            onClick={() =>
+                                setProjectFilter("MY")
+                            }
+                            className={`
+                            h-14
+                            px-5
+                            rounded-2xl
+                            border
+                            font-bold
+                            transition-all
+
+                            ${projectFilter === "MY"
+
+                                    ? `
+                                border-cyan-400
+                                bg-cyan-500/20
+                                text-cyan-300
+                                shadow-[0_0_25px_rgba(0,255,255,0.25)]
+                                `
+
+                                    : `
+                                border-white/10
+                                bg-white/5
+                                text-slate-400
+                                hover:border-cyan-500/20
+                                `
+                                }
+                            `}
+                        >
+
+                            My Project
+
+                        </button>
+
+                        {/* ALL PROJECT */}
+                        <button
+                            onClick={() =>
+                                setProjectFilter("ALL")
+                            }
+                            className={`
+                            h-14
+                            px-5
+                            rounded-2xl
+                            border
+                            font-bold
+                            transition-all
+
+                            ${projectFilter === "ALL"
+
+                                    ? `
+                                border-green-400
+                                bg-green-500/20
+                                text-green-300
+                                shadow-[0_0_25px_rgba(0,255,120,0.25)]
+                                `
+
+                                    : `
+                                border-white/10
+                                bg-white/5
+                                text-slate-400
+                                hover:border-green-500/20
+                                `
+                                }
+                            `}
+                        >
+
+                            All Project
+
+                        </button>
 
                     </div>
 
