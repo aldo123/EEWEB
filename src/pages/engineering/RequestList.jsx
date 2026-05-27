@@ -187,6 +187,18 @@ export default function RequestList() {
 
         });
 
+    const currentUser =
+        JSON.parse(
+            localStorage.getItem("user")
+        );
+
+    const isManagerOrAdmin =
+
+        currentUser?.role === "Manager"
+
+        ||
+
+        currentUser?.role === "Admin";
     // ========================================
     // LOAD DATA
     // ========================================
@@ -1556,9 +1568,22 @@ export default function RequestList() {
                 </div>
 
                 <button
-                    onClick={() =>
-                        setShowAddModal(true)
-                    }
+
+                    onClick={() => {
+
+                        if (!isManagerOrAdmin) {
+
+                            alert(
+                                "Only Manager or Admin can add request"
+                            );
+
+                            return;
+
+                        }
+
+                        setShowAddModal(true);
+
+                    }}
                     className="
                         h-12
                         px-5
@@ -1580,20 +1605,35 @@ export default function RequestList() {
 
                 </button>
 
-                <label className="
-                    h-12
-                    px-5
-                    rounded-2xl
-                    bg-emerald-500
-                    hover:bg-emerald-400
-                    flex
-                    items-center
-                    gap-2
-                    font-bold
-                    cursor-pointer
-                    transition
-                    whitespace-nowrap
-                ">
+                <label
+                    onClick={(e) => {
+
+                        if (!isManagerOrAdmin) {
+
+                            e.preventDefault();
+
+                            alert(
+                                "Only Manager or Admin can import excel"
+                            );
+
+                        }
+
+                    }}
+                    className={`
+                        h-12
+                        px-5
+                        rounded-2xl
+                        bg-emerald-500
+                        hover:bg-emerald-400
+                        flex
+                        items-center
+                        gap-2
+                        font-bold
+                        cursor-pointer
+                        transition
+                        whitespace-nowrap
+                    `}
+                >
 
                     <Upload size={18} />
 
@@ -1611,9 +1651,22 @@ export default function RequestList() {
                 </label>
 
                 <button
-                    onClick={
-                        handleExportExcel
-                    }
+
+                    onClick={() => {
+
+                        if (!isManagerOrAdmin) {
+
+                            alert(
+                                "Only Manager or Admin can export excel"
+                            );
+
+                            return;
+
+                        }
+
+                        handleExportExcel();
+
+                    }}
                     className="
                         h-12
                         px-5
@@ -1634,9 +1687,22 @@ export default function RequestList() {
 
                 </button>
                 <button
-                    onClick={
-                        handleDeleteAll
-                    }
+
+                    onClick={() => {
+
+                        if (!isManagerOrAdmin) {
+
+                            alert(
+                                "Only Manager or Admin can delete all request"
+                            );
+
+                            return;
+
+                        }
+
+                        handleDeleteAll();
+
+                    }}
                     className="
                         h-12
                         px-5
@@ -1959,9 +2025,22 @@ export default function RequestList() {
                                                 ">
 
                                                     <button
-                                                        onClick={() =>
-                                                            handleEdit(item)
-                                                        }
+
+                                                        onClick={() => {
+
+                                                            if (!isManagerOrAdmin) {
+
+                                                                alert(
+                                                                    "Only Manager or Admin can edit request"
+                                                                );
+
+                                                                return;
+
+                                                            }
+
+                                                            handleEdit(item);
+
+                                                        }}
                                                         className="
                                                             w-9
                                                             h-9
@@ -1986,11 +2065,22 @@ export default function RequestList() {
                                                     </button>
 
                                                     <button
-                                                        onClick={() =>
-                                                            handleDelete(
-                                                                item.id
-                                                            )
-                                                        }
+
+                                                        onClick={() => {
+
+                                                            if (!isManagerOrAdmin) {
+
+                                                                alert(
+                                                                    "Only Manager or Admin can delete request"
+                                                                );
+
+                                                                return;
+
+                                                            }
+
+                                                            handleDelete(item.id);
+
+                                                        }}
                                                         className="
                                                             w-9
                                                             h-9
