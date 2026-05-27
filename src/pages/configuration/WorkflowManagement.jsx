@@ -52,6 +52,7 @@ export default function WorkflowManagement() {
 
         });
 
+
     // =====================================
     // FETCH WORKFLOW
     // =====================================
@@ -78,6 +79,14 @@ export default function WorkflowManagement() {
 
         };
 
+    const currentUser =
+        JSON.parse(
+            localStorage.getItem("user")
+        );
+
+    const isManager =
+        currentUser?.role ===
+        "Manager";
     // =====================================
     // FETCH USERS
     // =====================================
@@ -712,9 +721,22 @@ export default function WorkflowManagement() {
 
                     {/* BUTTON */}
                     <button
-                        onClick={
-                            handleAddEngineer
-                        }
+
+                        onClick={() => {
+
+                            if (!isManager) {
+
+                                alert(
+                                    "Only Manager can add engineer"
+                                );
+
+                                return;
+
+                            }
+
+                            handleAddEngineer();
+
+                        }}
                         className="
                         h-14
                         px-7
@@ -832,11 +854,24 @@ export default function WorkflowManagement() {
 
                                     {/* DELETE ENGINEER */}
                                     <button
-                                        onClick={() =>
+
+                                        onClick={() => {
+
+                                            if (!isManager) {
+
+                                                alert(
+                                                    "Only Manager can delete engineer"
+                                                );
+
+                                                return;
+
+                                            }
+
                                             handleDeleteEngineer(
                                                 engineer
-                                            )
-                                        }
+                                            );
+
+                                        }}
                                         className="
                                         w-10 h-10 rounded-xl
                                         bg-red-500/10
@@ -857,11 +892,24 @@ export default function WorkflowManagement() {
 
                                 {/* ADD TECHNICIAN */}
                                 <button
-                                    onClick={() =>
+
+                                    onClick={() => {
+
+                                        if (!isManager) {
+
+                                            alert(
+                                                "Only Manager can add technician"
+                                            );
+
+                                            return;
+
+                                        }
+
                                         handleAddTechnician(
                                             engineer
-                                        )
-                                    }
+                                        );
+
+                                    }}
                                     className="
                                     mt-5 h-10 px-4 rounded-2xl
                                     bg-green-500/10
@@ -945,11 +993,22 @@ export default function WorkflowManagement() {
                                                     flex items-center gap-2">
 
                                                         <button
-                                                            onClick={() =>
-                                                                handleEdit(
-                                                                    item
-                                                                )
-                                                            }
+
+                                                            onClick={() => {
+
+                                                                if (!isManager) {
+
+                                                                    alert(
+                                                                        "Only Manager can edit technician"
+                                                                    );
+
+                                                                    return;
+
+                                                                }
+
+                                                                handleEdit(item);
+
+                                                            }}
                                                             className="
                                                             w-9 h-9 rounded-xl
                                                             bg-yellow-500/10
@@ -966,11 +1025,24 @@ export default function WorkflowManagement() {
                                                         </button>
 
                                                         <button
-                                                            onClick={() =>
+
+                                                            onClick={() => {
+
+                                                                if (!isManager) {
+
+                                                                    alert(
+                                                                        "Only Manager can delete technician"
+                                                                    );
+
+                                                                    return;
+
+                                                                }
+
                                                                 handleDeleteTechnician(
                                                                     item.firebase_id
-                                                                )
-                                                            }
+                                                                );
+
+                                                            }}
                                                             className="
                                                             w-9 h-9 rounded-xl
                                                             bg-red-500/10

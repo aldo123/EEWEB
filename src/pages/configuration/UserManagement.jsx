@@ -311,6 +311,15 @@ export default function UserRoleManagement() {
 
         };
 
+    const currentUser =
+        JSON.parse(
+            localStorage.getItem("user")
+        );
+
+    const isManager =
+        currentUser?.role ===
+        "Manager";
+
     return (
 
         <div className="
@@ -457,27 +466,27 @@ bg-[radial-gradient(circle_at_top_right,rgba(0,255,200,0.08),transparent_22%),ra
                         gap-4
                     ">
 
-                        <div className="relative flex-1">
+                    <div className="relative flex-1">
 
-                            <Search
-                                size={18}
-                                className="
+                        <Search
+                            size={18}
+                            className="
                                     absolute
                                     left-5
                                     top-1/2
                                     -translate-y-1/2
                                     text-slate-500
                                 "
-                            />
+                        />
 
-                            <input
-                                type="text"
-                                value={search}
-                                onChange={(e) =>
-                                    setSearch(e.target.value)
-                                }
-                                placeholder="Search user, username, role..."
-                                className="
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) =>
+                                setSearch(e.target.value)
+                            }
+                            placeholder="Search user, username, role..."
+                            className="
                                     w-full
                                     h-14
                                     rounded-2xl
@@ -495,13 +504,27 @@ bg-[radial-gradient(circle_at_top_right,rgba(0,255,200,0.08),transparent_22%),ra
 
                                     focus:border-cyan-500/20
                                 "
-                            />
+                        />
 
-                        </div>
+                    </div>
 
-                        <button
-                            onClick={handleAddUser}
-                            className="
+                    <button
+                        onClick={() => {
+
+                            if (!isManager) {
+
+                                alert(
+                                    "Only Manager can add user"
+                                );
+
+                                return;
+
+                            }
+
+                            handleAddUser();
+
+                        }}
+                        className="
                                 h-14
                                 px-7
                                 rounded-2xl
@@ -520,15 +543,15 @@ bg-[radial-gradient(circle_at_top_right,rgba(0,255,200,0.08),transparent_22%),ra
                                 font-bold
                                 shrink-0
                             "
-                        >
+                    >
 
-                            <Plus size={18} />
+                        <Plus size={18} />
 
-                            Add User
+                        Add User
 
-                        </button>
+                    </button>
 
-                    </div>
+                </div>
 
             </div>
 
@@ -785,11 +808,21 @@ bg-[radial-gradient(circle_at_top_right,rgba(0,255,200,0.08),transparent_22%),ra
 
                                 {/* EDIT */}
                                 <button
-                                    onClick={() =>
-                                        handleEditUser(
-                                            item
-                                        )
-                                    }
+                                    onClick={() => {
+
+                                        if (!isManager) {
+
+                                            alert(
+                                                "Only Manager can edit user"
+                                            );
+
+                                            return;
+
+                                        }
+
+                                        handleEditUser(item);
+
+                                    }}
                                     className="w-11 h-11 rounded-2xl
             bg-gradient-to-br
             from-yellow-500/10
@@ -809,11 +842,21 @@ bg-[radial-gradient(circle_at_top_right,rgba(0,255,200,0.08),transparent_22%),ra
 
                                 {/* DELETE */}
                                 <button
-                                    onClick={() =>
-                                        handleDeleteUser(
-                                            item
-                                        )
-                                    }
+                                    onClick={() => {
+
+                                        if (!isManager) {
+
+                                            alert(
+                                                "Only Manager can delete user"
+                                            );
+
+                                            return;
+
+                                        }
+
+                                        handleDeleteUser(item);
+
+                                    }}
                                     className="w-11 h-11 rounded-2xl
             bg-gradient-to-br
             from-red-500/10
@@ -1044,6 +1087,14 @@ bg-[radial-gradient(circle_at_top_right,rgba(0,255,200,0.08),transparent_22%),ra
 
                                     <option>
                                         Production
+                                    </option>
+
+                                    <option>
+                                        LEAN
+                                    </option>
+
+                                    <option>
+                                        ATL
                                     </option>
 
                                 </select>

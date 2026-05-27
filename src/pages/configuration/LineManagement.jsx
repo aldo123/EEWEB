@@ -71,6 +71,15 @@ export default function LineManagement() {
 
     }, []);
 
+    const currentUser =
+        JSON.parse(
+            localStorage.getItem("user")
+        );
+
+    const isManager =
+        currentUser?.role ===
+        "Manager";
+
     // =========================================
     // GROUP BY MODEL
     // =========================================
@@ -346,8 +355,8 @@ export default function LineManagement() {
         <div className="w-full">
 
             {/* HERO HEADER */}
-            <div 
-            className="
+            <div
+                className="
             relative
             overflow-hidden
 
@@ -525,7 +534,22 @@ export default function LineManagement() {
 
                     {/* BUTTON */}
                     <button
-                        onClick={handleAdd}
+
+                        onClick={() => {
+
+                            if (!isManager) {
+
+                                alert(
+                                    "Only Manager can add model"
+                                );
+
+                                return;
+
+                            }
+
+                            handleAdd();
+
+                        }}
                         className="
                         h-14
                         px-7
@@ -629,11 +653,22 @@ export default function LineManagement() {
 
                                 {/* ADD LINE */}
                                 <button
-                                    onClick={() =>
-                                        handleAddLine(
-                                            model
-                                        )
-                                    }
+
+                                    onClick={() => {
+
+                                        if (!isManager) {
+
+                                            alert(
+                                                "Only Manager can add line"
+                                            );
+
+                                            return;
+
+                                        }
+
+                                        handleAddLine(model);
+
+                                    }}
                                     className="mt-5 h-11 px-5 rounded-2xl
                                     bg-green-500/10
                                     border border-green-500/20
@@ -641,7 +676,7 @@ export default function LineManagement() {
                                     transition-all
                                     flex items-center gap-2
                                     text-sm font-semibold text-green-400"
-                                                    >
+                                >
 
                                     <Plus size={16} />
 
@@ -703,17 +738,28 @@ export default function LineManagement() {
 
                                                     {/* EDIT */}
                                                     <button
-                                                        onClick={() =>
-                                                            handleEdit(
-                                                                line
-                                                            )
-                                                        }
+
+                                                        onClick={() => {
+
+                                                            if (!isManager) {
+
+                                                                alert(
+                                                                    "Only Manager can edit line"
+                                                                );
+
+                                                                return;
+
+                                                            }
+
+                                                            handleEdit(line);
+
+                                                        }}
                                                         className="w-10 h-10 rounded-xl
                                                         bg-yellow-500/10
                                                         border border-yellow-500/20
                                                         flex items-center justify-center
                                                         hover:bg-yellow-500/20"
-                                                                                >
+                                                    >
 
                                                         <Pencil
                                                             size={15}
@@ -724,17 +770,28 @@ export default function LineManagement() {
 
                                                     {/* DELETE */}
                                                     <button
-                                                        onClick={() =>
-                                                            handleDelete(
-                                                                line
-                                                            )
-                                                        }
+
+                                                        onClick={() => {
+
+                                                            if (!isManager) {
+
+                                                                alert(
+                                                                    "Only Manager can delete line"
+                                                                );
+
+                                                                return;
+
+                                                            }
+
+                                                            handleDelete(line);
+
+                                                        }}
                                                         className="w-10 h-10 rounded-xl
                                                         bg-red-500/10
                                                         border border-red-500/20
                                                         flex items-center justify-center
                                                         hover:bg-red-500/20"
-                                                                                >
+                                                    >
 
                                                         <Trash2
                                                             size={15}
@@ -909,7 +966,7 @@ export default function LineManagement() {
                                 bg-white/[0.04]
                                 border border-white/5
                                 text-slate-300"
-                                            >
+                            >
 
                                 Cancel
 

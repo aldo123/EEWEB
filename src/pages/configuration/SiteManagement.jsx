@@ -84,6 +84,15 @@ export default function SiteManagement() {
 
   }, []);
 
+  const currentUser =
+    JSON.parse(
+      localStorage.getItem("user")
+    );
+
+  const isManager =
+    currentUser?.role ===
+    "Manager";
+
   // =====================================
   // FILTER
   // =====================================
@@ -407,36 +416,36 @@ export default function SiteManagement() {
       mb-8
       ">
 
-          <div className="
+        <div className="
           flex
           items-center
           gap-4
           ">
 
-              {/* SEARCH */}
-              <div className="relative flex-1">
+          {/* SEARCH */}
+          <div className="relative flex-1">
 
-                  <Search
-                      size={18}
-                      className="
+            <Search
+              size={18}
+              className="
                       absolute
                       left-5
                       top-1/2
                       -translate-y-1/2
                       text-slate-500
                       "
-                  />
+            />
 
-                  <input
-                      type="text"
-                      value={search}
-                      onChange={(e) =>
-                          setSearch(
-                              e.target.value
-                          )
-                      }
-                      placeholder="Search site..."
-                      className="
+            <input
+              type="text"
+              value={search}
+              onChange={(e) =>
+                setSearch(
+                  e.target.value
+                )
+              }
+              placeholder="Search site..."
+              className="
                       w-full
                       h-14
                       rounded-2xl
@@ -457,14 +466,29 @@ export default function SiteManagement() {
 
                       focus:border-green-500/20
                       "
-                  />
+            />
 
-              </div>
+          </div>
 
-              {/* BUTTON */}
-              <button
-                  onClick={handleAddSite}
-                  className="
+          {/* BUTTON */}
+          <button
+
+            onClick={() => {
+
+              if (!isManager) {
+
+                alert(
+                  "Only Manager can add site"
+                );
+
+                return;
+
+              }
+
+              handleAddSite();
+
+            }}
+            className="
                   h-14
                   px-7
 
@@ -490,15 +514,15 @@ export default function SiteManagement() {
 
                   shrink-0
                   "
-              >
+          >
 
-                  <Plus size={18} />
+            <Plus size={18} />
 
-                  Add Site
+            Add Site
 
-              </button>
+          </button>
 
-          </div>
+        </div>
 
       </div>
 
@@ -574,11 +598,21 @@ export default function SiteManagement() {
 
                 {/* EDIT */}
                 <button
-                  onClick={() =>
-                    handleEditSite(
-                      item
-                    )
-                  }
+                  onClick={() => {
+
+                    if (!isManager) {
+
+                      alert(
+                        "Only Manager can edit site"
+                      );
+
+                      return;
+
+                    }
+
+                    handleEditSite(item);
+
+                  }}
                   className="flex-1 h-12 rounded-2xl
                   bg-yellow-500/10
                   border border-yellow-500/20
@@ -602,11 +636,24 @@ export default function SiteManagement() {
 
                 {/* DELETE */}
                 <button
-                  onClick={() =>
-                    handleDeleteSite(
-                      item
-                    )
-                  }
+
+
+                  onClick={() => {
+
+                    if (!isManager) {
+
+                      alert(
+                        "Only Manager can delete site"
+                      );
+
+                      return;
+
+                    }
+
+                    handleDeleteSite(item);
+
+                  }}
+                  
                   className="w-12 h-12 rounded-2xl
                   bg-red-500/10
                   border border-red-500/20
