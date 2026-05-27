@@ -244,8 +244,20 @@ export default function ActivityDetail({
     const isManager =
         currentUser?.role === "Manager";
 
+    const projectEngineers =
+
+        Array.isArray(project?.ee)
+
+            ? project.ee
+
+            : project?.ee
+                ? [project.ee]
+                : [];
+
     const isProjectEngineer =
-        project?.ee === currentUser?.name;
+        projectEngineers.includes(
+            currentUser?.name
+        );
 
     const canManageTask =
         isManager ||
@@ -2052,8 +2064,20 @@ export default function ActivityDetail({
                                 const isManager =
                                     currentUser?.role === "Manager";
 
+                                const projectEngineers =
+
+                                    Array.isArray(project?.ee)
+
+                                        ? project.ee
+
+                                        : project?.ee
+                                            ? [project.ee]
+                                            : [];
+
                                 const isProjectEngineer =
-                                    project?.ee === currentUser?.name;
+                                    projectEngineers.includes(
+                                        currentUser?.name
+                                    );
 
                                 // ======================
                                 // ONLY ENGINEER PROJECT

@@ -59,8 +59,12 @@ export default function ProjectList() {
             type: "",
             site: "",
             tpm: "",
-            ee: "",
+            ee: [],
         });
+
+    const [openEngineerSelect,
+        setOpenEngineerSelect] =
+        useState(false);
 
     const [selectedProjectActivity,
         setSelectedProjectActivity] =
@@ -365,7 +369,7 @@ export default function ProjectList() {
                 type: "",
                 site: "",
                 tpm: "",
-                ee: "",
+                ee: [],
             });
 
             // =========================
@@ -447,6 +451,21 @@ export default function ProjectList() {
             // SEARCH FILTER
             // ======================
 
+            const matchEngineer =
+
+                Array.isArray(item.ee)
+
+                    ? item.ee.some(
+                        (name) =>
+                            name
+                                ?.toLowerCase()
+                                .includes(keyword)
+                    )
+
+                    : item.ee
+                        ?.toLowerCase()
+                        .includes(keyword);
+
             const matchSearch = (
 
                 item.title
@@ -461,9 +480,7 @@ export default function ProjectList() {
 
                 ||
 
-                item.ee
-                    ?.toLowerCase()
-                    .includes(keyword)
+                matchEngineer
 
                 ||
 
@@ -489,15 +506,21 @@ export default function ProjectList() {
                 projectFilter === "MY"
             ) {
 
+                const matchEngineerProject =
+
+                    Array.isArray(item.ee)
+
+                        ? item.ee.includes(currentUser?.name)
+
+                        : item.ee === currentUser?.name;
+
                 matchProject = (
 
-                    item.tpm ===
-                    currentUser?.name
+                    item.tpm === currentUser?.name
 
                     ||
 
-                    item.ee ===
-                    currentUser?.name
+                    matchEngineerProject
 
                 );
 
@@ -1192,7 +1215,7 @@ export default function ProjectList() {
                                 type: "",
                                 site: "",
                                 tpm: "",
-                                ee: "",
+                                ee: [],
                             });
 
                             setOpenModal(true);
@@ -1525,7 +1548,11 @@ export default function ProjectList() {
                                                     type: item.type || "",
                                                     site: item.site || "",
                                                     tpm: item.tpm || "",
-                                                    ee: item.ee || "",
+                                                    ee: Array.isArray(item.ee)
+                                                        ? item.ee
+                                                        : item.ee
+                                                            ? [item.ee]
+                                                            : [],
                                                 });
 
                                                 setOpenModal(true);
@@ -1586,9 +1613,72 @@ export default function ProjectList() {
                                                 Engineer
                                             </p>
 
-                                            <p className="font-semibold text-white">
-                                                {item.ee}
-                                            </p>
+                                            <div className="
+                                                flex
+                                                flex-wrap
+                                                gap-2
+                                            ">
+
+                                                {
+                                                    Array.isArray(item.ee)
+
+                                                        ? (
+
+                                                            item.ee.map((name) => (
+
+                                                            <div
+                                                                key={name}
+
+                                                                className="
+                                                                    px-3
+                                                                    py-1.5
+
+                                                                    rounded-xl
+
+                                                                    bg-cyan-500/10
+                                                                    border
+                                                                    border-cyan-500/20
+
+                                                                    text-white
+                                                                    text-sm
+                                                                    font-semibold
+
+                                                                    hover:bg-cyan-500/15
+                                                                    transition-all
+                                                                "
+                                                            >
+
+                                                                {name}
+
+                                                            </div>
+
+                                                        ))
+
+                                                        )
+
+                                                        : (
+
+                                                            <div className="
+                                                                px-3
+                                                                py-1.5
+
+                                                                rounded-xl
+
+                                                                bg-cyan-500/10
+                                                                border
+                                                                border-cyan-500/20
+
+                                                                text-white
+                                                                text-sm
+                                                                font-semibold
+                                                            ">
+                                                                {item.ee}
+                                                            </div>
+
+                                                        )
+                                                }
+
+                                            </div>
 
                                         </div>
 
@@ -1893,7 +1983,7 @@ export default function ProjectList() {
                     rounded-[32px]
                     border border-white/10
                     bg-[#071225]
-                    overflow-hidden">
+                    overflow-visible">
 
                         {/* HEADER */}
                         <div className="p-8 border-b border-white/5
@@ -2051,38 +2141,295 @@ export default function ProjectList() {
 
                             </select>
 
-                            {/* ENGINEER */}
-                            <select
-                                value={formData.ee}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        ee: e.target.value,
-                                    })
-                                }
-                                className="w-full h-14 px-5 rounded-2xl
-                                bg-black/30 border border-white/5 outline-none
-                                text-white"
-                            >
+                            {/* ENGINEER MULTI SELECT */}
+                            <div className="relative">
 
-                                <option value="">
+                                {/* LABEL */}
+                                <p className="
+                                    mb-2
+                                    text-sm
+                                    font-semibold
+                                    text-slate-300
+                                ">
                                     Select Engineer
-                                </option>
+                                </p>
 
-                                {engineerList.map((user) => (
+                                {/* SELECT BUTTON */}
+                                <button
+                                    type="button"
 
-                                    <option
-                                        key={user.name}
-                                        value={user.name}
-                                    >
+                                    onClick={() =>
+                                        setOpenEngineerSelect(
+                                            !openEngineerSelect
+                                        )
+                                    }
 
-                                        {user.name}
+                                    className="
+                                        w-full
+                                        min-h-[56px]
+                                        rounded-2xl
+                                        border
+                                        border-white/5
+                                        bg-black/30
 
-                                    </option>
+                                        px-4
+                                        py-3
 
-                                ))}
+                                        flex
+                                        flex-wrap
+                                        items-center
+                                        gap-2
 
-                            </select>
+                                        text-left
+                                    "
+                                >
+
+                                    {
+                                        formData.ee?.length > 0
+
+                                            ? (
+
+                                                formData.ee.map(
+                                                    (name) => (
+
+                                                        <div
+                                                            key={name}
+
+                                                            className="
+                                                                px-3
+                                                                py-1.5
+
+                                                                rounded-xl
+
+                                                                bg-cyan-500/10
+                                                                border
+                                                                border-cyan-500/20
+
+                                                                text-cyan-300
+                                                                text-xs
+                                                                font-bold
+
+                                                                flex
+                                                                items-center
+                                                                gap-2
+                                                            "
+                                                        >
+
+                                                            <div className="
+                                                                w-5
+                                                                h-5
+                                                                rounded-full
+
+                                                                bg-gradient-to-r
+                                                                from-cyan-400
+                                                                to-emerald-400
+
+                                                                flex
+                                                                items-center
+                                                                justify-center
+
+                                                                text-[10px]
+                                                                text-black
+                                                                font-black
+                                                            ">
+                                                                {name.charAt(0)}
+                                                            </div>
+
+                                                            {name}
+
+                                                        </div>
+
+                                                    )
+                                                )
+
+                                            )
+
+                                            : (
+
+                                                <span className="
+                                                    text-slate-500
+                                                ">
+                                                    Choose engineer...
+                                                </span>
+
+                                            )
+                                    }
+
+                                </button>
+
+                                {/* DROPDOWN */}
+                                {
+                                    openEngineerSelect && (
+
+                                        <div className="
+                                            absolute
+                                            z-50
+                                            mt-3
+                                            w-full
+
+                                            rounded-2xl
+
+                                            border
+                                            border-white/10
+
+                                            bg-[#071225]
+                                            backdrop-blur-xl
+
+                                            p-2
+
+                                            max-h-[260px]
+                                            overflow-auto
+
+                                            shadow-[0_0_40px_rgba(0,0,0,0.5)]
+                                        ">
+
+                                            {
+                                                engineerList.map((user) => {
+
+                                                    const selected =
+                                                        formData.ee?.includes(
+                                                            user.name
+                                                        );
+
+                                                    return (
+
+                                                        <button
+                                                            key={user.name}
+
+                                                            type="button"
+
+                                                            onClick={() => {
+
+                                                                let updated =
+                                                                    [...formData.ee];
+
+                                                                if (selected) {
+
+                                                                    updated =
+                                                                        updated.filter(
+                                                                            (x) =>
+                                                                                x !== user.name
+                                                                        );
+
+                                                                } else {
+
+                                                                    updated.push(
+                                                                        user.name
+                                                                    );
+
+                                                                }
+
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    ee: updated,
+                                                                });
+
+                                                            }}
+
+                                                            className={`
+                                                                w-full
+
+                                                                px-4
+                                                                py-3
+
+                                                                rounded-xl
+
+                                                                flex
+                                                                items-center
+                                                                justify-between
+
+                                                                transition-all
+
+                                                                ${selected
+
+                                                                    ? `
+                                                                        bg-cyan-500/15
+                                                                        border
+                                                                        border-cyan-500/20
+                                                                    `
+
+                                                                    : `
+                                                                        hover:bg-white/5
+                                                                    `
+                                                                }
+                                                            `}
+                                                        >
+
+                                                            <div className="
+                                                                flex
+                                                                items-center
+                                                                gap-3
+                                                            ">
+
+                                                                <div className="
+                                                                    w-9
+                                                                    h-9
+
+                                                                    rounded-full
+
+                                                                    bg-gradient-to-r
+                                                                    from-cyan-400
+                                                                    to-emerald-400
+
+                                                                    flex
+                                                                    items-center
+                                                                    justify-center
+
+                                                                    text-black
+                                                                    font-black
+                                                                ">
+                                                                    {user.name.charAt(0)}
+                                                                </div>
+
+                                                                <div className="
+                                                                    text-left
+                                                                ">
+
+                                                                    <p className="
+                                                                        text-white
+                                                                        font-semibold
+                                                                    ">
+                                                                        {user.name}
+                                                                    </p>
+
+                                                                    <p className="
+                                                                        text-xs
+                                                                        text-slate-500
+                                                                    ">
+                                                                        Engineer
+                                                                    </p>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                            {
+                                                                selected && (
+
+                                                                    <div className="
+                                                                        w-5
+                                                                        h-5
+
+                                                                        rounded-full
+                                                                        bg-cyan-400
+                                                                    "></div>
+
+                                                                )
+                                                            }
+
+                                                        </button>
+
+                                                    );
+
+                                                })
+                                            }
+
+                                        </div>
+
+                                    )
+                                }
+
+                            </div>
 
                         </div>
 
