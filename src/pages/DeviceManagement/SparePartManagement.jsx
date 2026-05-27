@@ -768,7 +768,7 @@ export default function SparePartManagement() {
     // ======================================================
 
     return (
-        <div className="min-h-screen bg-[#020817] text-white p-6">
+        <div className="min-h-screen bg-[#020817] text-white px-6 pb-6 pt-2">
 
             {/* ======================================== */}
             {/* HEADER */}
@@ -776,9 +776,9 @@ export default function SparePartManagement() {
 
             <div className="
                 flex
-                items-start
                 justify-between
-                mb-8
+                items-end
+                mb-3
                 rounded-[32px]
                 border
                 border-cyan-500/10
@@ -786,10 +786,12 @@ export default function SparePartManagement() {
                 from-cyan-500/5
                 to-transparent
                 backdrop-blur-xl
-                p-8
+                px-6 py-5
                 shadow-2xl
                 shadow-cyan-500/5
             ">
+
+                {/* LEFT */}
 
                 <div>
 
@@ -847,514 +849,1161 @@ export default function SparePartManagement() {
 
                 </div>
 
+                {/* RIGHT ACTION */}
+
+                <div className="
+                    flex
+                    items-center
+                    gap-3
+                    self-end
+                    mb-2
+                ">
+
+                    <button
+                        onClick={() => {
+
+                            if (!canManage) {
+                                alert("Only Manager/Admin");
+                                return;
+                            }
+
+                            resetForm();
+                            setShowPartModal(true);
+
+                        }}
+                        className="
+                            h-12
+                            px-6
+                            rounded-2xl
+                            bg-cyan-500
+                            hover:bg-cyan-400
+                            font-bold
+                            flex
+                            items-center
+                            gap-2
+                            shadow-lg
+                            shadow-cyan-500/20
+                        "
+                    >
+                        <Plus size={18} />
+                        Add Part
+                    </button>
+
+                    <label className="
+                        h-12
+                        px-6
+                        rounded-2xl
+                        bg-[#071226]
+                        border
+                        border-cyan-500/10
+                        hover:border-cyan-400/30
+                        font-bold
+                        flex
+                        items-center
+                        gap-2
+                        cursor-pointer
+                    ">
+
+                        <Upload size={18} />
+                        Import Excel
+
+                        <input
+                            type="file"
+                            hidden
+                            onChange={handleImportExcel}
+                        />
+
+                    </label>
+
+                    <button
+                        onClick={exportExcel}
+                        className="
+                            h-12
+                            px-6
+                            rounded-2xl
+                            bg-[#071226]
+                            border
+                            border-cyan-500/10
+                            hover:border-cyan-400/30
+                            font-bold
+                            flex
+                            items-center
+                            gap-2
+                        "
+                    >
+                        <Download size={18} />
+                        Export Excel
+                    </button>
+
+                    <button
+                        className="
+                            h-12
+                            px-6
+                            rounded-2xl
+                            bg-purple-500/10
+                            border
+                            border-purple-500/20
+                            text-purple-300
+                            hover:bg-purple-500/20
+                            font-bold
+                            flex
+                            items-center
+                            gap-2
+                        "
+                    >
+                        <Activity size={18} />
+                        Transaction
+                    </button>
+
+                </div>
+
             </div>
 
+            {/* ====================================================== */}
             {/* KPI */}
+            {/* ====================================================== */}
 
-            <div className="grid grid-cols-4 gap-5 mb-6">
+
+            <div className="
+                grid
+                grid-cols-5
+                gap-5
+                mt-3
+            ">
 
                 <KPI
                     title="Total Part"
                     value={totalParts}
-                    icon={
-                        <Package />
-                    }
+                    icon={<Package />}
                     color="cyan"
+                    subtitle="All spare part"
                 />
 
                 <KPI
                     title="Low Stock"
                     value={lowStock}
-                    icon={
-                        <AlertTriangle />
-                    }
-                    color="red"
-                />
-
-                <KPI
-                    title="Total Stock"
-                    value={totalStock}
-                    icon={
-                        <Boxes />
-                    }
-                    color="green"
-                />
-
-                <KPI
-                    title="Rack"
-                    value={totalRack}
-                    icon={
-                        <Warehouse />
-                    }
+                    icon={<AlertTriangle />}
                     color="yellow"
+                    subtitle="Need attention"
+                />
+
+                <KPI
+                    title="Incoming"
+                    value={
+                        transactions
+                            .filter(x => x.type === "IN")
+                            .length
+                    }
+                    icon={<ArrowDownCircle />}
+                    color="green"
+                    subtitle="+12.5%"
+                />
+
+                <KPI
+                    title="Outgoing"
+                    value={
+                        transactions
+                            .filter(x => x.type === "OUT")
+                            .length
+                    }
+                    icon={<ArrowUpCircle />}
+                    color="purple"
+                    subtitle="+18.7%"
+                />
+
+                <KPI
+                    title="Critical"
+                    value={
+                        parts.filter(
+                            x => x.current_stock <= 0
+                        ).length
+                    }
+                    icon={<ShieldAlert />}
+                    color="red"
+                    subtitle="Very low stock"
                 />
 
             </div>
 
-            {/* CHART */}
 
-            <div className="grid grid-cols-3 gap-5 mb-6">
 
-                <div className="col-span-2 bg-[#071226] rounded-3xl border border-cyan-500/10 p-5">
+            {/* ====================================================== */}
+            {/* ANALYTICS DASHBOARD */}
+            {/* ====================================================== */}
 
-                    <div className="flex justify-between mb-5">
+            <div className="
+                grid
+                grid-cols-12
+                gap-5
+                mt-4
+                mb-4
+            ">
 
-                        <h2 className="font-bold text-xl">
-                            Recent Transactions
+                {/* ================================================= */}
+                {/* STOCK HEALTH */}
+                {/* ================================================= */}
+
+                <div className="
+                    col-span-4
+                    bg-[#071226]
+                    rounded-3xl
+                    border
+                    border-cyan-500/10
+                    p-5
+                ">
+
+                    <div className="
+                        flex
+                        justify-between
+                        items-center
+                        mb-5
+                    ">
+
+                        <h2 className="
+                            font-bold
+                            text-lg
+                        ">
+                            Stock Health
                         </h2>
 
-                        <Activity className="text-cyan-400" />
+                        <select className="
+                            h-9
+                            px-3
+                            rounded-xl
+                            bg-[#08192e]
+                            border
+                            border-cyan-500/10
+                            text-xs
+                            outline-none
+                        ">
+                            <option>
+                                All Category
+                            </option>
+                        </select>
 
                     </div>
 
-                    <div className="space-y-3 max-h-[300px] overflow-auto">
+                    <div className="
+                        flex
+                        items-center
+                        justify-between
+                    ">
 
-                        {
-                            transactions.map(
-                                (
-                                    trx,
-                                    i
-                                ) => (
+                        {/* DONUT */}
 
-                                    <div
-                                        key={i}
-                                        className="bg-[#08192e] rounded-2xl p-4 flex justify-between items-center border border-cyan-500/10"
+                        <div className="
+                            w-[180px]
+                            h-[180px]
+                        ">
+
+                            <ResponsiveContainer
+                                width="100%"
+                                height="100%"
+                            >
+
+                                <PieChart>
+
+                                    <Pie
+                                        data={stockChart}
+                                        dataKey="value"
+                                        innerRadius={55}
+                                        outerRadius={80}
+                                        paddingAngle={2}
                                     >
 
-                                        <div>
+                                        {
+                                            stockChart.map(
+                                                (
+                                                    entry,
+                                                    index
+                                                ) => (
 
-                                            <div className="font-bold">
-                                                {
-                                                    trx.part_name
-                                                }
-                                            </div>
+                                                    <Cell
+                                                        key={index}
+                                                        fill={
+                                                            index === 0
+                                                                ? "#00E5FF"
+                                                                : "#FFD600"
+                                                        }
+                                                    />
 
-                                            <div className="text-xs text-slate-400">
-                                                {
-                                                    trx.remark
-                                                }
-                                            </div>
-
-                                        </div>
-
-                                        <div
-                                            className={`px-3 py-1 rounded-full text-xs font-bold ${trx.type ===
-                                                "IN"
-                                                ? "bg-green-500/20 text-green-400"
-                                                : "bg-red-500/20 text-red-400"
-                                                }`}
-                                        >
-                                            {
-                                                trx.type
-                                            }{" "}
-                                            (
-                                            {
-                                                trx.qty
-                                            }
+                                                )
                                             )
-                                        </div>
+                                        }
 
-                                    </div>
+                                    </Pie>
 
-                                )
-                            )
-                        }
+                                </PieChart>
+
+                            </ResponsiveContainer>
+
+                        </div>
+
+                        {/* LEGEND */}
+
+                        <div className="space-y-4 flex-1">
+
+                            <LegendItem
+                                color="bg-cyan-400"
+                                label="Healthy"
+                                value={
+                                    parts.filter(
+                                        x =>
+                                            x.current_stock >
+                                            x.min_stock
+                                    ).length
+                                }
+                            />
+
+                            <LegendItem
+                                color="bg-yellow-400"
+                                label="Low Stock"
+                                value={lowStock}
+                            />
+
+                            <LegendItem
+                                color="bg-red-400"
+                                label="Critical"
+                                value={
+                                    parts.filter(
+                                        x =>
+                                            x.current_stock <= 0
+                                    ).length
+                                }
+                            />
+
+                        </div>
 
                     </div>
 
                 </div>
 
-                <div className="bg-[#071226] rounded-3xl border border-cyan-500/10 p-5">
+                {/* ================================================= */}
+                {/* TRANSACTION OVERVIEW */}
+                {/* ================================================= */}
 
-                    <div className="flex justify-between mb-5">
+                <div className="
+                    col-span-4
+                    bg-[#071226]
+                    rounded-3xl
+                    border
+                    border-cyan-500/10
+                    p-5
+                ">
 
-                        <h2 className="font-bold text-xl">
-                            Stock Health
+                    <div className="
+                        flex
+                        justify-between
+                        items-center
+                        mb-5
+                    ">
+
+                        <h2 className="
+                            font-bold
+                            text-lg
+                        ">
+                            Transaction Overview
                         </h2>
 
-                        <ShieldAlert className="text-cyan-400" />
+                        <div className="
+                            text-sm
+                            text-slate-400
+                        ">
+                            This Year
+                        </div>
 
                     </div>
 
                     <ResponsiveContainer
                         width="100%"
-                        height={260}
+                        height={230}
                     >
 
-                        <PieChart>
-
-                            <Pie
-                                data={stockChart}
-                                dataKey="value"
-                                innerRadius={60}
-                                outerRadius={90}
-                            >
-
+                        <BarChart
+                            data={[
                                 {
-                                    stockChart.map(
-                                        (
-                                            entry,
-                                            index
-                                        ) => (
-                                            <Cell
-                                                key={index}
-                                                fill={
-                                                    COLORS[
-                                                    index
-                                                    ]
-                                                }
-                                            />
-                                        )
-                                    )
+                                    month: "Jan",
+                                    incoming: 120,
+                                    outgoing: 80
+                                },
+                                {
+                                    month: "Feb",
+                                    incoming: 180,
+                                    outgoing: 120
+                                },
+                                {
+                                    month: "Mar",
+                                    incoming: 160,
+                                    outgoing: 100
+                                },
+                                {
+                                    month: "Apr",
+                                    incoming: 220,
+                                    outgoing: 140
+                                },
+                                {
+                                    month: "May",
+                                    incoming: 140,
+                                    outgoing: 110
+                                },
+                                {
+                                    month: "Jun",
+                                    incoming: 190,
+                                    outgoing: 130
                                 }
+                            ]}
+                        >
 
-                            </Pie>
+                            <XAxis
+                                dataKey="month"
+                                stroke="#64748b"
+                            />
 
-                        </PieChart>
+                            <Tooltip />
+
+                            <Bar
+                                dataKey="incoming"
+                                fill="#00E5FF"
+                                radius={[6, 6, 0, 0]}
+                            />
+
+                            <Bar
+                                dataKey="outgoing"
+                                fill="#A855F7"
+                                radius={[6, 6, 0, 0]}
+                            />
+
+                        </BarChart>
 
                     </ResponsiveContainer>
 
                 </div>
 
-            </div>
+                {/* ================================================= */}
+                {/* TOP USED PART */}
+                {/* ================================================= */}
 
-            {/* ACTION */}
+                <div className="
+                    col-span-4
+                    bg-[#071226]
+                    rounded-3xl
+                    border
+                    border-cyan-500/10
+                    p-5
+                ">
 
-            <div className="flex gap-3 mb-5">
+                    <div className="
+                        flex
+                        justify-between
+                        items-center
+                        mb-5
+                    ">
 
-                <div className="flex-1 relative">
+                        <h2 className="
+                            font-bold
+                            text-lg
+                        ">
+                            Top 5 Most Used Part
+                        </h2>
 
-                    <Search
-                        className="absolute left-4 top-3 text-slate-500"
-                        size={18}
-                    />
+                        <select className="
+                            h-9
+                            px-3
+                            rounded-xl
+                            bg-[#08192e]
+                            border
+                            border-cyan-500/10
+                            text-xs
+                            outline-none
+                        ">
+                            <option>
+                                This Month
+                            </option>
+                        </select>
 
-                    <input
-                        type="text"
-                        placeholder="Search part..."
-                        value={search}
-                        onChange={(e) =>
-                            setSearch(
-                                e.target.value
-                            )
+                    </div>
+
+                    <div className="space-y-5">
+
+                        {
+                            filteredParts
+                                .slice(0, 5)
+                                .map((item, index) => (
+
+                                    <div key={index}>
+
+                                        <div className="
+                                            flex
+                                            justify-between
+                                            mb-2
+                                            text-sm
+                                        ">
+
+                                            <div>
+                                                {item.part_name}
+                                            </div>
+
+                                            <div className="
+                                                text-cyan-400
+                                                font-bold
+                                            ">
+                                                {item.current_stock}
+                                            </div>
+
+                                        </div>
+
+                                        <div className="
+                                            w-full
+                                            h-2
+                                            rounded-full
+                                            bg-[#08192e]
+                                            overflow-hidden
+                                        ">
+
+                                            <div
+                                                className="
+                                                    h-full
+                                                    rounded-full
+                                                    bg-cyan-400
+                                                "
+                                                style={{
+                                                    width: `${Math.min(
+                                                        item.current_stock,
+                                                        100
+                                                    )}%`
+                                                }}
+                                            />
+
+                                        </div>
+
+                                    </div>
+
+                                ))
                         }
-                        className="w-full bg-[#071226] border border-cyan-500/10 rounded-2xl h-12 pl-12 outline-none"
-                    />
+
+                    </div>
 
                 </div>
 
-                <button
-                    onClick={() => {
-
-                        if (
-                            !canManage
-                        ) {
-                            alert(
-                                "Only Manager/Admin"
-                            );
-                            return;
-                        }
-
-                        resetForm();
-
-                        setShowPartModal(
-                            true
-                        );
-
-                    }}
-                    className="px-5 rounded-2xl bg-cyan-500 hover:bg-cyan-400 font-bold flex items-center gap-2"
-                >
-                    <Plus size={18} />
-                    Add Part
-                </button>
-
-                <label className="px-5 rounded-2xl bg-green-500 hover:bg-green-400 font-bold flex items-center gap-2 cursor-pointer">
-
-                    <Upload size={18} />
-                    Import
-
-                    <input
-                        type="file"
-                        hidden
-                        onChange={
-                            handleImportExcel
-                        }
-                    />
-
-                </label>
-
-                <button
-                    onClick={
-                        exportExcel
-                    }
-                    className="px-5 rounded-2xl bg-blue-500 hover:bg-blue-400 font-bold flex items-center gap-2"
-                >
-                    <Download size={18} />
-                    Export
-                </button>
-
             </div>
 
-            {/* TABLE */}
 
-            <div className="bg-[#071226] rounded-3xl border border-cyan-500/10 overflow-auto">
 
-                <table className="w-full">
+            {/* ====================================================== */
+            /* MAIN DASHBOARD AREA */
+            /* ====================================================== */}
 
-                    <thead className="bg-[#0d1d35] text-cyan-400 text-sm">
+            <div className="
+                grid
+                grid-cols-12
+                gap-5
+                mt-2
+            ">
 
-                        <tr>
+                {/* ================================================= */}
+                {/* LEFT CONTENT */}
+                {/* ================================================= */}
 
-                            <th className="p-4">
-                                Part No
-                            </th>
+                <div className="col-span-9 space-y-5">
 
-                            <th>
-                                Part Name
-                            </th>
+                    {/* ================================================= */}
+                    {/* FILTER BAR */}
+                    {/* ================================================= */}
 
-                            <th>
-                                Machine
-                            </th>
+                    <div className="
+                        bg-[#071226]
+                        rounded-3xl
+                        border
+                        border-cyan-500/10
+                        px-4 py-3
+                    ">
 
-                            <th>
-                                Model
-                            </th>
+                        <div className="flex gap-3">
 
-                            <th>
-                                Category
-                            </th>
+                            <div className="flex-1 relative">
 
-                            <th>
-                                Rack
-                            </th>
+                                <Search
+                                    className="
+                                        absolute
+                                        left-4
+                                        top-3
+                                        text-slate-500
+                                    "
+                                    size={18}
+                                />
 
-                            <th>
-                                Stock
-                            </th>
+                                <input
+                                    type="text"
+                                    placeholder="Search part..."
+                                    value={search}
+                                    onChange={(e) =>
+                                        setSearch(
+                                            e.target.value
+                                        )
+                                    }
+                                    className="
+                                        w-full
+                                        h-12
+                                        pl-12
+                                        rounded-2xl
+                                        bg-[#08192e]
+                                        border
+                                        border-cyan-500/10
+                                        outline-none
+                                    "
+                                />
 
-                            <th>
-                                Min
-                            </th>
+                            </div>
 
-                            <th>
-                                Unit
-                            </th>
+                            <select className="
+                                h-12
+                                px-4
+                                rounded-2xl
+                                bg-[#08192e]
+                                border
+                                border-cyan-500/10
+                                outline-none
+                            ">
+                                <option>
+                                    All Category
+                                </option>
+                            </select>
 
-                            <th>
-                                Vendor
-                            </th>
+                            <select className="
+                                h-12
+                                px-4
+                                rounded-2xl
+                                bg-[#08192e]
+                                border
+                                border-cyan-500/10
+                                outline-none
+                            ">
+                                <option>
+                                    All Machine
+                                </option>
+                            </select>
 
-                            <th>
-                                Status
-                            </th>
+                            <select className="
+                                h-12
+                                px-4
+                                rounded-2xl
+                                bg-[#08192e]
+                                border
+                                border-cyan-500/10
+                                outline-none
+                            ">
+                                <option>
+                                    All Status
+                                </option>
+                            </select>
 
-                            <th>
-                                Action
-                            </th>
+                        </div>
 
-                        </tr>
+                    </div>
 
-                    </thead>
+                    {/* ================================================= */}
+                    {/* PART TABLE */}
+                    {/* ================================================= */}
 
-                    <tbody>
+                    <div className="
+                        bg-[#071226]
+                        rounded-3xl
+                        border
+                        border-cyan-500/10
+                        overflow-hidden
+                    ">
 
-                        {
-                            filteredParts.map(
-                                (
-                                    item,
-                                    index
-                                ) => (
+                        {/* TABLE HEADER */}
 
-                                    <tr
-                                        key={index}
-                                        className="border-t border-cyan-500/10 hover:bg-cyan-500/5"
-                                    >
+                        <div className="
+                            px-5
+                            py-4
+                            border-b
+                            border-cyan-500/10
+                            flex
+                            justify-between
+                            items-center
+                        ">
 
-                                        <td className="p-4">
-                                            {
-                                                item.part_no
-                                            }
-                                        </td>
+                            <div className="font-bold text-lg">
+                                Part List
+                            </div>
 
-                                        <td>
-                                            {
-                                                item.part_name
-                                            }
-                                        </td>
+                            <div className="
+                                text-sm
+                                text-slate-400
+                            ">
+                                Showing {filteredParts.length} items
+                            </div>
 
-                                        <td>
-                                            {
-                                                item.machine
-                                            }
-                                        </td>
+                        </div>
 
-                                        <td>
-                                            {
-                                                item.model
-                                            }
-                                        </td>
+                        {/* TABLE */}
 
-                                        <td>
-                                            {
-                                                item.category
-                                            }
-                                        </td>
+                        <div className="overflow-auto">
 
-                                        <td>
-                                            {
-                                                item.rack
-                                            }
-                                        </td>
+                            <table className="w-full min-w-[1400px]">
 
-                                        <td className="font-bold">
-                                            {
-                                                item.current_stock
-                                            }
-                                        </td>
+                                <thead className="
+                                    bg-[#0d1d35]
+                                    text-cyan-400
+                                    text-sm
+                                    text-left
+                                ">
 
-                                        <td>
-                                            {
-                                                item.min_stock
-                                            }
-                                        </td>
+                                    <tr>
 
-                                        <td>
-                                            {
-                                                item.unit
-                                            }
-                                        </td>
+                                        <th className="p-4">
+                                            No
+                                        </th>
 
-                                        <td>
-                                            {
-                                                item.vendor
-                                            }
-                                        </td>
+                                        <th>
+                                            Part Number
+                                        </th>
 
-                                        <td>
+                                        <th>
+                                            Part Name
+                                        </th>
 
-                                            {
-                                                item.current_stock <=
-                                                    item.min_stock
-                                                    ? (
-                                                        <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-bold">
-                                                            LOW
-                                                        </span>
-                                                    )
-                                                    : (
-                                                        <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-bold">
-                                                            SAFE
-                                                        </span>
-                                                    )
-                                            }
+                                        <th>
+                                            Category
+                                        </th>
 
-                                        </td>
+                                        <th>
+                                            Machine
+                                        </th>
 
-                                        <td>
+                                        <th>
+                                            Model
+                                        </th>
 
-                                            <div className="flex gap-2">
+                                        <th>
+                                            Min Stock
+                                        </th>
 
-                                                <button
-                                                    onClick={() => {
+                                        <th>
+                                            Current Stock
+                                        </th>
 
-                                                        setSelectedPart(
-                                                            item
-                                                        );
+                                        <th>
+                                            Unit
+                                        </th>
 
-                                                        setTransactionType(
-                                                            "IN"
-                                                        );
+                                        <th>
+                                            Rack
+                                        </th>
 
-                                                        setShowTransactionModal(
-                                                            true
-                                                        );
+                                        <th>
+                                            Status
+                                        </th>
 
-                                                    }}
-                                                    className="w-9 h-9 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center"
-                                                >
-                                                    <ArrowDownCircle size={16} />
-                                                </button>
-
-                                                <button
-                                                    onClick={() => {
-
-                                                        setSelectedPart(
-                                                            item
-                                                        );
-
-                                                        setTransactionType(
-                                                            "OUT"
-                                                        );
-
-                                                        setShowTransactionModal(
-                                                            true
-                                                        );
-
-                                                    }}
-                                                    className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center"
-                                                >
-                                                    <ArrowUpCircle size={16} />
-                                                </button>
-
-                                                <button
-                                                    onClick={() => {
-
-                                                        if (
-                                                            !canManage
-                                                        ) {
-                                                            alert(
-                                                                "Only Manager/Admin"
-                                                            );
-                                                            return;
-                                                        }
-
-                                                        setSelectedPart(
-                                                            item
-                                                        );
-
-                                                        setForm({
-
-                                                            ...item,
-
-                                                            model:
-                                                                item.model || ""
-
-                                                        });
-
-                                                        setShowPartModal(
-                                                            true
-                                                        );
-
-                                                    }}
-                                                    className="w-9 h-9 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center"
-                                                >
-                                                    <Pencil size={16} />
-                                                </button>
-
-                                                <button
-                                                    onClick={() =>
-                                                        handleDeletePart(
-                                                            item.id
-                                                        )
-                                                    }
-                                                    className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-
-                                            </div>
-
-                                        </td>
+                                        <th>
+                                            Action
+                                        </th>
 
                                     </tr>
 
-                                )
-                            )
-                        }
+                                </thead>
 
-                    </tbody>
+                                <tbody>
 
-                </table>
+                                    {
+                                        filteredParts.map(
+                                            (
+                                                item,
+                                                index
+                                            ) => (
+
+                                                <tr
+                                                    key={index}
+                                                    className="
+                                                        border-t
+                                                        border-cyan-500/10
+                                                        hover:bg-cyan-500/5
+                                                    "
+                                                >
+
+                                                    <td className="p-4">
+                                                        {index + 1}
+                                                    </td>
+
+                                                    <td className="font-bold">
+                                                        {item.part_no}
+                                                    </td>
+
+                                                    <td>
+                                                        {item.part_name}
+                                                    </td>
+
+                                                    <td>
+                                                        {item.category}
+                                                    </td>
+
+                                                    <td>
+                                                        {item.machine}
+                                                    </td>
+
+                                                    <td>
+                                                        {item.model || "-"}
+                                                    </td>
+
+                                                    <td>
+                                                        {item.min_stock}
+                                                    </td>
+
+                                                    <td className="
+                                                        font-bold
+                                                        text-cyan-300
+                                                    ">
+                                                        {item.current_stock}
+                                                    </td>
+
+                                                    <td>
+                                                        {item.unit}
+                                                    </td>
+
+                                                    <td>
+                                                        {item.rack}
+                                                    </td>
+
+                                                    <td>
+
+                                                        {
+                                                            item.current_stock <= 0
+                                                                ? (
+                                                                    <span className="
+                                                                        px-3
+                                                                        py-1
+                                                                        rounded-full
+                                                                        bg-red-500/20
+                                                                        text-red-400
+                                                                        text-xs
+                                                                        font-bold
+                                                                    ">
+                                                                        OUT STOCK
+                                                                    </span>
+                                                                )
+                                                                : item.current_stock <= item.min_stock
+                                                                    ? (
+                                                                        <span className="
+                                                                            px-3
+                                                                            py-1
+                                                                            rounded-full
+                                                                            bg-yellow-500/20
+                                                                            text-yellow-400
+                                                                            text-xs
+                                                                            font-bold
+                                                                        ">
+                                                                            LOW STOCK
+                                                                        </span>
+                                                                    )
+                                                                    : (
+                                                                        <span className="
+                                                                            px-3
+                                                                            py-1
+                                                                            rounded-full
+                                                                            bg-green-500/20
+                                                                            text-green-400
+                                                                            text-xs
+                                                                            font-bold
+                                                                        ">
+                                                                            HEALTHY
+                                                                        </span>
+                                                                    )
+                                                        }
+
+                                                    </td>
+
+                                                    <td>
+
+                                                        <div className="flex gap-2">
+
+                                                            {/* EDIT */}
+
+                                                            <button
+                                                                onClick={() => {
+
+                                                                    setSelectedPart(item);
+
+                                                                    setForm({
+                                                                        ...item
+                                                                    });
+
+                                                                    setShowPartModal(true);
+
+                                                                }}
+                                                                className="
+                                                                    w-9
+                                                                    h-9
+                                                                    rounded-xl
+                                                                    bg-yellow-500/10
+                                                                    border
+                                                                    border-yellow-500/20
+                                                                    flex
+                                                                    items-center
+                                                                    justify-center
+                                                                "
+                                                            >
+                                                                <Pencil size={16} />
+                                                            </button>
+
+                                                            {/* DELETE */}
+
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleDeletePart(item.id)
+                                                                }
+                                                                className="
+                                                                    w-9
+                                                                    h-9
+                                                                    rounded-xl
+                                                                    bg-red-500/10
+                                                                    border
+                                                                    border-red-500/20
+                                                                    flex
+                                                                    items-center
+                                                                    justify-center
+                                                                "
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+
+                                                        </div>
+
+                                                    </td>
+
+                                                </tr>
+
+                                            )
+                                        )
+                                    }
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {/* ================================================= */}
+                {/* RIGHT SIDEBAR */}
+                {/* ================================================= */}
+
+                <div className="col-span-3 space-y-4">
+
+                    {/* STORAGE OVERVIEW */}
+
+                    <div className="
+                        bg-[#071226]
+                        rounded-3xl
+                        border
+                        border-cyan-500/10
+                        p-5
+                    ">
+
+                        <div className="
+                            flex
+                            justify-between
+                            items-center
+                            mb-5
+                        ">
+
+                            <h2 className="font-bold text-lg">
+                                Storage Overview
+                            </h2>
+
+                            <div className="
+                                text-cyan-400
+                                text-sm
+                            ">
+                                View All
+                            </div>
+
+                        </div>
+
+                        <div className="
+                            grid
+                            grid-cols-2
+                            gap-3
+                        ">
+
+                            {
+                                [...new Set(parts.map(x => x.rack))]
+                                    .slice(0, 6)
+                                    .map((rack, index) => {
+
+                                        const rackParts =
+                                            parts.filter(
+                                                x => x.rack === rack
+                                            );
+
+                                        const total =
+                                            rackParts.reduce(
+                                                (a, b) =>
+                                                    a + Number(
+                                                        b.current_stock || 0
+                                                    ),
+                                                0
+                                            );
+
+                                        return (
+
+                                            <div
+                                                key={index}
+                                                className="
+                                                bg-[#08192e]
+                                                rounded-2xl
+                                                p-4
+                                                border
+                                                border-cyan-500/10
+                                            "
+                                            >
+
+                                                <div className="
+                                                    flex
+                                                    justify-between
+                                                    mb-2
+                                                ">
+
+                                                    <div className="font-bold">
+                                                        {rack}
+                                                    </div>
+
+                                                    <div className="
+                                                        text-cyan-400
+                                                        text-sm
+                                                    ">
+                                                        {total} pcs
+                                                    </div>
+
+                                                </div>
+
+                                                <div className="
+                                                    w-full
+                                                    h-3
+                                                    rounded-full
+                                                    bg-black/30
+                                                    overflow-hidden
+                                                ">
+
+                                                    <div
+                                                        className="
+                                                            h-full
+                                                            bg-cyan-400
+                                                        "
+                                                        style={{
+                                                            width: `${Math.min(total, 100)}%`
+                                                        }}
+                                                    />
+
+                                                </div>
+
+                                            </div>
+
+                                        );
+
+                                    })
+                            }
+
+                        </div>
+
+                    </div>
+
+                    {/* RECENT TRANSACTION */}
+
+                    <div className="
+                        bg-[#071226]
+                        rounded-3xl
+                        border
+                        border-cyan-500/10
+                        p-5
+                        min-h-[320px]
+                    ">
+
+                        <div className="
+                            flex
+                            justify-between
+                            items-center
+                            mb-5
+                        ">
+
+                            <h2 className="font-bold text-lg">
+                                Recent Transaction
+                            </h2>
+
+                            <Activity
+                                className="text-cyan-400"
+                                size={18}
+                            />
+
+                        </div>
+
+                        <div className="space-y-3">
+
+                            {
+                                transactions
+                                    .slice(0, 8)
+                                    .map((trx, i) => (
+
+                                        <div
+                                            key={i}
+                                            className="
+                                                bg-[#08192e]
+                                                rounded-2xl
+                                                p-3
+                                                border
+                                                border-cyan-500/10
+                                            "
+                                        >
+
+                                            <div className="
+                                                flex
+                                                justify-between
+                                                items-start
+                                            ">
+
+                                                <div>
+
+                                                    <div className="
+                                                        font-bold
+                                                        text-sm
+                                                    ">
+                                                        {trx.part_name}
+                                                    </div>
+
+                                                    <div className="
+                                                        text-xs
+                                                        text-slate-400
+                                                    ">
+                                                        {trx.remark}
+                                                    </div>
+
+                                                </div>
+
+                                                <div
+                                                    className={`px-2 py-1 rounded-lg text-xs font-bold ${trx.type === "IN"
+                                                        ? "bg-green-500/20 text-green-400"
+                                                        : "bg-red-500/20 text-red-400"
+                                                        }`}
+                                                >
+                                                    {trx.type}
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    ))
+                            }
+
+                        </div>
+
+                    </div>
+
+                </div>
 
             </div>
 
@@ -1657,31 +2306,129 @@ function KPI({
     title,
     value,
     icon,
-    color
+    color,
+    subtitle
 }) {
 
     return (
 
-        <div className="bg-[#071226] rounded-3xl border border-cyan-500/10 p-5">
+        <div className="
+        bg-[#071226]
+        rounded-3xl
+        border
+        border-cyan-500/10
+        p-5
+        min-h-[120px]
+        flex
+        flex-col
+        justify-between
+    ">
 
-            <div className="flex justify-between items-center">
+            <div className="
+            flex
+            justify-between
+            items-start
+        ">
 
                 <div>
 
-                    <div className="text-slate-400 text-sm">
+                    <div className={`
+                    text-sm
+                    font-semibold
+                    ${color === "cyan"
+                            ? "text-cyan-400"
+                            : color === "yellow"
+                                ? "text-yellow-400"
+                                : color === "green"
+                                    ? "text-green-400"
+                                    : color === "purple"
+                                        ? "text-purple-400"
+                                        : "text-red-400"
+                        }
+                `}>
                         {title}
                     </div>
 
-                    <div className="text-4xl font-black mt-2">
+                    <div className="
+                    text-5xl
+                    font-black
+                    mt-2
+                ">
                         {value}
                     </div>
 
                 </div>
 
-                <div className={`text-${color}-400`}>
+                <div className={`
+                ${color === "cyan"
+                        ? "text-cyan-400"
+                        : color === "yellow"
+                            ? "text-yellow-400"
+                            : color === "green"
+                                ? "text-green-400"
+                                : color === "purple"
+                                    ? "text-purple-400"
+                                    : "text-red-400"
+                    }
+            `}>
                     {icon}
                 </div>
 
+            </div>
+
+            <div className="
+            text-sm
+            text-slate-500
+            mt-4
+        ">
+                {subtitle}
+            </div>
+
+        </div>
+
+    );
+
+}
+
+function LegendItem({
+    color,
+    label,
+    value
+}) {
+
+    return (
+
+        <div className="
+            flex
+            items-center
+            justify-between
+            text-sm
+        ">
+
+            <div className="
+                flex
+                items-center
+                gap-3
+            ">
+
+                <div className={`
+                    w-3
+                    h-3
+                    rounded-full
+                    ${color}
+                `} />
+
+                <div className="text-slate-300">
+                    {label}
+                </div>
+
+            </div>
+
+            <div className="
+                font-bold
+                text-white
+            ">
+                {value}
             </div>
 
         </div>
