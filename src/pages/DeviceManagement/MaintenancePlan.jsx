@@ -96,6 +96,7 @@ const getCurrentWeek = () => {
 
 };
 
+
 const getWeekFromDate = (dateString) => {
 
     if (!dateString)
@@ -104,33 +105,50 @@ const getWeekFromDate = (dateString) => {
     const date =
         new Date(dateString);
 
-    // COPY DATE
-    const target =
-        new Date(date.valueOf());
-
-    // ISO WEEK DATE
-    const dayNr =
-        (date.getDay() + 6) % 7;
-
-    target.setDate(
-        target.getDate() - dayNr + 3
-    );
-
-    const firstThursday =
+    // START YEAR
+    const startOfYear =
         new Date(
-            target.getFullYear(),
+            date.getFullYear(),
             0,
-            4
+            1
         );
 
-    const diff =
-        target - firstThursday;
+    // CARI SENIN PERTAMA
+    const firstMonday =
+        new Date(startOfYear);
+
+    while (
+        firstMonday.getDay() !== 1
+    ) {
+
+        firstMonday.setDate(
+            firstMonday.getDate() + 1
+        );
+
+    }
+
+    // =====================================
+    // SEBELUM SENIN PERTAMA = WEEK 1
+    // =====================================
+
+    if (date < firstMonday) {
+
+        return 1;
+
+    }
+
+    // =====================================
+    // HITUNG SELISIH HARI
+    // =====================================
+
+    const diffDays =
+        Math.floor(
+            (date - firstMonday)
+            / 86400000
+        );
 
     return (
-        1 +
-        Math.round(
-            diff / 604800000
-        )
+        Math.floor(diffDays / 7) + 2
     );
 
 };
@@ -902,20 +920,6 @@ export default function MaintenancePlan() {
 
                         }
 
-                        if (error) {
-
-                            console.log(
-                                error
-                            );
-
-                            alert(
-                                "Import failed"
-                            );
-
-                            return;
-
-                        }
-
                         await loadPMData();
 
                         alert(
@@ -1474,57 +1478,79 @@ export default function MaintenancePlan() {
                     ">
 
                         {
-                            uniqueResponsibles.map((person) => {
+                            [...uniqueResponsibles]
 
-                                const currentWeek =
-                                    getCurrentWeek();
+                                .map((person) => {
+
+                                    const currentWeek =
+                                        getCurrentWeek();
+
+                                    // ======================================
+                                    // ALL DATA UNTIL CURRENT WEEK
+                                    // ======================================
+
+                                    const personData =
+                                        pmData.filter(
+                                            x =>
+                                                x.responsible === person
+                                                &&
+                                                Number(x.week) <= currentWeek
+                                        );
+
+                                    // ======================================
+                                    // TOTAL POINT SUMMARY
+                                    // ======================================
+
+                                    const totalPoint =
+                                        personData.reduce(
+                                            (sum, item) =>
+                                                sum + Number(item.pointSummary || 0),
+                                            0
+                                        );
+
+                                    // ======================================
+                                    // TOTAL TASK
+                                    // ======================================
+
+                                    const totalTask =
+                                        personData.length;
+
+                                    // ======================================
+                                    // PERFORMANCE
+                                    // ======================================
+
+                                    const percent =
+                                        totalTask > 0
+                                            ? Math.round(
+                                                (totalPoint / totalTask) * 100
+                                            )
+                                            : 0;
+
+                                    return {
+                                        person,
+                                        percent
+                                    };
+
+                                })
 
                                 // ======================================
-                                // ALL DATA UNTIL CURRENT WEEK
+                                // SORT HIGHEST TO LOWEST
                                 // ======================================
 
-                                const personData =
-                                    pmData.filter(
-                                        x =>
-                                            x.responsible === person
-                                            &&
-                                            Number(x.week) <= currentWeek
-                                    );
+                                .sort(
+                                    (a, b) =>
+                                        b.percent - a.percent
+                                )
 
-                                // ======================================
-                                // TOTAL POINT SUMMARY
-                                // ======================================
+                                .map(({ person, percent }) => {
 
-                                const totalPoint =
-                                    personData.reduce(
-                                        (sum, item) =>
-                                            sum + Number(item.pointSummary || 0),
-                                        0
-                                    );
+                                    
 
-                                // ======================================
-                                // TOTAL TASK
-                                // ======================================
+                                    return (
 
-                                const totalTask =
-                                    personData.length;
-
-                                // ======================================
-                                // PERFORMANCE
-                                // ======================================
-
-                                const percent =
-                                    totalTask > 0
-                                        ? Math.round(
-                                            (totalPoint / totalTask) * 100
-                                        )
-                                        : 0;
-
-                                return (
-
-                                    <div
-                                        key={person}
-                                        className={`
+                                        <div
+                                            key={person}
+                                            className={`
                                     mb-4
                                     cursor-pointer
                                     transition
@@ -1532,108 +1558,108 @@ export default function MaintenancePlan() {
                                     p-2
 
                                     ${responsibleFilter.includes(person)
-                                                ? "bg-emerald-500/10 border border-emerald-400/40"
-                                                : "hover:bg-white/5 border border-transparent"
-                                            }
+                                                    ? "bg-emerald-500/10 border border-emerald-400/40"
+                                                    : "hover:bg-white/5 border border-transparent"
+                                                }
                                 `}
-                                        onClick={() => {
+                                            onClick={() => {
 
-                                            const currentWeek =
-                                                getCurrentWeek();
+                                                const currentWeek =
+                                                    getCurrentWeek();
 
-                                            // buka semua week sebelumnya
-                                            const allWeeksUntilNow =
-                                                uniqueWeeks
-                                                    .filter(
-                                                        w => Number(w) <= currentWeek
-                                                    )
-                                                    .map(String);
+                                                // buka semua week sebelumnya
+                                                const allWeeksUntilNow =
+                                                    uniqueWeeks
+                                                        .filter(
+                                                            w => Number(w) <= currentWeek
+                                                        )
+                                                        .map(String);
 
-                                            setWeekFilter(
-                                                allWeeksUntilNow
-                                            );
+                                                setWeekFilter(
+                                                    allWeeksUntilNow
+                                                );
 
-                                            setResponsibleFilter(prev => {
+                                                setResponsibleFilter(prev => {
 
-                                                if (prev.includes(person)) {
+                                                    if (prev.includes(person)) {
 
-                                                    // kalau semua unselect
-                                                    const updated =
-                                                        prev.filter(
-                                                            x => x !== person
-                                                        );
-
-                                                    // balik default current week
-                                                    if (
-                                                        updated.length === 0
-                                                        &&
-                                                        monthFilter.length === 0
-                                                    ) {
+                                                        // kalau semua unselect
+                                                        const updated =
+                                                            prev.filter(
+                                                                x => x !== person
+                                                            );
 
                                                         // balik default current week
-                                                        setWeekFilter([
-                                                            String(getCurrentWeek())
-                                                        ]);
+                                                        if (
+                                                            updated.length === 0
+                                                            &&
+                                                            monthFilter.length === 0
+                                                        ) {
+
+                                                            // balik default current week
+                                                            setWeekFilter([
+                                                                String(getCurrentWeek())
+                                                            ]);
+
+                                                        }
+
+                                                        else {
+
+                                                            // tetap buka semua week sebelumnya
+                                                            const currentWeek =
+                                                                getCurrentWeek();
+
+                                                            const allWeeksUntilNow =
+                                                                uniqueWeeks
+                                                                    .filter(
+                                                                        w => Number(w) <= currentWeek
+                                                                    )
+                                                                    .map(String);
+
+                                                            setWeekFilter(
+                                                                allWeeksUntilNow
+                                                            );
+
+                                                        }
+
+                                                        return updated;
 
                                                     }
 
-                                                    else {
+                                                    return [
+                                                        ...prev,
+                                                        person
+                                                    ];
 
-                                                        // tetap buka semua week sebelumnya
-                                                        const currentWeek =
-                                                            getCurrentWeek();
+                                                });
 
-                                                        const allWeeksUntilNow =
-                                                            uniqueWeeks
-                                                                .filter(
-                                                                    w => Number(w) <= currentWeek
-                                                                )
-                                                                .map(String);
+                                            }}
+                                        >
 
-                                                        setWeekFilter(
-                                                            allWeeksUntilNow
-                                                        );
-
-                                                    }
-
-                                                    return updated;
-
-                                                }
-
-                                                return [
-                                                    ...prev,
-                                                    person
-                                                ];
-
-                                            });
-
-                                        }}
-                                    >
-
-                                        <div className="
+                                            <div className="
                                 flex
                                 justify-between
                                 text-xs
                                 mb-2
                             ">
 
-                                            <span className="
+                                                <span className="
                                     text-white
                                     font-medium
                                 ">
-                                                {person}
-                                            </span>
+                                                    {person}
+                                                </span>
 
-                                            <span className="
+                                                <span className="
                                     text-emerald-300
                                     font-bold
                                 ">
-                                                {percent}%
-                                            </span>
+                                                    {percent}%
+                                                </span>
 
-                                        </div>
+                                            </div>
 
-                                        <div className="
+                                            <div className="
                                 w-full
                                 h-3
                                 rounded-full
@@ -1641,26 +1667,26 @@ export default function MaintenancePlan() {
                                 overflow-hidden
                             ">
 
-                                            <div
-                                                className="
+                                                <div
+                                                    className="
                                         h-full
                                         rounded-full
                                         bg-gradient-to-r
                                         from-emerald-400
                                         to-yellow-400
                                     "
-                                                style={{
-                                                    width: `${percent}%`
-                                                }}
-                                            />
+                                                    style={{
+                                                        width: `${percent}%`
+                                                    }}
+                                                />
+
+                                            </div>
 
                                         </div>
 
-                                    </div>
+                                    );
 
-                                );
-
-                            })
+                                })
                         }
 
                     </div>
