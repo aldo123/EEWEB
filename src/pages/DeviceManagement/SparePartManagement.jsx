@@ -25,7 +25,8 @@ import {
     Activity,
     TrendingUp,
     ShieldAlert,
-    X
+    X,
+    PackageSearch
 } from "lucide-react";
 
 import * as XLSX from "xlsx";
@@ -769,37 +770,80 @@ export default function SparePartManagement() {
     return (
         <div className="min-h-screen bg-[#020817] text-white p-6">
 
+            {/* ======================================== */}
             {/* HEADER */}
+            {/* ======================================== */}
 
-            <div className="bg-gradient-to-r from-[#071226] to-[#071d35] border border-cyan-500/20 rounded-3xl p-8 mb-6">
+            <div className="
+                flex
+                items-start
+                justify-between
+                mb-8
+                rounded-[32px]
+                border
+                border-cyan-500/10
+                bg-gradient-to-r
+                from-cyan-500/5
+                to-transparent
+                backdrop-blur-xl
+                p-8
+                shadow-2xl
+                shadow-cyan-500/5
+            ">
 
-                <div className="flex justify-between items-center">
+                <div>
 
-                    <div>
+                    <div className="
+                        inline-flex
+                        items-center
+                        gap-2
+                        px-4
+                        py-2
+                        rounded-2xl
+                        border
+                        border-cyan-500/20
+                        bg-cyan-500/10
+                        text-cyan-300
+                        text-xs
+                        font-bold
+                        uppercase
+                        tracking-[3px]
+                        mb-4
+                    ">
 
-                        <div className="inline-flex px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-bold tracking-widest mb-4">
-                            SPARE PART MONITORING
-                        </div>
+                        <div className="
+                            w-2
+                            h-2
+                            rounded-full
+                            bg-cyan-400
+                            animate-pulse
+                        " />
 
-                        <h1 className="text-6xl font-black">
-                            Spare Part
-                            <span className="text-cyan-400">
-                                {" "}
-                                Management
-                            </span>
-                        </h1>
-
-                        <p className="text-slate-400 mt-2">
-                            Inventory monitoring &
-                            warehouse management
-                        </p>
+                        SPARE PART MONITORING
 
                     </div>
 
-                    <Warehouse
-                        size={80}
-                        className="text-cyan-400"
-                    />
+                    <h1 className="
+                        text-6xl
+                        font-black
+                        leading-tight
+                        bg-gradient-to-r
+                        from-white
+                        via-cyan-200
+                        to-cyan-500
+                        bg-clip-text
+                        text-transparent
+                    ">
+                        Spare Part Management
+                    </h1>
+
+                    <p className="
+                        text-slate-400
+                        mt-3
+                        text-lg
+                    ">
+                        Inventory monitoring & warehouse management system
+                    </p>
 
                 </div>
 
