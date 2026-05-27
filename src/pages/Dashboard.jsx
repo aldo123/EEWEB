@@ -20,6 +20,8 @@ import {
   Workflow,
   MapPinned,
   PackageSearch,
+  Wrench,
+  Warehouse,
 
 } from "lucide-react";
 
@@ -49,6 +51,9 @@ import MaintenancePlan
 
 import EquipmentList
   from "../pages/DeviceManagement/EquipmentList";
+
+import SparePartManagement
+  from "../pages/DeviceManagement/SparePartManagement";
 
 export default function Dashboard() {
 
@@ -527,93 +532,7 @@ flex flex-col">
 
               <div className="ml-6 pl-6 border-l border-green-500/20 space-y-3">
 
-                {/* PART LIST */}
-                <button
-                  onClick={() =>
-                    setSelectedPage(
-                      "part-list"
-                    )
-                  }
-                  className={`group w-full h-[60px]
-                  rounded-2xl
-                  border
-                  transition-all
-                  px-5 flex items-center gap-4
-
-                  ${selectedPage ===
-                      "part-list"
-                      ? "bg-green-500/15 border-green-500/30"
-                      : "bg-white/[0.03] border-white/5 hover:bg-green-500/10 hover:border-green-500/20"
-                    }`}
-                >
-
-                  <PackageSearch
-                    size={18}
-                    className="text-green-400"
-                  />
-
-                  <div className="text-left">
-
-                    <p className="font-medium text-sm">
-
-                      Part List
-
-                    </p>
-
-                    <p className="text-xs text-slate-500 mt-1">
-
-                      Spare part inventory
-
-                    </p>
-
-                  </div>
-
-                </button>
-
-                {/* IN OUT STOCK */}
-                <button
-                  onClick={() =>
-                    setSelectedPage(
-                      "in-out-stock"
-                    )
-                  }
-                  className={`group w-full h-[60px]
-                  rounded-2xl
-                  border
-                  transition-all
-                  px-5 flex items-center gap-4
-
-                  ${selectedPage ===
-                      "in-out-stock"
-                      ? "bg-green-500/15 border-green-500/30"
-                      : "bg-white/[0.03] border-white/5 hover:bg-green-500/10 hover:border-green-500/20"
-                    }`}
-                >
-
-                  <ClipboardList
-                    size={18}
-                    className="text-green-400"
-                  />
-
-                  <div className="text-left">
-
-                    <p className="font-medium text-sm">
-
-                      In/Out Stock
-
-                    </p>
-
-                    <p className="text-xs text-slate-500 mt-1">
-
-                      Inventory movement
-
-                    </p>
-
-                  </div>
-
-                </button>
-
-                {/* STORAGE */}
+                {/* SPARE PART MANAGEMETN */}
                 <button
                   onClick={() =>
                     setSelectedPage(
@@ -633,7 +552,7 @@ flex flex-col">
                     }`}
                 >
 
-                  <Boxes
+                  <Warehouse
                     size={18}
                     className="text-green-400"
                   />
@@ -642,13 +561,13 @@ flex flex-col">
 
                     <p className="font-medium text-sm">
 
-                      Storage
+                      Spare Part System
 
                     </p>
 
                     <p className="text-xs text-slate-500 mt-1">
 
-                      Rack & storage area
+                      Spare Part Management
 
                     </p>
 
@@ -719,7 +638,7 @@ flex flex-col">
                     }`}
                 >
 
-                  <Workflow
+                  <Wrench
                     size={18}
                     className="text-green-400"
                   />
@@ -1271,97 +1190,11 @@ flex flex-col">
                 <WorkflowManagement />
               )}
 
-            {/* PART LIST */}
-            {selectedPage ===
-              "part-list" && (
 
-                <div className="h-[500px]
-                  rounded-[36px]
-                  border border-white/5
-                  bg-white/[0.03]
-                  backdrop-blur-2xl
-                  flex items-center justify-center">
-
-                  <div className="text-center">
-
-                    <h1 className="text-5xl font-black text-white">
-
-                      Part List
-
-                    </h1>
-
-                    <p className="text-slate-500 mt-4">
-
-                      Module coming soon
-
-                    </p>
-
-                  </div>
-
-                </div>
-
-              )}
-
-            {/* IN OUT */}
-            {selectedPage ===
-              "in-out-stock" && (
-
-                <div className="h-[500px]
-                  rounded-[36px]
-                  border border-white/5
-                  bg-white/[0.03]
-                  backdrop-blur-2xl
-                  flex items-center justify-center">
-
-                  <div className="text-center">
-
-                    <h1 className="text-5xl font-black text-white">
-
-                      In / Out Stock
-
-                    </h1>
-
-                    <p className="text-slate-500 mt-4">
-
-                      Module coming soon
-
-                    </p>
-
-                  </div>
-
-                </div>
-
-              )}
-
-            {/* STORAGE */}
+            {/* SPAREPART MANAGEMENT */}
             {selectedPage ===
               "storage" && (
-
-                <div className="h-[500px]
-                  rounded-[36px]
-                  border border-white/5
-                  bg-white/[0.03]
-                  backdrop-blur-2xl
-                  flex items-center justify-center">
-
-                  <div className="text-center">
-
-                    <h1 className="text-5xl font-black text-white">
-
-                      Storage
-
-                    </h1>
-
-                    <p className="text-slate-500 mt-4">
-
-                      Module coming soon
-
-                    </p>
-
-                  </div>
-
-                </div>
-
+                <SparePartManagement />
               )}
 
 
