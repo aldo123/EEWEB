@@ -403,7 +403,6 @@ export default function RequestList() {
                                         String(item.price).trim() === "" ||
                                         String(item.total_cost).trim() === "" ||
                                         String(item.vendor).trim() === "" ||
-                                        String(item.additional_info).trim() === "" ||
                                         String(item.pic).trim() === ""
 
                                     ) {
@@ -1060,7 +1059,7 @@ export default function RequestList() {
                 • Price
                 • Total Cost
                 • Vendor
-                • Project
+                • Additional Info
                 • PIC
                 `
                 );
@@ -1796,7 +1795,11 @@ export default function RequestList() {
                             </th>
 
                             <th className="p-3">
-                                Project
+                                Category
+                            </th>
+
+                            <th className="p-3">
+                                Additional Information
                             </th>
 
                             <th className="p-3">
@@ -1895,7 +1898,11 @@ export default function RequestList() {
                                             </td>
 
                                             <td className="p-3">
-                                                {item.additional_info}
+                                                {item.category || "-"}
+                                            </td>
+
+                                            <td className="p-3">
+                                                {item.additional_info || "-"}
                                             </td>
 
                                             <td className="p-3">
