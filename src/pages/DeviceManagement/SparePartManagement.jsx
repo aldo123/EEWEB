@@ -357,7 +357,13 @@ export default function SparePartManagement() {
     const handleTransaction =
         async () => {
 
-            if (!selectedPart) return;
+            if (!selectedPart) {
+
+                alert("Please select part first");
+
+                return;
+
+            }
 
             const qty =
                 Number(trxForm.qty);
@@ -935,8 +941,10 @@ export default function SparePartManagement() {
                         Export Excel
                     </button>
 
-                    <button
-                        className="
+                    <div className="relative group">
+
+                        <button
+                            className="
                             h-12
                             px-6
                             rounded-2xl
@@ -950,10 +958,94 @@ export default function SparePartManagement() {
                             items-center
                             gap-2
                         "
-                    >
-                        <Activity size={18} />
-                        Transaction
-                    </button>
+                        >
+                            <Activity size={18} />
+                            Transaction
+                        </button>
+
+                        {/* DROPDOWN */}
+
+                        <div className="
+                        absolute
+                        right-0
+                        top-14
+                        w-44
+                        bg-[#071226]
+                        border
+                        border-purple-500/20
+                        rounded-2xl
+                        overflow-hidden
+                        opacity-0
+                        invisible
+                        group-hover:opacity-100
+                        group-hover:visible
+                        transition-all
+                        duration-200
+                        z-50
+                        shadow-2xl
+                    ">
+
+                            {/* IN */}
+
+                            <button
+                                onClick={() => {
+
+                                    setTransactionType("IN");
+
+                                    setSelectedPart(null);
+
+                                    setShowTransactionModal(true);
+
+                                }}
+                                className="
+                                w-full
+                                h-12
+                                px-4
+                                flex
+                                items-center
+                                gap-3
+                                hover:bg-green-500/10
+                                text-green-400
+                                font-semibold
+                            "
+                            >
+                                <ArrowDownCircle size={18} />
+                                Stock In
+                            </button>
+
+                            {/* OUT */}
+
+                            <button
+                                onClick={() => {
+
+                                    setTransactionType("OUT");
+
+                                    setSelectedPart(null);
+
+                                    setShowTransactionModal(true);
+
+                                }}
+                                className="
+                                w-full
+                                h-12
+                                px-4
+                                flex
+                                items-center
+                                gap-3
+                                hover:bg-red-500/10
+                                text-red-400
+                                font-semibold
+                                border-t
+                                border-purple-500/10
+                            "
+                            >
+                                <ArrowUpCircle size={18} />
+                                Stock Out
+                            </button>
+
+                        </div>
+
+                    </div>
 
                 </div>
 

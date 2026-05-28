@@ -389,7 +389,7 @@ export default function ActivityDetail({
 
         }, 300);
 
-    }, []);
+    }, [project]);
 
     const loadUsers =
         async () => {
@@ -558,6 +558,7 @@ export default function ActivityDetail({
                 );
 
                 await loadTaskHeaders();
+                
 
                 if (refreshProjects) {
 
