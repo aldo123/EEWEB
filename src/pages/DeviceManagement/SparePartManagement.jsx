@@ -82,6 +82,13 @@ export default function SparePartManagement() {
     ] = useState([]);
 
     const [
+        selectedTransactionDate,
+        setSelectedTransactionDate
+    ] = useState(
+        new Date().toISOString().split("T")[0]
+    );
+
+    const [
         transactions,
         setTransactions
     ] = useState([]);
@@ -122,6 +129,73 @@ export default function SparePartManagement() {
     ] = useState("IN");
 
     const [
+        transactionSearch,
+        setTransactionSearch
+    ] = useState("");
+
+    const [
+        showPartDropdown,
+        setShowPartDropdown
+    ] = useState(false);
+
+    const [
+        userSearch,
+        setUserSearch
+    ] = useState("");
+
+    const [
+        showUserDropdown,
+        setShowUserDropdown
+    ] = useState(false);
+
+    const [
+        users,
+        setUsers
+    ] = useState([]);
+
+    const [
+        selectedUser,
+        setSelectedUser
+    ] = useState(null);
+
+    const [
+        lineSearch,
+        setLineSearch
+    ] = useState("");
+
+    const [
+        showLineDropdown,
+        setShowLineDropdown
+    ] = useState(false);
+
+    const [
+        selectedLine,
+        setSelectedLine
+    ] = useState(null);
+
+    const [
+        selectedModel,
+        setSelectedModel
+    ] = useState("ALL");
+
+    const [
+        selectedStatuses,
+        setSelectedStatuses
+    ] = useState([]);
+
+    const [
+        selectedRack,
+        setSelectedRack
+    ] = useState("ALL");
+
+    const [
+        selectedTopUsedMonth,
+        setSelectedTopUsedMonth
+    ] = useState(
+        new Date().getMonth() + 1
+    );
+
+    const [
         form,
         setForm
     ] = useState({
@@ -134,7 +208,8 @@ export default function SparePartManagement() {
         min_stock: 0,
         current_stock: 0,
         unit: "",
-        vendor: ""
+        vendor: "",
+        price: 0
     });
 
     const [
@@ -142,7 +217,9 @@ export default function SparePartManagement() {
         setTrxForm
     ] = useState({
         qty: 0,
-        remark: ""
+        po_no: "",
+        machine: "",
+        line: ""
     });
 
     // ======================================================
@@ -154,6 +231,7 @@ export default function SparePartManagement() {
         loadParts();
         loadTransactions();
         loadLines();
+        loadUsers();
 
         const channel =
             supabase
@@ -177,6 +255,27 @@ export default function SparePartManagement() {
 
     }, []);
 
+    const loadUsers =
+        async () => {
+
+            const {
+                data,
+                error
+            } = await supabase
+                .from("users")
+                .select("*")
+                .order(
+                    "username",
+                    {
+                        ascending: true
+                    }
+                );
+
+            if (!error) {
+                setUsers(data || []);
+            }
+
+        };
     // ======================================================
     // LOAD PARTS
     // ======================================================
@@ -288,10 +387,15 @@ export default function SparePartManagement() {
 
             const payload = {
                 ...form,
+
                 current_stock:
                     Number(form.current_stock),
+
                 min_stock:
-                    Number(form.min_stock)
+                    Number(form.min_stock),
+
+                price:
+                    Number(form.price || 0)
             };
 
             if (selectedPart) {
@@ -357,75 +461,196 @@ export default function SparePartManagement() {
     const handleTransaction =
         async () => {
 
-            if (!selectedPart) {
+            try {
 
-                alert("Please select part first");
+                if (!selectedPart) {
 
-                return;
+                    alert("Please select part first");
 
-            }
+                    return;
 
-            const qty =
-                Number(trxForm.qty);
+                }
 
-            if (qty <= 0) {
-                alert("Qty invalid");
-                return;
-            }
+                const qty =
+                    Number(trxForm.qty);
 
-            let newStock =
-                selectedPart.current_stock;
+                if (qty <= 0) {
 
-            if (
-                transactionType === "IN"
-            ) {
-                newStock += qty;
-            } else {
-                newStock -= qty;
-            }
+                    alert("Qty invalid");
 
-            if (newStock < 0) {
-                alert("Stock insufficient");
-                return;
-            }
+                    return;
 
-            await supabase
-                .from("spare_transactions")
-                .insert([
-                    {
-                        part_id:
-                            selectedPart.id,
-                        part_name:
-                            selectedPart.part_name,
-                        type:
-                            transactionType,
-                        qty,
-                        stock_before:
-                            selectedPart.current_stock,
-                        stock_after:
-                            newStock,
-                        responsible:
-                            currentUser?.username,
-                        remark:
-                            trxForm.remark
-                    }
-                ]);
+                }
 
-            await supabase
-                .from("spare_parts")
-                .update({
-                    current_stock:
-                        newStock
-                })
-                .eq(
-                    "id",
-                    selectedPart.id
+                if (
+                    transactionType === "OUT"
+                    &&
+                    !selectedUser
+                ) {
+
+                    alert("Select technician");
+
+                    return;
+
+                }
+
+                let newStock =
+                    Number(
+                        selectedPart.current_stock || 0
+                    );
+
+                if (
+                    transactionType === "IN"
+                ) {
+
+                    newStock += qty;
+
+                } else {
+
+                    newStock -= qty;
+
+                }
+
+                if (newStock < 0) {
+
+                    alert("Stock insufficient");
+
+                    return;
+
+                }
+
+                // =========================================
+                // INSERT TRANSACTION
+                // =========================================
+
+                const {
+                    error: trxError
+                } = await supabase
+                    .from("spare_transactions")
+                    .insert([
+                        {
+                            part_id:
+                                selectedPart.id,
+
+                            part_no:
+                                selectedPart.part_no || "",
+
+                            part_name:
+                                selectedPart.part_name || "",
+
+                            type:
+                                transactionType,
+
+                            qty,
+
+                            po_no:
+                                trxForm.po_no || "",
+
+                            machine:
+                                trxForm.machine || "",
+
+                            line:
+                                trxForm.line || "",
+
+                            technician:
+                                selectedUser?.username || "",
+
+                            stock_before:
+                                Number(
+                                    selectedPart.current_stock || 0
+                                ),
+
+                            stock_after:
+                                newStock,
+
+                            responsible:
+                                currentUser?.username || "SYSTEM"
+                        }
+                    ]);
+
+                if (trxError) {
+
+                    console.log(
+                        "TRANSACTION ERROR:",
+                        trxError
+                    );
+
+                    alert(
+                        trxError.message
+                    );
+
+                    return;
+
+                }
+
+                // =========================================
+                // UPDATE STOCK
+                // =========================================
+
+                const {
+                    error: stockError
+                } = await supabase
+                    .from("spare_parts")
+                    .update({
+                        current_stock:
+                            newStock
+                    })
+                    .eq(
+                        "id",
+                        selectedPart.id
+                    );
+
+                if (stockError) {
+
+                    console.log(
+                        "UPDATE STOCK ERROR:",
+                        stockError
+                    );
+
+                    alert(
+                        stockError.message
+                    );
+
+                    return;
+
+                }
+
+                // =========================================
+                // SUCCESS
+                // =========================================
+
+                alert(
+                    `${transactionType} transaction success`
                 );
 
-            setShowTransactionModal(false);
+                setShowTransactionModal(false);
 
-            loadParts();
-            loadTransactions();
+                setSelectedPart(null);
+
+                setSelectedUser(null);
+
+                setSelectedLine(null);
+
+                setTrxForm({
+                    qty: 0,
+                    po_no: "",
+                    machine: "",
+                    line: ""
+                });
+
+                loadParts();
+
+                loadTransactions();
+
+            } catch (err) {
+
+                console.log(err);
+
+                alert(
+                    err.message
+                );
+
+            }
 
         };
 
@@ -464,6 +689,9 @@ export default function SparePartManagement() {
 
                 Vendor:
                     item.vendor || "",
+
+                Price:
+                    item.price || 0,
 
                 Status:
                     item.current_stock <= item.min_stock
@@ -584,6 +812,9 @@ export default function SparePartManagement() {
                                 vendor:
                                     row.Vendor || "",
 
+                                price:
+                                    Number(row.Price || 0),
+
                                 min_stock:
                                     Number(
                                         row.Min_stock || 0
@@ -677,7 +908,8 @@ export default function SparePartManagement() {
                 min_stock: 0,
                 current_stock: 0,
                 unit: "",
-                vendor: ""
+                vendor: "",
+                price: 0
             });
 
         };
@@ -686,28 +918,99 @@ export default function SparePartManagement() {
     // FILTER
     // ======================================================
 
-    const filteredParts =
+    const tableFilteredParts =
         useMemo(() => {
+
+            const keyword =
+                search.toLowerCase();
 
             return parts.filter(
                 (item) => {
 
-                    return (
-                        item.part_name
-                            ?.toLowerCase()
-                            .includes(
-                                search.toLowerCase()
-                            ) ||
+                    // SEARCH
+                    const matchSearch =
+
                         item.part_no
                             ?.toLowerCase()
-                            .includes(
-                                search.toLowerCase()
-                            ) ||
+                            .includes(keyword)
+
+                        ||
+
+                        item.part_name
+                            ?.toLowerCase()
+                            .includes(keyword)
+
+                        ||
+
+                        item.category
+                            ?.toLowerCase()
+                            .includes(keyword)
+
+                        ||
+
                         item.machine
                             ?.toLowerCase()
-                            .includes(
-                                search.toLowerCase()
-                            )
+                            .includes(keyword)
+
+                        ||
+
+                        item.model
+                            ?.toLowerCase()
+                            .includes(keyword)
+
+                        ||
+
+                        item.vendor
+                            ?.toLowerCase()
+                            .includes(keyword)
+
+                        ||
+
+                        item.rack
+                            ?.toLowerCase()
+                            .includes(keyword);
+
+                    // MODEL FILTER
+                    const matchModel =
+
+                        selectedModel === "ALL"
+                        ||
+                        item.model === selectedModel;
+
+                    // RACK FILTER
+                    const matchRack =
+
+                        selectedRack === "ALL"
+                        ||
+                        item.rack === selectedRack;
+
+                    // STATUS
+                    let itemStatus = "HEALTHY";
+
+                    if (item.current_stock <= 0) {
+
+                        itemStatus = "CRITICAL";
+
+                    } else if (
+                        item.current_stock <= item.min_stock
+                    ) {
+
+                        itemStatus = "LOW STOCK";
+
+                    }
+
+                    // MULTI STATUS FILTER
+                    const matchStatus =
+
+                        selectedStatuses.length === 0
+                        ||
+                        selectedStatuses.includes(itemStatus);
+
+                    return (
+                        matchSearch &&
+                        matchModel &&
+                        matchRack &&
+                        matchStatus
                     );
 
                 }
@@ -715,8 +1018,44 @@ export default function SparePartManagement() {
 
         }, [
             parts,
-            search
+            search,
+            selectedModel,
+            selectedStatuses,
+            selectedRack
         ]);
+
+    const topUsedParts =
+        useMemo(() => {
+
+            return parts.filter((item) => {
+
+                return (
+                    selectedModel === "ALL"
+                    ||
+                    item.model === selectedModel
+                );
+
+            });
+
+        }, [
+            parts,
+            selectedModel
+        ]);
+
+    const monthOptions = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+    ];
 
     // ======================================================
     // KPI
@@ -753,11 +1092,20 @@ export default function SparePartManagement() {
     // CHART DATA
     // ======================================================
 
+    const analyticsParts =
+        parts.filter((item) =>
+
+            selectedModel === "ALL"
+            ||
+            item.model === selectedModel
+
+        );
+
     const stockChart = [
         {
             name: "Safe",
             value:
-                parts.filter(
+                analyticsParts.filter(
                     (x) =>
                         x.current_stock >
                         x.min_stock
@@ -765,7 +1113,11 @@ export default function SparePartManagement() {
         },
         {
             name: "Low",
-            value: lowStock
+            value:
+                analyticsParts.filter(
+                    (x) =>
+                        x.current_stock <= x.min_stock
+                ).length
         }
     ];
 
@@ -832,7 +1184,7 @@ export default function SparePartManagement() {
                     </div>
 
                     <h1 className="
-                        text-6xl
+                        text-5xl
                         font-black
                         leading-tight
                         bg-gradient-to-r
@@ -864,7 +1216,42 @@ export default function SparePartManagement() {
                     self-end
                     mb-2
                 ">
+                    <div className="relative">
 
+                        <Search
+                            className="
+                                absolute
+                                left-4
+                                top-3.5
+                                text-slate-500
+                            "
+                            size={18}
+                        />
+
+                        <input
+                            type="text"
+                            placeholder="Search part..."
+                            value={search}
+                            onChange={(e) =>
+                                setSearch(e.target.value)
+                            }
+                            className="
+                                w-[320px]
+                                h-12
+                                pl-12
+                                pr-4
+                                rounded-2xl
+                                bg-[#08192e]
+                                border
+                                border-cyan-500/10
+                                outline-none
+                                text-white
+                                placeholder:text-slate-500
+                                focus:border-cyan-400/40
+                            "
+                        />
+
+                    </div>
                     <button
                         onClick={() => {
 
@@ -1063,21 +1450,91 @@ export default function SparePartManagement() {
                 mt-3
             ">
 
-                <KPI
-                    title="Total Part"
-                    value={totalParts}
-                    icon={<Package />}
-                    color="cyan"
-                    subtitle="All spare part"
-                />
+                <div onClick={() => setSelectedStatuses([])}>
+                    <KPI
+                        title="Total Part"
+                        value={tableFilteredParts.length}
+                        icon={<Package />}
+                        color="cyan"
+                        subtitle="All spare part"
+                        active={selectedStatuses.length === 0}
+                    />
+                </div>
 
-                <KPI
-                    title="Low Stock"
-                    value={lowStock}
-                    icon={<AlertTriangle />}
-                    color="yellow"
-                    subtitle="Need attention"
-                />
+                <div
+                    onClick={() => {
+
+                        setSelectedStatuses((prev) =>
+
+                            prev.includes("LOW STOCK")
+                                ? prev.filter(
+                                    x => x !== "LOW STOCK"
+                                )
+                                : [
+                                    ...prev,
+                                    "LOW STOCK"
+                                ]
+
+                        );
+
+                    }}
+                >
+                    <KPI
+                        title="Low Stock"
+                        value={
+                            parts.filter(
+                                x =>
+                                    x.current_stock <= x.min_stock
+                                    &&
+                                    x.current_stock > 0
+                            ).length
+                        }
+                        icon={<AlertTriangle />}
+                        color="yellow"
+                        subtitle="Need attention"
+                        active={
+                            selectedStatuses.includes(
+                                "LOW STOCK"
+                            )
+                        }
+                    />
+                </div>
+
+                <div
+                    onClick={() => {
+
+                        setSelectedStatuses((prev) =>
+
+                            prev.includes("CRITICAL")
+                                ? prev.filter(
+                                    x => x !== "CRITICAL"
+                                )
+                                : [
+                                    ...prev,
+                                    "CRITICAL"
+                                ]
+
+                        );
+
+                    }}
+                >
+                    <KPI
+                        title="Critical"
+                        value={
+                            parts.filter(
+                                x => x.current_stock <= 0
+                            ).length
+                        }
+                        icon={<ShieldAlert />}
+                        color="red"
+                        subtitle="Very low stock"
+                        active={
+                            selectedStatuses.includes(
+                                "CRITICAL"
+                            )
+                        }
+                    />
+                </div>
 
                 <KPI
                     title="Incoming"
@@ -1103,18 +1560,6 @@ export default function SparePartManagement() {
                     subtitle="+18.7%"
                 />
 
-                <KPI
-                    title="Critical"
-                    value={
-                        parts.filter(
-                            x => x.current_stock <= 0
-                        ).length
-                    }
-                    icon={<ShieldAlert />}
-                    color="red"
-                    subtitle="Very low stock"
-                />
-
             </div>
 
 
@@ -1126,29 +1571,31 @@ export default function SparePartManagement() {
             <div className="
                 grid
                 grid-cols-12
-                gap-5
-                mt-4
-                mb-4
+                gap-4
+                mt-3
+                mb-3
+                items-start
             ">
-
                 {/* ================================================= */}
                 {/* STOCK HEALTH */}
                 {/* ================================================= */}
 
                 <div className="
-                    col-span-4
+                    col-span-3
                     bg-[#071226]
                     rounded-3xl
                     border
                     border-cyan-500/10
-                    p-5
+                    p-4
+                    h-[280px]
+                    overflow-hidden
                 ">
 
                     <div className="
                         flex
                         justify-between
                         items-center
-                        mb-5
+                        mb-2
                     ">
 
                         <h2 className="
@@ -1158,19 +1605,53 @@ export default function SparePartManagement() {
                             Stock Health
                         </h2>
 
-                        <select className="
-                            h-9
-                            px-3
-                            rounded-xl
-                            bg-[#08192e]
-                            border
-                            border-cyan-500/10
-                            text-xs
-                            outline-none
-                        ">
-                            <option>
-                                All Category
+                        <select
+
+                            value={selectedModel}
+
+                            onChange={(e) =>
+                                setSelectedModel(
+                                    e.target.value
+                                )
+                            }
+
+                            className="
+                                h-9
+                                px-3
+                                rounded-xl
+                                bg-[#08192e]
+                                border
+                                border-cyan-500/10
+                                text-xs
+                                outline-none
+                                text-white
+                                min-w-[130px]
+                            "
+                        >
+
+                            <option value="ALL">
+                                All Model
                             </option>
+
+                            {
+                                [...new Set(
+                                    parts
+                                        .map(x => x.model)
+                                        .filter(Boolean)
+                                )]
+                                    .sort()
+                                    .map((model) => (
+
+                                        <option
+                                            key={model}
+                                            value={model}
+                                        >
+                                            {model}
+                                        </option>
+
+                                    ))
+                            }
+
                         </select>
 
                     </div>
@@ -1233,13 +1714,17 @@ export default function SparePartManagement() {
 
                         {/* LEGEND */}
 
-                        <div className="space-y-4 flex-1">
+                        <div className="
+                            space-y-2
+                            flex-1
+                            pl-2
+                        ">
 
                             <LegendItem
                                 color="bg-cyan-400"
                                 label="Healthy"
                                 value={
-                                    parts.filter(
+                                    analyticsParts.filter(
                                         x =>
                                             x.current_stock >
                                             x.min_stock
@@ -1250,14 +1735,21 @@ export default function SparePartManagement() {
                             <LegendItem
                                 color="bg-yellow-400"
                                 label="Low Stock"
-                                value={lowStock}
+                                value={
+                                    analyticsParts.filter(
+                                        x =>
+                                            x.current_stock <= x.min_stock
+                                            &&
+                                            x.current_stock > 0
+                                    ).length
+                                }
                             />
 
                             <LegendItem
                                 color="bg-red-400"
                                 label="Critical"
                                 value={
-                                    parts.filter(
+                                    analyticsParts.filter(
                                         x =>
                                             x.current_stock <= 0
                                     ).length
@@ -1275,7 +1767,7 @@ export default function SparePartManagement() {
                 {/* ================================================= */}
 
                 <div className="
-                    col-span-4
+                    col-span-5
                     bg-[#071226]
                     rounded-3xl
                     border
@@ -1308,7 +1800,7 @@ export default function SparePartManagement() {
 
                     <ResponsiveContainer
                         width="100%"
-                        height={230}
+                        height={190}
                     >
 
                         <BarChart
@@ -1381,7 +1873,11 @@ export default function SparePartManagement() {
                     rounded-3xl
                     border
                     border-cyan-500/10
-                    p-5
+                    p-4
+                    h-[280px]
+                    overflow-hidden
+                    flex
+                    flex-col
                 ">
 
                     <div className="
@@ -1398,27 +1894,58 @@ export default function SparePartManagement() {
                             Top 5 Most Used Part
                         </h2>
 
-                        <select className="
-                            h-9
-                            px-3
-                            rounded-xl
-                            bg-[#08192e]
-                            border
-                            border-cyan-500/10
-                            text-xs
-                            outline-none
-                        ">
-                            <option>
-                                This Month
-                            </option>
+                        <select
+
+                            value={selectedTopUsedMonth}
+
+                            onChange={(e) =>
+                                setSelectedTopUsedMonth(
+                                    Number(e.target.value)
+                                )
+                            }
+
+                            className="
+                                h-9
+                                px-3
+                                rounded-xl
+                                bg-[#08192e]
+                                border
+                                border-cyan-500/10
+                                text-xs
+                                outline-none
+                                text-white
+                                min-w-[130px]
+                            "
+                        >
+
+                            {
+                                monthOptions.map(
+                                    (month, index) => (
+
+                                        <option
+                                            key={month}
+                                            value={index + 1}
+                                        >
+                                            {month}
+                                        </option>
+
+                                    )
+                                )
+                            }
+
                         </select>
 
                     </div>
 
-                    <div className="space-y-5">
+                    <div className="
+                        space-y-3
+                        overflow-auto
+                        pr-1
+                        flex-1
+                    ">
 
                         {
-                            filteredParts
+                            topUsedParts
                                 .slice(0, 5)
                                 .map((item, index) => (
 
@@ -1499,101 +2026,6 @@ export default function SparePartManagement() {
                 <div className="col-span-9 space-y-5">
 
                     {/* ================================================= */}
-                    {/* FILTER BAR */}
-                    {/* ================================================= */}
-
-                    <div className="
-                        bg-[#071226]
-                        rounded-3xl
-                        border
-                        border-cyan-500/10
-                        px-4 py-3
-                    ">
-
-                        <div className="flex gap-3">
-
-                            <div className="flex-1 relative">
-
-                                <Search
-                                    className="
-                                        absolute
-                                        left-4
-                                        top-3
-                                        text-slate-500
-                                    "
-                                    size={18}
-                                />
-
-                                <input
-                                    type="text"
-                                    placeholder="Search part..."
-                                    value={search}
-                                    onChange={(e) =>
-                                        setSearch(
-                                            e.target.value
-                                        )
-                                    }
-                                    className="
-                                        w-full
-                                        h-12
-                                        pl-12
-                                        rounded-2xl
-                                        bg-[#08192e]
-                                        border
-                                        border-cyan-500/10
-                                        outline-none
-                                    "
-                                />
-
-                            </div>
-
-                            <select className="
-                                h-12
-                                px-4
-                                rounded-2xl
-                                bg-[#08192e]
-                                border
-                                border-cyan-500/10
-                                outline-none
-                            ">
-                                <option>
-                                    All Category
-                                </option>
-                            </select>
-
-                            <select className="
-                                h-12
-                                px-4
-                                rounded-2xl
-                                bg-[#08192e]
-                                border
-                                border-cyan-500/10
-                                outline-none
-                            ">
-                                <option>
-                                    All Machine
-                                </option>
-                            </select>
-
-                            <select className="
-                                h-12
-                                px-4
-                                rounded-2xl
-                                bg-[#08192e]
-                                border
-                                border-cyan-500/10
-                                outline-none
-                            ">
-                                <option>
-                                    All Status
-                                </option>
-                            </select>
-
-                        </div>
-
-                    </div>
-
-                    {/* ================================================= */}
                     {/* PART TABLE */}
                     {/* ================================================= */}
 
@@ -1625,18 +2057,21 @@ export default function SparePartManagement() {
                                 text-sm
                                 text-slate-400
                             ">
-                                Showing {filteredParts.length} items
+                                Showing {tableFilteredParts.length} items
                             </div>
 
                         </div>
 
                         {/* TABLE */}
 
-                        <div className="overflow-auto">
+                        <div className="overflow-auto max-h-[520px]">
 
-                            <table className="w-full min-w-[1400px]">
+                            <table className="w-full min-w-[1500px]">
 
                                 <thead className="
+                                    sticky
+                                    top-0
+                                    z-20
                                     bg-[#0d1d35]
                                     text-cyan-400
                                     text-sm
@@ -1686,6 +2121,14 @@ export default function SparePartManagement() {
                                         </th>
 
                                         <th>
+                                            Vendor
+                                        </th>
+
+                                        <th>
+                                            Price
+                                        </th>
+
+                                        <th>
                                             Status
                                         </th>
 
@@ -1700,7 +2143,7 @@ export default function SparePartManagement() {
                                 <tbody>
 
                                     {
-                                        filteredParts.map(
+                                        tableFilteredParts.map(
                                             (
                                                 item,
                                                 index
@@ -1756,6 +2199,21 @@ export default function SparePartManagement() {
 
                                                     <td>
                                                         {item.rack}
+                                                    </td>
+
+                                                    <td>
+                                                        {item.vendor || "-"}
+                                                    </td>
+
+                                                    <td className="
+                                                            text-cyan-300
+                                                            font-semibold
+                                                        ">
+                                                        {
+                                                            item.price
+                                                                ? `Rp ${Number(item.price).toLocaleString("id-ID")}`
+                                                                : "-"
+                                                        }
                                                     </td>
 
                                                     <td>
@@ -1893,112 +2351,208 @@ export default function SparePartManagement() {
                         rounded-3xl
                         border
                         border-cyan-500/10
-                        p-5
+                        h-[260px]
+                        overflow-hidden
+                        flex
+                        flex-col
                     ">
 
+                        {/* HEADER */}
+
                         <div className="
+                            sticky
+                            top-0
+                            z-20
                             flex
-                            justify-between
                             items-center
-                            mb-5
+                            justify-between
+                            px-4
+                            py-4
+                            bg-[#071226]
+                            border-b
+                            border-cyan-500/10
+                            shrink-0
                         ">
 
                             <h2 className="font-bold text-lg">
                                 Storage Overview
                             </h2>
 
-                            <div className="
+                            <div className="flex items-center gap-2">
+
+                                {
+                                    selectedRack !== "ALL" && (
+
+                                        <button
+
+                                            onClick={() =>
+                                                setSelectedRack("ALL")
+                                            }
+
+                                            className="
+                                            px-3
+                                            h-7
+                                            rounded-full
+                                            bg-cyan-500/15
+                                            border
+                                            border-cyan-400/30
+                                            text-cyan-300
+                                            text-xs
+                                            font-bold
+                                            hover:bg-cyan-500/25
+                                            transition-all
+                                        "
+                                        >
+
+                                            {selectedRack} ✕
+
+                                        </button>
+
+                                    )
+                                }
+
+                                <div className="
                                 text-cyan-400
                                 text-sm
+                                cursor-pointer
                             ">
-                                View All
+
+                                    View All
+
+                                </div>
+
                             </div>
 
                         </div>
 
+                        {/* SCROLL BODY */}
+
                         <div className="
-                            grid
-                            grid-cols-2
-                            gap-3
+                            flex-1
+                            overflow-y-auto
+                            px-4
+                            py-3
+                            scrollbar-thin
+                            scrollbar-thumb-cyan-500/20
+                            scrollbar-track-transparent
                         ">
 
-                            {
-                                [...new Set(parts.map(x => x.rack))]
-                                    .slice(0, 6)
-                                    .map((rack, index) => {
+                            <div className="
+                                grid
+                                grid-cols-2
+                                gap-3
+                            ">
 
-                                        const rackParts =
-                                            parts.filter(
-                                                x => x.rack === rack
-                                            );
+                                {
+                                    [...new Set(parts.map(x => x.rack))]
+                                        .map((rack, index) => {
 
-                                        const total =
-                                            rackParts.reduce(
-                                                (a, b) =>
-                                                    a + Number(
-                                                        b.current_stock || 0
-                                                    ),
-                                                0
-                                            );
+                                            const rackParts =
+                                                parts.filter(
+                                                    x => x.rack === rack
+                                                );
 
-                                        return (
+                                            const total =
+                                                rackParts.reduce(
+                                                    (a, b) =>
+                                                        a + Number(
+                                                            b.current_stock || 0
+                                                        ),
+                                                    0
+                                                );
 
-                                            <div
-                                                key={index}
-                                                className="
-                                                bg-[#08192e]
-                                                rounded-2xl
-                                                p-4
-                                                border
-                                                border-cyan-500/10
-                                            "
-                                            >
+                                            return (
 
-                                                <div className="
-                                                    flex
-                                                    justify-between
-                                                    mb-2
-                                                ">
+                                                <div
+                                                    key={index}
 
-                                                    <div className="font-bold">
-                                                        {rack}
+                                                    onClick={() =>
+
+                                                        setSelectedRack(
+
+                                                            selectedRack === rack
+                                                                ? "ALL"
+                                                                : rack
+
+                                                        )
+
+                                                    }
+
+                                                    className={`
+                                                        rounded-2xl
+                                                        p-3
+                                                        min-h-[82px]
+                                                        cursor-pointer
+                                                        transition-all
+                                                        duration-200
+
+                                                        ${selectedRack === rack
+                                                            ? `
+                                                                    bg-cyan-500/10
+                                                                    border-2
+                                                                    border-cyan-400
+                                                                    shadow-lg
+                                                                    shadow-cyan-500/20
+                                                                    scale-[1.02]
+                                                                `
+                                                            : `
+                                                                    bg-[#08192e]
+                                                                    border
+                                                                    border-cyan-500/10
+                                                                `
+                                                        }
+                                                    `}
+                                                >
+
+                                                    <div className="
+                                                        flex
+                                                        justify-between
+                                                        items-center
+                                                        mb-2
+                                                    ">
+
+                                                        <div className="font-bold">
+                                                            {rack}
+                                                        </div>
+
+                                                        <div className="
+                                                            text-cyan-400
+                                                            text-sm
+                                                        ">
+                                                            {total} pcs
+                                                        </div>
+
                                                     </div>
 
                                                     <div className="
-                                                        text-cyan-400
-                                                        text-sm
+                                                        w-full
+                                                        h-3
+                                                        rounded-full
+                                                        bg-black/30
+                                                        overflow-hidden
                                                     ">
-                                                        {total} pcs
+
+                                                        <div
+                                                            className="
+                                                                h-full
+                                                                rounded-full
+                                                                bg-cyan-400
+                                                            "
+                                                            style={{
+                                                                width: `${Math.min(total, 100)}%`
+                                                            }}
+                                                        />
+
                                                     </div>
 
                                                 </div>
 
-                                                <div className="
-                                                    w-full
-                                                    h-3
-                                                    rounded-full
-                                                    bg-black/30
-                                                    overflow-hidden
-                                                ">
+                                            );
 
-                                                    <div
-                                                        className="
-                                                            h-full
-                                                            bg-cyan-400
-                                                        "
-                                                        style={{
-                                                            width: `${Math.min(total, 100)}%`
-                                                        }}
-                                                    />
+                                        })
+                                }
 
-                                                </div>
-
-                                            </div>
-
-                                        );
-
-                                    })
-                            }
+                            </div>
 
                         </div>
 
@@ -2011,84 +2565,322 @@ export default function SparePartManagement() {
                         rounded-3xl
                         border
                         border-cyan-500/10
-                        p-5
-                        min-h-[320px]
+                        h-[310px]
+                        overflow-hidden
+                        flex
+                        flex-col
                     ">
 
+                        {/* HEADER */}
+
                         <div className="
+                            sticky
+                            top-0
+                            z-20
                             flex
                             justify-between
                             items-center
-                            mb-5
+                            px-5
+                            py-5
+                            bg-[#071226]
+                            border-b
+                            border-cyan-500/10
+                            shrink-0
                         ">
 
-                            <h2 className="font-bold text-lg">
-                                Recent Transaction
-                            </h2>
+                            <div className="
+                                flex
+                                items-center
+                                gap-3
+                            ">
 
-                            <Activity
-                                className="text-cyan-400"
-                                size={18}
-                            />
+                                <input
+                                    type="date"
+                                    value={selectedTransactionDate}
+                                    onChange={(e) =>
+                                        setSelectedTransactionDate(
+                                            e.target.value
+                                        )
+                                    }
+                                    className="
+                                        h-9
+                                        px-3
+                                        rounded-xl
+                                        bg-[#08192e]
+                                        border
+                                        border-cyan-500/10
+                                        text-sm
+                                        outline-none
+                                        text-white
+                                    "
+                                />
+
+                                <Activity
+                                    className="text-cyan-400"
+                                    size={18}
+                                />
+
+                            </div>
 
                         </div>
 
-                        <div className="space-y-3">
+                        {/* BODY */}
+
+                        <div className="
+                            flex-1
+                            overflow-y-auto
+                            px-5
+                            py-4
+                            space-y-3
+
+                            scrollbar-thin
+                            scrollbar-thumb-cyan-500/20
+                            scrollbar-track-transparent
+                        ">
 
                             {
                                 transactions
-                                    .slice(0, 8)
-                                    .map((trx, i) => (
+                                    .filter((trx) => {
 
-                                        <div
-                                            key={i}
-                                            className="
-                                                bg-[#08192e]
-                                                rounded-2xl
-                                                p-3
-                                                border
-                                                border-cyan-500/10
-                                            "
-                                        >
+                                        if (!trx.created_at)
+                                            return false;
 
-                                            <div className="
-                                                flex
-                                                justify-between
-                                                items-start
-                                            ">
+                                        const trxDate =
+                                            new Date(trx.created_at)
+                                                .toISOString()
+                                                .split("T")[0];
 
-                                                <div>
+                                        return (
+                                            trxDate ===
+                                            selectedTransactionDate
+                                        );
 
-                                                    <div className="
-                                                        font-bold
-                                                        text-sm
-                                                    ">
-                                                        {trx.part_name}
+                                    })
+                                    .slice(0, 20)
+                                    .map((trx, i) => {
+
+                                        const trxDate =
+                                            trx.created_at
+                                                ? new Date(trx.created_at)
+                                                : null;
+
+                                        const date =
+                                            trxDate
+                                                ? trxDate.toLocaleDateString("id-ID")
+                                                : "-";
+
+                                        const time =
+                                            trxDate
+                                                ? trxDate.toLocaleTimeString(
+                                                    "id-ID",
+                                                    {
+                                                        hour: "2-digit",
+                                                        minute: "2-digit"
+                                                    }
+                                                )
+                                                : "-";
+
+                                        return (
+
+                                            <div
+                                                key={i}
+                                                className="
+                                                    bg-[#08192e]
+                                                    rounded-2xl
+                                                    p-4
+                                                    border
+                                                    border-cyan-500/10
+                                                "
+                                            >
+
+                                                {/* TOP */}
+
+                                                <div className="
+                                                    flex
+                                                    justify-between
+                                                    items-start
+                                                    gap-3
+                                                ">
+
+                                                    {/* LEFT */}
+
+                                                    <div className="flex-1 min-w-0">
+
+                                                        {/* PART NO */}
+
+                                                        <div className="
+                                                            text-cyan-400
+                                                            text-[11px]
+                                                            font-bold
+                                                            tracking-wide
+                                                            mb-1
+                                                            break-all
+                                                        ">
+
+                                                            {trx.part_no || "-"}
+
+                                                        </div>
+
+                                                        {/* PART NAME */}
+
+                                                        <div className="
+                                                            font-bold
+                                                            text-sm
+                                                            leading-tight
+                                                            break-words
+                                                        ">
+
+                                                            {trx.part_name || "-"}
+
+                                                        </div>
+
                                                     </div>
 
-                                                    <div className="
-                                                        text-xs
-                                                        text-slate-400
-                                                    ">
-                                                        {trx.remark}
+                                                    {/* BADGE */}
+
+                                                    <div
+                                                        className={`
+                                                            px-3
+                                                            py-1
+                                                            rounded-xl
+                                                            text-xs
+                                                            font-bold
+                                                            shrink-0
+
+                                                            ${trx.type === "IN"
+                                                                ? "bg-green-500/20 text-green-400"
+                                                                : "bg-red-500/20 text-red-400"
+                                                            }
+                                                        `}
+                                                    >
+
+                                                        {
+                                                            trx.type === "IN"
+                                                                ? `IN +${trx.qty}`
+                                                                : `OUT -${trx.qty}`
+                                                        }
+
                                                     </div>
 
                                                 </div>
 
-                                                <div
-                                                    className={`px-2 py-1 rounded-lg text-xs font-bold ${trx.type === "IN"
-                                                        ? "bg-green-500/20 text-green-400"
-                                                        : "bg-red-500/20 text-red-400"
-                                                        }`}
-                                                >
-                                                    {trx.type}
+                                                {/* DETAIL */}
+
+                                                <div className="
+                                                    mt-3
+                                                    pt-3
+                                                    border-t
+                                                    border-cyan-500/10
+                                                    grid
+                                                    grid-cols-2
+                                                    gap-x-4
+                                                    gap-y-1
+                                                    text-xs
+                                                ">
+
+                                                    {/* DATE */}
+
+                                                    <div className="text-slate-400">
+                                                        Date
+                                                    </div>
+
+                                                    <div className="text-white text-right">
+                                                        {date}
+                                                    </div>
+
+                                                    {/* TIME */}
+
+                                                    <div className="text-slate-400">
+                                                        Time
+                                                    </div>
+
+                                                    <div className="text-white text-right">
+                                                        {time}
+                                                    </div>
+
+                                                    {/* STOCK IN */}
+
+                                                    {
+                                                        trx.type === "IN" && (
+                                                            <>
+                                                                <div className="text-slate-400">
+                                                                    PO No
+                                                                </div>
+
+                                                                <div className="
+                                                                    text-cyan-300
+                                                                    text-right
+                                                                    break-all
+                                                                ">
+                                                                    {trx.po_no || "-"}
+                                                                </div>
+
+                                                                <div className="text-slate-400">
+                                                                    Qty In
+                                                                </div>
+
+                                                                <div className="
+                                                                    text-green-400
+                                                                    font-bold
+                                                                    text-right
+                                                                ">
+                                                                    +{trx.qty}
+                                                                </div>
+                                                            </>
+                                                        )
+                                                    }
+
+                                                    {/* STOCK OUT */}
+
+                                                    {
+                                                        trx.type === "OUT" && (
+                                                            <>
+                                                                <div className="text-slate-400">
+                                                                    Name
+                                                                </div>
+
+                                                                <div className="
+                                                                    text-white
+                                                                    text-right
+                                                                    break-words
+                                                                ">
+                                                                    {trx.technician || "-"}
+                                                                </div>
+
+                                                                <div className="text-slate-400">
+                                                                    Machine
+                                                                </div>
+
+                                                                <div className="
+                                                                    text-white
+                                                                    text-right
+                                                                    break-words
+                                                                ">
+                                                                    {trx.machine || "-"}
+                                                                </div>
+
+                                                                <div className="text-slate-400">
+                                                                    Qty Out
+                                                                </div>
+
+                                                                <div className="
+                                                                    text-red-400
+                                                                    font-bold
+                                                                    text-right
+                                                                ">
+                                                                    -{trx.qty}
+                                                                </div>
+                                                            </>
+                                                        )
+                                                    }
+
                                                 </div>
 
                                             </div>
 
-                                        </div>
+                                        );
 
-                                    ))
+                                    })
                             }
 
                         </div>
@@ -2258,6 +3050,23 @@ export default function SparePartManagement() {
                             />
 
                             <Input
+                                label="Vendor"
+                                value={
+                                    form.vendor
+                                }
+                                onChange={(
+                                    e
+                                ) =>
+                                    setForm({
+                                        ...form,
+                                        vendor:
+                                            e.target
+                                                .value
+                                    })
+                                }
+                            />
+
+                            <Input
                                 label="Unit"
                                 value={
                                     form.unit
@@ -2270,6 +3079,21 @@ export default function SparePartManagement() {
                                         unit:
                                             e.target
                                                 .value
+                                    })
+                                }
+                            />
+
+                            <Input
+                                type="number"
+                                label="Price"
+                                value={
+                                    form.price
+                                }
+                                onChange={(e) =>
+                                    setForm({
+                                        ...form,
+                                        price:
+                                            e.target.value
                                     })
                                 }
                             />
@@ -2340,45 +3164,780 @@ export default function SparePartManagement() {
                         }
                     >
 
-                        <Input
-                            type="number"
-                            label="Qty"
-                            value={
-                                trxForm.qty
-                            }
-                            onChange={(e) =>
-                                setTrxForm({
-                                    ...trxForm,
-                                    qty:
-                                        e.target
-                                            .value
-                                })
-                            }
-                        />
+                        <div className="space-y-4">
 
-                        <Input
-                            label="Remark"
-                            value={
-                                trxForm.remark
-                            }
-                            onChange={(e) =>
-                                setTrxForm({
-                                    ...trxForm,
-                                    remark:
-                                        e.target
-                                            .value
-                                })
-                            }
-                        />
+                            {/* PART SEARCHABLE DROPDOWN */}
 
-                        <button
-                            onClick={
-                                handleTransaction
+                            <div className="relative">
+
+                                <div className="mb-2 text-sm text-slate-400">
+                                    Search Part
+                                </div>
+
+                                {/* BUTTON */}
+
+                                <button
+
+                                    type="button"
+
+                                    onClick={() =>
+                                        setShowPartDropdown(
+                                            !showPartDropdown
+                                        )
+                                    }
+
+                                    className="
+                                        w-full
+                                        h-12
+                                        px-4
+                                        bg-[#08192e]
+                                        border
+                                        border-cyan-500/10
+                                        rounded-2xl
+                                        outline-none
+                                        text-left
+                                        flex
+                                        items-center
+                                        justify-between
+                                    "
+                                >
+
+                                    <span>
+
+                                        {
+                                            selectedPart
+                                                ? `${selectedPart.part_no} - ${selectedPart.part_name}`
+                                                : "Select Part No / Part Name"
+                                        }
+
+                                    </span>
+
+                                    <span className="text-slate-400">
+                                        ▼
+                                    </span>
+
+                                </button>
+
+                                {/* DROPDOWN */}
+
+                                {
+                                    showPartDropdown && (
+
+                                        <div className="
+                                            absolute
+                                            top-[78px]
+                                            left-0
+                                            w-full
+                                            bg-[#071226]
+                                            border
+                                            border-cyan-500/20
+                                            rounded-2xl
+                                            z-50
+                                            shadow-2xl
+                                            overflow-hidden
+                                        ">
+
+                                            {/* SEARCH */}
+
+                                            <div className="p-3 border-b border-cyan-500/10">
+
+                                                <input
+
+                                                    type="text"
+
+                                                    placeholder="Search Part No / Part Name..."
+
+                                                    value={transactionSearch}
+
+                                                    onChange={(e) =>
+                                                        setTransactionSearch(
+                                                            e.target.value
+                                                        )
+                                                    }
+
+                                                    className="
+                                                        w-full
+                                                        h-11
+                                                        px-4
+                                                        bg-[#08192e]
+                                                        border
+                                                        border-cyan-500/10
+                                                        rounded-xl
+                                                        outline-none
+                                                        text-white
+                                                    "
+                                                />
+
+                                            </div>
+
+                                            {/* LIST */}
+
+                                            <div className="
+                                                max-h-[250px]
+                                                overflow-auto
+                                            ">
+
+                                                {
+                                                    parts
+                                                        .filter((item) => {
+
+                                                            const keyword =
+                                                                transactionSearch.toLowerCase();
+
+                                                            return (
+                                                                item.part_no
+                                                                    ?.toLowerCase()
+                                                                    .includes(keyword)
+                                                                ||
+                                                                item.part_name
+                                                                    ?.toLowerCase()
+                                                                    .includes(keyword)
+                                                            );
+
+                                                        })
+                                                        .map((item) => (
+
+                                                            <button
+
+                                                                key={item.id}
+
+                                                                type="button"
+
+                                                                onClick={() => {
+
+                                                                    setSelectedPart(item);
+
+                                                                    setShowPartDropdown(false);
+
+                                                                    setTransactionSearch("");
+
+                                                                }}
+
+                                                                className="
+                                                                    w-full
+                                                                    px-4
+                                                                    py-3
+                                                                    text-left
+                                                                    hover:bg-cyan-500/10
+                                                                    border-b
+                                                                    border-cyan-500/5
+                                                                    transition-all
+                                                                "
+                                                            >
+
+                                                                <div className="
+                                                                    font-semibold
+                                                                    text-cyan-300
+                                                                ">
+                                                                    {item.part_no}
+                                                                </div>
+
+                                                                <div className="
+                                                                    text-sm
+                                                                    text-slate-400
+                                                                ">
+                                                                    {item.part_name}
+                                                                </div>
+
+                                                            </button>
+
+                                                        ))
+                                                }
+
+                                            </div>
+
+                                        </div>
+
+                                    )
+                                }
+
+                            </div>
+
+                            {/* PART INFO */}
+
+                            {
+                                selectedPart && (
+
+                                    <div className="
+                                        grid
+                                        grid-cols-2
+                                        gap-3
+                                    ">
+
+                                        {/* CURRENT STOCK */}
+
+                                        <div className="
+                                            bg-[#08192e]
+                                            rounded-2xl
+                                            p-4
+                                            border
+                                            border-cyan-500/10
+                                        ">
+
+                                            <div className="
+                                                text-xs
+                                                text-slate-400
+                                                mb-1
+                                            ">
+                                                Current Stock
+                                            </div>
+
+                                            <div className="
+                                                text-2xl
+                                                font-black
+                                                text-cyan-400
+                                            ">
+                                                {selectedPart.current_stock}
+                                            </div>
+
+                                        </div>
+
+                                        {/* RACK */}
+
+                                        <div className="
+                                            bg-[#08192e]
+                                            rounded-2xl
+                                            p-4
+                                            border
+                                            border-cyan-500/10
+                                        ">
+
+                                            <div className="
+                                                text-xs
+                                                text-slate-400
+                                                mb-1
+                                            ">
+                                                Rack
+                                            </div>
+
+                                            <div className="
+                                                text-lg
+                                                font-bold
+                                            ">
+                                                {selectedPart.rack || "-"}
+                                            </div>
+
+                                        </div>
+
+                                        {/* CATEGORY */}
+
+                                        <div className="
+                                            bg-[#08192e]
+                                            rounded-2xl
+                                            p-4
+                                            border
+                                            border-cyan-500/10
+                                        ">
+
+                                            <div className="
+                                                text-xs
+                                                text-slate-400
+                                                mb-1
+                                            ">
+                                                Category
+                                            </div>
+
+                                            <div className="
+                                                text-lg
+                                                font-bold
+                                                text-cyan-300
+                                            ">
+                                                {selectedPart.category || "-"}
+                                            </div>
+
+                                        </div>
+
+                                        {/* MODEL */}
+
+                                        <div className="
+                                            bg-[#08192e]
+                                            rounded-2xl
+                                            p-4
+                                            border
+                                            border-cyan-500/10
+                                        ">
+
+                                            <div className="
+                                                text-xs
+                                                text-slate-400
+                                                mb-1
+                                            ">
+                                                Model
+                                            </div>
+
+                                            <div className="
+                                                text-lg
+                                                font-bold
+                                                text-cyan-300
+                                            ">
+                                                {selectedPart.model || "-"}
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                )
                             }
-                            className="w-full h-12 rounded-2xl bg-cyan-500 font-bold mt-5"
-                        >
-                            Submit
-                        </button>
+
+                            {/* USER SEARCHABLE DROPDOWN */}
+
+                            {
+                                transactionType === "OUT" && (
+
+                                    <div className="relative">
+
+                                        <div className="mb-2 text-sm text-slate-400">
+                                            Technician / Engineer
+                                        </div>
+
+                                        {/* BUTTON */}
+
+                                        <button
+
+                                            type="button"
+
+                                            onClick={() =>
+                                                setShowUserDropdown(
+                                                    !showUserDropdown
+                                                )
+                                            }
+
+                                            className="
+                                                w-full
+                                                h-12
+                                                px-4
+                                                bg-[#08192e]
+                                                border
+                                                border-cyan-500/10
+                                                rounded-2xl
+                                                outline-none
+                                                text-left
+                                                flex
+                                                items-center
+                                                justify-between
+                                            "
+                                        >
+
+                                            <span>
+
+                                                {
+                                                    selectedUser
+                                                        ? `${selectedUser.username} - ${selectedUser.role}`
+                                                        : "Select Technician / Engineer"
+                                                }
+
+                                            </span>
+
+                                            <span className="text-slate-400">
+                                                ▼
+                                            </span>
+
+                                        </button>
+
+                                        {/* DROPDOWN */}
+
+                                        {
+                                            showUserDropdown && (
+
+                                                <div className="
+                                                    absolute
+                                                    top-[78px]
+                                                    left-0
+                                                    w-full
+                                                    bg-[#071226]
+                                                    border
+                                                    border-cyan-500/20
+                                                    rounded-2xl
+                                                    z-50
+                                                    shadow-2xl
+                                                    overflow-hidden
+                                                ">
+
+                                                    {/* SEARCH */}
+
+                                                    <div className="p-3 border-b border-cyan-500/10">
+
+                                                        <input
+
+                                                            type="text"
+
+                                                            placeholder="Search username..."
+
+                                                            value={userSearch}
+
+                                                            onChange={(e) =>
+                                                                setUserSearch(
+                                                                    e.target.value
+                                                                )
+                                                            }
+
+                                                            className="
+                                                                w-full
+                                                                h-11
+                                                                px-4
+                                                                bg-[#08192e]
+                                                                border
+                                                                border-cyan-500/10
+                                                                rounded-xl
+                                                                outline-none
+                                                                text-white
+                                                            "
+                                                        />
+
+                                                    </div>
+
+                                                    {/* LIST */}
+
+                                                    <div className="
+                                                        max-h-[250px]
+                                                        overflow-auto
+                                                    ">
+
+                                                        {
+                                                            users
+                                                                .filter((user) => {
+
+                                                                    const keyword =
+                                                                        userSearch.toLowerCase();
+
+                                                                    return (
+                                                                        user.username
+                                                                            ?.toLowerCase()
+                                                                            .includes(keyword)
+                                                                    );
+
+                                                                })
+                                                                .map((user) => (
+
+                                                                    <button
+
+                                                                        key={user.id}
+
+                                                                        type="button"
+
+                                                                        onClick={() => {
+
+                                                                            setSelectedUser(user);
+
+                                                                            setShowUserDropdown(false);
+
+                                                                            setUserSearch("");
+
+                                                                        }}
+
+                                                                        className="
+                                                                            w-full
+                                                                            px-4
+                                                                            py-3
+                                                                            text-left
+                                                                            hover:bg-cyan-500/10
+                                                                            border-b
+                                                                            border-cyan-500/5
+                                                                        "
+                                                                    >
+
+                                                                        <div className="
+                                                                            font-semibold
+                                                                            text-cyan-300
+                                                                        ">
+                                                                            {user.username}
+                                                                        </div>
+
+                                                                        <div className="
+                                                                            text-sm
+                                                                            text-slate-400
+                                                                        ">
+                                                                            {user.role}
+                                                                        </div>
+
+                                                                    </button>
+
+                                                                ))
+                                                        }
+
+                                                    </div>
+
+                                                </div>
+
+                                            )
+                                        }
+
+                                    </div>
+
+                                )
+                            }
+
+                            {/* MACHINE */}
+
+                            {
+                                transactionType === "OUT" && (
+
+                                    <Input
+                                        label="Machine"
+                                        value={
+                                            trxForm.machine || ""
+                                        }
+                                        onChange={(e) =>
+                                            setTrxForm({
+                                                ...trxForm,
+                                                machine:
+                                                    e.target.value
+                                            })
+                                        }
+                                    />
+
+                                )
+                            }
+
+                            {/* LINE SEARCHABLE DROPDOWN */}
+
+                            {
+                                transactionType === "OUT" && (
+
+                                    <div className="relative">
+
+                                        <div className="mb-2 text-sm text-slate-400">
+                                            Line Name
+                                        </div>
+
+                                        {/* BUTTON */}
+
+                                        <button
+
+                                            type="button"
+
+                                            onClick={() =>
+                                                setShowLineDropdown(
+                                                    !showLineDropdown
+                                                )
+                                            }
+
+                                            className="
+                                                w-full
+                                                h-12
+                                                px-4
+                                                bg-[#08192e]
+                                                border
+                                                border-cyan-500/10
+                                                rounded-2xl
+                                                outline-none
+                                                text-left
+                                                flex
+                                                items-center
+                                                justify-between
+                                            "
+                                        >
+
+                                            <span>
+
+                                                {
+                                                    selectedLine
+                                                        ? selectedLine.name
+                                                        : "Select Line Name"
+                                                }
+
+                                            </span>
+
+                                            <span className="text-slate-400">
+                                                ▼
+                                            </span>
+
+                                        </button>
+
+                                        {/* DROPDOWN */}
+
+                                        {
+                                            showLineDropdown && (
+
+                                                <div className="
+                                                    absolute
+                                                    top-[78px]
+                                                    left-0
+                                                    w-full
+                                                    bg-[#071226]
+                                                    border
+                                                    border-cyan-500/20
+                                                    rounded-2xl
+                                                    z-50
+                                                    shadow-2xl
+                                                    overflow-hidden
+                                                ">
+
+                                                    {/* SEARCH */}
+
+                                                    <div className="p-3 border-b border-cyan-500/10">
+
+                                                        <input
+
+                                                            type="text"
+
+                                                            placeholder="Search line..."
+
+                                                            value={lineSearch}
+
+                                                            onChange={(e) =>
+                                                                setLineSearch(
+                                                                    e.target.value
+                                                                )
+                                                            }
+
+                                                            className="
+                                                                w-full
+                                                                h-11
+                                                                px-4
+                                                                bg-[#08192e]
+                                                                border
+                                                                border-cyan-500/10
+                                                                rounded-xl
+                                                                outline-none
+                                                                text-white
+                                                            "
+                                                        />
+
+                                                    </div>
+
+                                                    {/* LIST */}
+
+                                                    <div className="
+                                                        max-h-[250px]
+                                                        overflow-auto
+                                                    ">
+
+                                                        {
+                                                            lines
+                                                                .filter((line) => {
+
+                                                                    const keyword =
+                                                                        lineSearch.toLowerCase();
+
+                                                                    return (
+                                                                        line.name
+                                                                            ?.toLowerCase()
+                                                                            .includes(keyword)
+                                                                    );
+
+                                                                })
+                                                                .map((line) => (
+
+                                                                    <button
+
+                                                                        key={line.id}
+
+                                                                        type="button"
+
+                                                                        onClick={() => {
+
+                                                                            setSelectedLine(line);
+
+                                                                            setTrxForm({
+                                                                                ...trxForm,
+                                                                                line:
+                                                                                    line.name
+                                                                            });
+
+                                                                            setShowLineDropdown(false);
+
+                                                                            setLineSearch("");
+
+                                                                        }}
+
+                                                                        className="
+                                                                            w-full
+                                                                            px-4
+                                                                            py-3
+                                                                            text-left
+                                                                            hover:bg-cyan-500/10
+                                                                            border-b
+                                                                            border-cyan-500/5
+                                                                        "
+                                                                    >
+
+                                                                        <div className="
+                                                                            font-semibold
+                                                                            text-cyan-300
+                                                                        ">
+                                                                            {line.name}
+                                                                        </div>
+
+                                                                        <div className="
+                                                                            text-sm
+                                                                            text-slate-400
+                                                                        ">
+                                                                            {line.model}
+                                                                        </div>
+
+                                                                    </button>
+
+                                                                ))
+                                                        }
+
+                                                    </div>
+
+                                                </div>
+
+                                            )
+                                        }
+
+                                    </div>
+
+                                )
+                            }
+
+                            {/* PO NUMBER */}
+                            {
+                                transactionType === "IN" && (
+                                    <Input
+                                        label="PO No"
+                                        value={
+                                            trxForm.po_no || ""
+                                        }
+                                        onChange={(e) =>
+                                            setTrxForm({
+                                                ...trxForm,
+                                                po_no:
+                                                    e.target.value
+                                            })
+                                        }
+                                    />
+                                )
+                            }
+
+                            {/* QTY */}
+
+                            <Input
+                                type="number"
+                                label={`Qty ${transactionType}`}
+                                value={
+                                    trxForm.qty
+                                }
+                                onChange={(e) =>
+                                    setTrxForm({
+                                        ...trxForm,
+                                        qty:
+                                            e.target.value
+                                    })
+                                }
+                            />
+
+
+                            <button
+                                onClick={
+                                    handleTransaction
+                                }
+                                className="
+                                    w-full
+                                    h-12
+                                    rounded-2xl
+                                    bg-cyan-500
+                                    font-bold
+                                    mt-2
+                                "
+                            >
+                                Submit
+                            </button>
+
+                        </div>
 
                     </Modal>
 
@@ -2399,35 +3958,58 @@ function KPI({
     value,
     icon,
     color,
-    subtitle
+    subtitle,
+    active
 }) {
 
     return (
 
-        <div className="
-        bg-[#071226]
-        rounded-3xl
-        border
-        border-cyan-500/10
-        p-5
-        min-h-[120px]
-        flex
-        flex-col
-        justify-between
-    ">
+        <div className={`
+            bg-[#071226]
+            rounded-3xl
+            p-5
+            min-h-[120px]
+            flex
+            flex-col
+            justify-between
+            cursor-pointer
+            transition-all
+            duration-200
+
+            ${active
+                ? `
+                        border-2
+                        scale-[1.02]
+                        shadow-lg
+                    `
+                : `
+                        border
+                        border-cyan-500/10
+                    `
+            }
+
+            ${active && color === "cyan"
+                ? "border-cyan-400 shadow-cyan-500/20"
+                : active && color === "yellow"
+                    ? "border-yellow-400 shadow-yellow-500/20"
+                    : active && color === "red"
+                        ? "border-red-400 shadow-red-500/20"
+                        : ""
+            }
+        `}>
 
             <div className="
-            flex
-            justify-between
-            items-start
-        ">
+                flex
+                justify-between
+                items-start
+            ">
 
                 <div>
 
                     <div className={`
-                    text-sm
-                    font-semibold
-                    ${color === "cyan"
+                        text-sm
+                        font-semibold
+                        ${color === "cyan"
                             ? "text-cyan-400"
                             : color === "yellow"
                                 ? "text-yellow-400"
@@ -2437,22 +4019,22 @@ function KPI({
                                         ? "text-purple-400"
                                         : "text-red-400"
                         }
-                `}>
+                    `}>
                         {title}
                     </div>
 
                     <div className="
-                    text-5xl
-                    font-black
-                    mt-2
-                ">
+                        text-5xl
+                        font-black
+                        mt-2
+                    ">
                         {value}
                     </div>
 
                 </div>
 
                 <div className={`
-                ${color === "cyan"
+                    ${color === "cyan"
                         ? "text-cyan-400"
                         : color === "yellow"
                             ? "text-yellow-400"
@@ -2462,17 +4044,17 @@ function KPI({
                                     ? "text-purple-400"
                                     : "text-red-400"
                     }
-            `}>
+                `}>
                     {icon}
                 </div>
 
             </div>
 
             <div className="
-            text-sm
-            text-slate-500
-            mt-4
-        ">
+                text-sm
+                text-slate-500
+                mt-4
+            ">
                 {subtitle}
             </div>
 
