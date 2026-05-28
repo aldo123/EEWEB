@@ -178,6 +178,7 @@ export default function RequestList() {
             price: "",
             total_cost: "",
             vendor: "",
+            category: "",
             additional_info: "",
             pic: "",
             original_due: "",
@@ -499,14 +500,61 @@ export default function RequestList() {
                             const existing =
                                 existingMap.get(key);
 
-                            row.status =
+                            const oaDate =
+                                row.oa_pr
+                                    ?.replace("PR", "")
+                                    ?.substring(0, 8);
 
-                                row.oa_pr &&
-                                    row.pr_no &&
-                                    row.po
+                            const year =
+                                oaDate?.substring(0, 4);
 
-                                    ? "Done"
-                                    : "Ongoing";
+                            const month =
+                                oaDate?.substring(4, 6);
+
+                            const day =
+                                oaDate?.substring(6, 8);
+
+                            const createdDate =
+                                new Date(
+                                    `${year}-${month}-${day}`
+                                );
+
+                            const today =
+                                new Date();
+
+                            const diffDays =
+                                Math.floor(
+                                    (
+                                        today - createdDate
+                                    ) / (1000 * 60 * 60 * 24)
+                                );
+
+                            // ====================================
+                            // STATUS LOGIC
+                            // ====================================
+
+                            if (
+                                row.pr_no &&
+                                row.po
+                            ) {
+
+                                row.status = "Done";
+
+                            }
+
+                            else if (
+                                diffDays > 10
+                            ) {
+
+                                row.status = "Delay";
+
+                            }
+
+                            else {
+
+                                row.status = "Ongoing";
+
+                            }
 
                             // ====================================
                             // UPDATE EXISTING
@@ -928,6 +976,9 @@ export default function RequestList() {
                 vendor:
                     item.vendor || "",
 
+                category:
+                    item.category || "",
+
                 additional_info:
                     item.additional_info || "",
 
@@ -961,15 +1012,54 @@ export default function RequestList() {
 
                 parseNumber(editForm.price);
 
-            const updatedStatus =
+            const oaDate =
+                editForm.oa_pr
+                    ?.replace("PR", "")
+                    ?.substring(0, 8);
 
-                editForm.oa_pr &&
-                    editForm.pr_no &&
-                    editForm.po
+            const year =
+                oaDate?.substring(0, 4);
 
-                    ? "Done"
+            const month =
+                oaDate?.substring(4, 6);
 
-                    : "Ongoing";
+            const day =
+                oaDate?.substring(6, 8);
+
+            const createdDate =
+                new Date(
+                    `${year}-${month}-${day}`
+                );
+
+            const today =
+                new Date();
+
+            const diffDays =
+                Math.floor(
+                    (
+                        today - createdDate
+                    ) / (1000 * 60 * 60 * 24)
+                );
+
+            let updatedStatus =
+                "Ongoing";
+
+            if (
+                editForm.pr_no &&
+                editForm.po
+            ) {
+
+                updatedStatus = "Done";
+
+            }
+
+            else if (
+                diffDays > 10
+            ) {
+
+                updatedStatus = "Delay";
+
+            }
 
             const {
                 error
@@ -1103,15 +1193,54 @@ export default function RequestList() {
 
                 parseNumber(addForm.price);
 
-            const status =
+            const oaDate =
+                addForm.oa_pr
+                    ?.replace("PR", "")
+                    ?.substring(0, 8);
 
-                addForm.oa_pr &&
-                    addForm.pr_no &&
-                    addForm.po
+            const year =
+                oaDate?.substring(0, 4);
 
-                    ? "Done"
+            const month =
+                oaDate?.substring(4, 6);
 
-                    : "Ongoing";
+            const day =
+                oaDate?.substring(6, 8);
+
+            const createdDate =
+                new Date(
+                    `${year}-${month}-${day}`
+                );
+
+            const today =
+                new Date();
+
+            const diffDays =
+                Math.floor(
+                    (
+                        today - createdDate
+                    ) / (1000 * 60 * 60 * 24)
+                );
+
+            let status =
+                "Ongoing";
+
+            if (
+                addForm.pr_no &&
+                addForm.po
+            ) {
+
+                status = "Done";
+
+            }
+
+            else if (
+                diffDays > 10
+            ) {
+
+                status = "Delay";
+
+            }
 
             const {
                 error
@@ -1164,6 +1293,7 @@ export default function RequestList() {
                 price: "",
                 total_cost: "",
                 vendor: "",
+                category: "",
                 additional_info: "",
                 pic: "",
                 original_due: "",
