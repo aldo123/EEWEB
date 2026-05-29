@@ -94,6 +94,26 @@ export default function SparePartManagement() {
     ] = useState([]);
 
     const [
+        showEditTransactionModal,
+        setShowEditTransactionModal
+    ] = useState(false);
+
+    const [
+        editingTransaction,
+        setEditingTransaction
+    ] = useState(null);
+
+    const [
+        editTransactionForm,
+        setEditTransactionForm
+    ] = useState({
+        qty: 0,
+        po_no: "",
+        machine: "",
+        technician: ""
+    });
+
+    const [
         lines,
         setLines
     ] = useState([]);
@@ -194,6 +214,18 @@ export default function SparePartManagement() {
     ] = useState(
         new Date().getMonth() + 1
     );
+
+    const resetAllFilters = () => {
+
+        setSearch("");
+
+        setSelectedModel("ALL");
+
+        setSelectedRack("ALL");
+
+        setSelectedStatuses([]);
+
+    };
 
     const [
         form,
@@ -451,6 +483,203 @@ export default function SparePartManagement() {
                 .eq("id", id);
 
             loadParts();
+
+        };
+
+    const handleDeleteTransaction =
+        async (trx) => {
+
+            if (!canManage) {
+
+                alert(
+                    "Only Manager/Admin can delete"
+                );
+
+                return;
+
+            }
+
+            const ok =
+                window.confirm(
+                    `Delete transaction ${trx.part_no}?`
+                );
+
+            if (!ok) return;
+
+            try {
+
+                await supabase
+                    .from("spare_transactions")
+                    .delete()
+                    .eq(
+                        "id",
+                        trx.id
+                    );
+
+                await supabase
+                    .from("spare_parts")
+                    .update({
+                        current_stock:
+                            trx.stock_before
+                    })
+                    .eq(
+                        "id",
+                        trx.part_id
+                    );
+
+                loadParts();
+
+                loadTransactions();
+
+                alert(
+                    "Transaction deleted"
+                );
+
+            } catch (err) {
+
+                console.log(err);
+
+                alert(
+                    err.message
+                );
+
+            }
+
+        };
+
+    const handleEditTransaction =
+        (trx) => {
+
+            setEditingTransaction(trx);
+
+            setEditTransactionForm({
+
+                qty:
+                    trx.qty || 0,
+
+                po_no:
+                    trx.po_no || "",
+
+                machine:
+                    trx.machine || "",
+
+                technician:
+                    trx.technician || ""
+
+            });
+
+            setShowEditTransactionModal(
+                true
+            );
+
+        };
+
+    const handleSaveEditTransaction =
+        async () => {
+
+            try {
+
+                const qty =
+                    Number(
+                        editTransactionForm.qty
+                    );
+
+                if (qty <= 0) {
+
+                    alert(
+                        "Qty invalid"
+                    );
+
+                    return;
+
+                }
+
+                let stockAfter;
+
+                if (
+                    editingTransaction.type === "IN"
+                ) {
+
+                    stockAfter =
+                        editingTransaction.stock_before
+                        +
+                        qty;
+
+                } else {
+
+                    stockAfter =
+                        editingTransaction.stock_before
+                        -
+                        qty;
+
+                }
+
+                if (stockAfter < 0) {
+
+                    alert(
+                        "Stock insufficient"
+                    );
+
+                    return;
+
+                }
+
+                await supabase
+                    .from("spare_transactions")
+                    .update({
+
+                        qty,
+
+                        po_no:
+                            editTransactionForm.po_no,
+
+                        machine:
+                            editTransactionForm.machine,
+
+                        technician:
+                            editTransactionForm.technician,
+
+                        stock_after:
+                            stockAfter
+
+                    })
+                    .eq(
+                        "id",
+                        editingTransaction.id
+                    );
+
+                await supabase
+                    .from("spare_parts")
+                    .update({
+                        current_stock:
+                            stockAfter
+                    })
+                    .eq(
+                        "id",
+                        editingTransaction.part_id
+                    );
+
+                setShowEditTransactionModal(
+                    false
+                );
+
+                loadParts();
+
+                loadTransactions();
+
+                alert(
+                    "Transaction updated"
+                );
+
+            } catch (err) {
+
+                console.log(err);
+
+                alert(
+                    err.message
+                );
+
+            }
 
         };
 
@@ -1024,23 +1253,95 @@ export default function SparePartManagement() {
             selectedRack
         ]);
 
-    const topUsedParts =
-        useMemo(() => {
+    const topUsedParts = useMemo(() => {
 
-            return parts.filter((item) => {
+        const filteredTransactions =
+            transactions.filter((trx) => {
 
-                return (
-                    selectedModel === "ALL"
-                    ||
-                    item.model === selectedModel
-                );
+                if (trx.type !== "OUT")
+                    return false;
+
+                const trxDate =
+                    new Date(trx.created_at);
+
+                const trxMonth =
+                    trxDate.getMonth() + 1;
+
+                if (
+                    trxMonth !==
+                    selectedTopUsedMonth
+                ) {
+                    return false;
+                }
+
+                // FILTER MODEL
+                if (
+                    selectedModel !== "ALL"
+                ) {
+
+                    const part =
+                        parts.find(
+                            p =>
+                                p.part_no ===
+                                trx.part_no
+                        );
+
+                    if (
+                        !part ||
+                        part.model !==
+                        selectedModel
+                    ) {
+                        return false;
+                    }
+
+                }
+
+                return true;
 
             });
 
-        }, [
-            parts,
-            selectedModel
-        ]);
+        const grouped = {};
+
+        filteredTransactions.forEach((trx) => {
+
+            const key =
+                trx.part_no;
+
+            if (!grouped[key]) {
+
+                grouped[key] = {
+
+                    part_no:
+                        trx.part_no,
+
+                    part_name:
+                        trx.part_name,
+
+                    total_qty: 0
+
+                };
+
+            }
+
+            grouped[key].total_qty +=
+                Number(trx.qty || 0);
+
+        });
+
+        return Object.values(grouped)
+            .sort(
+                (a, b) =>
+                    b.total_qty -
+                    a.total_qty
+            )
+            .slice(0, 5);
+
+    }, [
+        transactions,
+        selectedTopUsedMonth,
+        selectedModel,
+        parts
+    ]);
 
     const monthOptions = [
         "January",
@@ -1057,6 +1358,103 @@ export default function SparePartManagement() {
         "December"
     ];
 
+    const transactionOverviewData =
+        useMemo(() => {
+
+            const months = [
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "Jun",
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec"
+            ];
+
+            return months.map(
+                (monthName, monthIndex) => {
+
+                    const monthTransactions =
+                        transactions.filter((trx) => {
+
+                            const trxDate =
+                                new Date(trx.created_at);
+
+                            const trxMonth =
+                                trxDate.getMonth();
+
+                            if (
+                                trxMonth !== monthIndex
+                            ) {
+                                return false;
+                            }
+
+                            // FILTER MODEL
+                            if (
+                                selectedModel !== "ALL"
+                            ) {
+
+                                const part =
+                                    parts.find(
+                                        p =>
+                                            p.part_no ===
+                                            trx.part_no
+                                    );
+
+                                if (
+                                    !part ||
+                                    part.model !== selectedModel
+                                ) {
+                                    return false;
+                                }
+
+                            }
+
+                            return true;
+
+                        });
+
+                    const incoming =
+                        new Set(
+                            monthTransactions
+                                .filter(
+                                    x => x.type === "IN"
+                                )
+                                .map(
+                                    x => x.part_no
+                                )
+                        ).size;
+
+                    const outgoing =
+                        new Set(
+                            monthTransactions
+                                .filter(
+                                    x => x.type === "OUT"
+                                )
+                                .map(
+                                    x => x.part_no
+                                )
+                        ).size;
+
+                    return {
+                        month: monthName,
+                        incoming,
+                        outgoing
+                    };
+
+                }
+            );
+
+        }, [
+            transactions,
+            selectedModel,
+            parts
+        ]);
     // ======================================================
     // KPI
     // ======================================================
@@ -1087,6 +1485,8 @@ export default function SparePartManagement() {
                 (x) => x.rack
             )
         ).size;
+
+        
 
     // ======================================================
     // CHART DATA
@@ -1450,20 +1850,35 @@ export default function SparePartManagement() {
                 mt-3
             ">
 
-                <div onClick={() => setSelectedStatuses([])}>
+                <div
+                        onClick={() => {
+
+                            resetAllFilters();
+
+                        }}
+                    >
                     <KPI
                         title="Total Part"
-                        value={tableFilteredParts.length}
+                        value={parts.length}
                         icon={<Package />}
                         color="cyan"
                         subtitle="All spare part"
-                        active={selectedStatuses.length === 0}
+                        active={
+                            selectedStatuses.length === 0
+                            &&
+                            selectedModel === "ALL"
+                            &&
+                            selectedRack === "ALL"
+                            &&
+                            search === ""
+                        }
                     />
                 </div>
 
                 <div
                     onClick={() => {
 
+                        resetAllFilters();
                         setSelectedStatuses((prev) =>
 
                             prev.includes("LOW STOCK")
@@ -1503,6 +1918,7 @@ export default function SparePartManagement() {
                 <div
                     onClick={() => {
 
+                        resetAllFilters();
                         setSelectedStatuses((prev) =>
 
                             prev.includes("CRITICAL")
@@ -1606,28 +2022,24 @@ export default function SparePartManagement() {
                         </h2>
 
                         <select
-
                             value={selectedModel}
-
                             onChange={(e) =>
-                                setSelectedModel(
-                                    e.target.value
-                                )
+                                setSelectedModel(e.target.value)
                             }
-
                             className="
                                 h-9
+                                min-w-[130px]
                                 px-3
                                 rounded-xl
+                                text-xs
+                                font-medium
                                 bg-[#08192e]
                                 border
                                 border-cyan-500/10
-                                text-xs
-                                outline-none
                                 text-white
-                                min-w-[130px]
+                                outline-none
                             "
-                        >
+            >
 
                             <option value="ALL">
                                 All Model
@@ -1653,7 +2065,24 @@ export default function SparePartManagement() {
                             }
 
                         </select>
-
+                    {
+                            selectedModel !== "ALL" && (
+                                <span className="
+                                    px-2
+                                    py-1
+                                    rounded-full
+                                    bg-cyan-500/20
+                                    border
+                                    border-cyan-400
+                                    text-cyan-300
+                                    text-[10px]
+                                    font-bold
+                                    animate-pulse
+                                ">
+                                    FILTER ON
+                                </span>
+                            )
+                        }
                     </div>
 
                     <div className="
@@ -1804,38 +2233,7 @@ export default function SparePartManagement() {
                     >
 
                         <BarChart
-                            data={[
-                                {
-                                    month: "Jan",
-                                    incoming: 120,
-                                    outgoing: 80
-                                },
-                                {
-                                    month: "Feb",
-                                    incoming: 180,
-                                    outgoing: 120
-                                },
-                                {
-                                    month: "Mar",
-                                    incoming: 160,
-                                    outgoing: 100
-                                },
-                                {
-                                    month: "Apr",
-                                    incoming: 220,
-                                    outgoing: 140
-                                },
-                                {
-                                    month: "May",
-                                    incoming: 140,
-                                    outgoing: 110
-                                },
-                                {
-                                    month: "Jun",
-                                    incoming: 190,
-                                    outgoing: 130
-                                }
-                            ]}
+                            data={transactionOverviewData}
                         >
 
                             <XAxis
@@ -1937,47 +2335,70 @@ export default function SparePartManagement() {
 
                     </div>
 
-                    <div className="
-                        space-y-3
-                        overflow-auto
-                        pr-1
-                        flex-1
-                    ">
+                    <div
+                        className="
+                            space-y-3
+                            overflow-auto
+                            pr-1
+                            flex-1
+                        "
+                    >
 
                         {
-                            topUsedParts
-                                .slice(0, 5)
-                                .map((item, index) => (
+                            topUsedParts.length === 0 ? (
+
+                                <div
+                                    className="
+                                        h-full
+                                        flex
+                                        items-center
+                                        justify-center
+                                        text-slate-500
+                                    "
+                                >
+                                    No outgoing transaction
+                                    in this month
+                                </div>
+
+                            ) : (
+
+                                topUsedParts.map((item, index) => (
 
                                     <div key={index}>
 
-                                        <div className="
-                                            flex
-                                            justify-between
-                                            mb-2
-                                            text-sm
-                                        ">
+                                        <div
+                                            className="
+                                                flex
+                                                justify-between
+                                                mb-2
+                                                text-sm
+                                            "
+                                        >
 
                                             <div>
                                                 {item.part_name}
                                             </div>
 
-                                            <div className="
-                                                text-cyan-400
-                                                font-bold
-                                            ">
-                                                {item.current_stock}
+                                            <div
+                                                className="
+                                                    text-cyan-400
+                                                    font-bold
+                                                "
+                                            >
+                                                {item.total_qty}
                                             </div>
 
                                         </div>
 
-                                        <div className="
-                                            w-full
-                                            h-2
-                                            rounded-full
-                                            bg-[#08192e]
-                                            overflow-hidden
-                                        ">
+                                        <div
+                                            className="
+                                                w-full
+                                                h-2
+                                                rounded-full
+                                                bg-[#08192e]
+                                                overflow-hidden
+                                            "
+                                        >
 
                                             <div
                                                 className="
@@ -1986,10 +2407,13 @@ export default function SparePartManagement() {
                                                     bg-cyan-400
                                                 "
                                                 style={{
-                                                    width: `${Math.min(
-                                                        item.current_stock,
-                                                        100
-                                                    )}%`
+                                                    width: `${topUsedParts[0]
+                                                        ? (
+                                                            item.total_qty /
+                                                            topUsedParts[0].total_qty
+                                                        ) * 100
+                                                        : 0
+                                                        }%`
                                                 }}
                                             />
 
@@ -1998,6 +2422,8 @@ export default function SparePartManagement() {
                                     </div>
 
                                 ))
+
+                            )
                         }
 
                     </div>
@@ -2738,27 +3164,77 @@ export default function SparePartManagement() {
 
                                                     {/* BADGE */}
 
-                                                    <div
-                                                        className={`
-                                                            px-3
-                                                            py-1
-                                                            rounded-xl
-                                                            text-xs
-                                                            font-bold
-                                                            shrink-0
+                                                    <div className="
+                                                        flex
+                                                        items-center
+                                                        gap-2
+                                                        shrink-0
+                                                    ">
 
-                                                            ${trx.type === "IN"
-                                                                ? "bg-green-500/20 text-green-400"
-                                                                : "bg-red-500/20 text-red-400"
+                                                        <button
+                                                            onClick={() =>
+                                                                handleEditTransaction(trx)
                                                             }
-                                                        `}
-                                                    >
+                                                            className="
+                                                                w-8
+                                                                h-8
+                                                                rounded-lg
+                                                                bg-yellow-500/10
+                                                                border
+                                                                border-yellow-500/20
+                                                                flex
+                                                                items-center
+                                                                justify-center
+                                                                text-yellow-400
+                                                                hover:bg-yellow-500/20
+                                                            "
+                                                        >
+                                                            <Pencil size={14} />
+                                                        </button>
 
-                                                        {
-                                                            trx.type === "IN"
-                                                                ? `IN +${trx.qty}`
-                                                                : `OUT -${trx.qty}`
-                                                        }
+                                                        <button
+                                                            onClick={() =>
+                                                                handleDeleteTransaction(trx)
+                                                            }
+                                                            className="
+                                                                w-8
+                                                                h-8
+                                                                rounded-lg
+                                                                bg-red-500/10
+                                                                border
+                                                                border-red-500/20
+                                                                flex
+                                                                items-center
+                                                                justify-center
+                                                                text-red-400
+                                                                hover:bg-red-500/20
+                                                            "
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+
+                                                        <div
+                                                            className={`
+                                                                px-3
+                                                                py-1
+                                                                rounded-xl
+                                                                text-xs
+                                                                font-bold
+
+                                                                ${trx.type === "IN"
+                                                                    ? "bg-green-500/20 text-green-400"
+                                                                    : "bg-red-500/20 text-red-400"
+                                                                }
+                                                            `}
+                                                        >
+
+                                                            {
+                                                                trx.type === "IN"
+                                                                    ? `IN +${trx.qty}`
+                                                                    : `OUT -${trx.qty}`
+                                                            }
+
+                                                        </div>
 
                                                     </div>
 
@@ -3935,6 +4411,112 @@ export default function SparePartManagement() {
                                 "
                             >
                                 Submit
+                            </button>
+
+                        </div>
+
+                    </Modal>
+
+                )
+            }
+
+            {
+                showEditTransactionModal
+                &&
+                editingTransaction
+                && (
+
+                    <Modal
+                        title="Edit Transaction"
+                        onClose={() =>
+                            setShowEditTransactionModal(
+                                false
+                            )
+                        }
+                    >
+
+                        <div className="space-y-4">
+
+                            <Input
+                                type="number"
+                                label="Qty"
+                                value={
+                                    editTransactionForm.qty
+                                }
+                                onChange={(e) =>
+                                    setEditTransactionForm({
+                                        ...editTransactionForm,
+                                        qty: e.target.value
+                                    })
+                                }
+                            />
+
+                            {
+                                editingTransaction.type === "IN"
+                                &&
+                                (
+                                    <Input
+                                        label="PO No"
+                                        value={
+                                            editTransactionForm.po_no
+                                        }
+                                        onChange={(e) =>
+                                            setEditTransactionForm({
+                                                ...editTransactionForm,
+                                                po_no: e.target.value
+                                            })
+                                        }
+                                    />
+                                )
+                            }
+
+                            {
+                                editingTransaction.type === "OUT"
+                                &&
+                                (
+                                    <>
+                                        <Input
+                                            label="Machine"
+                                            value={
+                                                editTransactionForm.machine
+                                            }
+                                            onChange={(e) =>
+                                                setEditTransactionForm({
+                                                    ...editTransactionForm,
+                                                    machine: e.target.value
+                                                })
+                                            }
+                                        />
+
+                                        <Input
+                                            label="Technician"
+                                            value={
+                                                editTransactionForm.technician
+                                            }
+                                            onChange={(e) =>
+                                                setEditTransactionForm({
+                                                    ...editTransactionForm,
+                                                    technician: e.target.value
+                                                })
+                                            }
+                                        />
+                                    </>
+                                )
+                            }
+
+                            <button
+                                onClick={
+                                    handleSaveEditTransaction
+                                }
+                                className="
+                                    w-full
+                                    h-12
+                                    rounded-2xl
+                                    bg-cyan-500
+                                    font-bold
+                                "
+                            >
+                                Save Changes
                             </button>
 
                         </div>
