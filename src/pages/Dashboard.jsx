@@ -70,6 +70,65 @@ export default function Dashboard() {
   const [selectedPage, setSelectedPage] =
     useState("project-list");
 
+  const pageInfo = {
+
+    "project-list": {
+      title: "Project List",
+      subtitle: "Engineering Monitoring"
+    },
+
+    "request-list": {
+      title: "Request List",
+      subtitle: "Request Tracking"
+    },
+
+    "open-list": {
+      title: "Open List",
+      subtitle: "Delay Monitoring"
+    },
+
+    "assets-list": {
+      title: "Assets List",
+      subtitle: "Equipment Asset Database"
+    },
+
+    "storage": {
+      title: "Spare Part System",
+      subtitle: "Inventory Management"
+    },
+
+    "calibration-plan": {
+      title: "Calibration Plan",
+      subtitle: "Calibration Schedule"
+    },
+
+    "maintenance-plan": {
+      title: "Maintenance Plan",
+      subtitle: "Preventive Maintenance"
+    },
+
+    "user-management": {
+      title: "User Management",
+      subtitle: "System Configuration"
+    },
+
+    "site-management": {
+      title: "Site Management",
+      subtitle: "Factory Configuration"
+    },
+
+    "line-management": {
+      title: "Line Management",
+      subtitle: "Production Line Setup"
+    },
+
+    "workflow-management": {
+      title: "Workflow Management",
+      subtitle: "Workflow Configuration"
+    }
+
+  };
+
   const [openPartsDevice,
     setOpenPartsDevice] =
     useState(false);
@@ -1011,7 +1070,41 @@ flex flex-col">
 
           <div>
 
-          </div>
+            <div className="flex flex-col">
+
+                <h1 className="
+                    text-[32px]
+                    font-black
+                    leading-none
+
+                    bg-gradient-to-r
+                    from-white
+                    via-cyan-200
+                    to-cyan-500
+
+                    bg-clip-text
+                    text-transparent
+                ">
+
+                    {pageInfo[selectedPage]?.title}
+
+                </h1>
+
+                <p className="
+                    text-xs
+                    tracking-[3px]
+                    uppercase
+                    text-cyan-400
+                    mt-2
+                ">
+
+                    {pageInfo[selectedPage]?.subtitle}
+
+                </p>
+
+            </div>
+
+        </div>
 
           <div className="flex items-center gap-5">
 

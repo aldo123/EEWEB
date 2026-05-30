@@ -13,6 +13,18 @@ import {
     X,
 } from "lucide-react";
 
+import {
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip
+} from "recharts";
+
 import { supabase }
     from "../../supabase/supabase";
 
@@ -75,6 +87,13 @@ export default function ProjectList() {
     // =========================
     const [projectFilter,
         setProjectFilter] =
+        useState("ALL");
+
+    const [trendMode, setTrendMode] =
+        useState("PLAN");
+
+    const [dashboardFilter,
+        setDashboardFilter] =
         useState("ALL");
 
     // =========================
@@ -271,6 +290,165 @@ export default function ProjectList() {
         );
 
     // =========================
+    // ENGINEER WORKLOAD
+    // =========================
+    const getHeaderStatus = (header) => {
+
+        const relatedSubs =
+            subTasks.filter(
+                sub =>
+                    String(sub.header_id) ===
+                    String(header.id)
+            );
+
+        const planTasks =
+            relatedSubs.filter(
+                sub =>
+                    String(sub.remark)
+                        .toUpperCase() ===
+                    "PLAN"
+            );
+
+        const actualTasks =
+            relatedSubs.filter(
+                sub =>
+                    String(sub.remark)
+                        .toUpperCase() ===
+                    "ACTUAL"
+            );
+
+        const hasProgress =
+
+            planTasks.some(
+                x =>
+                    x.start_date &&
+                    x.end_date
+            )
+
+            ||
+
+            actualTasks.some(
+                x =>
+                    x.start_date &&
+                    x.end_date
+            );
+
+        const allActualDone =
+
+            actualTasks.length > 0 &&
+
+            actualTasks.every(
+                x =>
+                    x.start_date &&
+                    x.end_date
+            );
+
+        if (allActualDone)
+            return "DONE";
+
+        const today =
+            new Date();
+
+        today.setHours(
+            0,
+            0,
+            0,
+            0
+        );
+
+        if (header.end_date) {
+
+            const endDate =
+                new Date(
+                    header.end_date
+                );
+
+            endDate.setHours(
+                0,
+                0,
+                0,
+                0
+            );
+
+            if (
+                today > endDate
+            ) {
+
+                return "DELAY";
+
+            }
+
+        }
+
+        if (hasProgress)
+            return "PROGRESS";
+
+        return "OPEN";
+
+    };
+
+    const filteredHeaders =
+        taskHeaders.filter(
+            header => {
+
+                if (
+                    dashboardFilter === "ALL"
+                ) {
+                    return true;
+                }
+
+                return (
+                    getHeaderStatus(
+                        header
+                    ) ===
+                    dashboardFilter
+                );
+
+            }
+        );
+
+    const engineerWorkload =
+        engineerList
+            .map((eng) => {
+
+                const taskCount =
+                    filteredHeaders.filter(
+                        (header) =>
+
+                            String(
+                                header.assigned_to || ""
+                            )
+                                .trim()
+                                .toLowerCase()
+
+                            ===
+
+                            String(
+                                eng.name || ""
+                            )
+                                .trim()
+                                .toLowerCase()
+
+                    ).length;
+
+                return {
+                    name: eng.name,
+                    taskCount
+                };
+
+            })
+
+            .sort(
+                (a, b) =>
+                    b.taskCount - a.taskCount
+            );
+
+
+
+    const maxWorkload =
+        engineerWorkload[0]?.taskCount || 1;
+
+    // =========================
     // SAVE PROJECT
     // =========================
     const handleSaveProject = async () => {
@@ -391,32 +569,117 @@ export default function ProjectList() {
     // DELETE PROJECT
     // =========================
     const handleDeleteProject =
-        async (id) => {
+        async (projectId) => {
 
             const confirmDelete =
                 window.confirm(
-                    "Delete this project?"
+                    "Delete this project and all activities?"
                 );
 
             if (!confirmDelete) return;
 
             try {
 
-                const { error } =
-                    await supabase
-                        .from("projects")
+                // =====================
+                // GET HEADER TASK
+                // =====================
+
+                const {
+                    data: headers,
+                    error: headerError
+                } = await supabase
+                    .from("task_headers")
+                    .select("id")
+                    .eq(
+                        "project_id",
+                        projectId
+                    );
+
+                if (headerError)
+                    throw headerError;
+
+                const headerIds =
+                    (headers || [])
+                        .map(x => x.id);
+
+                // =====================
+                // DELETE SUB TASK
+                // =====================
+
+                if (
+                    headerIds.length > 0
+                ) {
+
+                    const {
+                        error: subError
+                    } = await supabase
+                        .from("sub_tasks")
                         .delete()
-                        .eq("id", id);
+                        .in(
+                            "header_id",
+                            headerIds
+                        );
 
-                if (error) throw error;
+                    if (subError)
+                        throw subError;
 
-                loadProjects();
+                }
+
+                // =====================
+                // DELETE HEADER TASK
+                // =====================
+
+                const {
+                    error: deleteHeaderError
+                } = await supabase
+                    .from("task_headers")
+                    .delete()
+                    .eq(
+                        "project_id",
+                        projectId
+                    );
+
+                if (
+                    deleteHeaderError
+                )
+                    throw deleteHeaderError;
+
+                // =====================
+                // DELETE PROJECT
+                // =====================
+
+                const {
+                    error: projectError
+                } = await supabase
+                    .from("projects")
+                    .delete()
+                    .eq(
+                        "id",
+                        projectId
+                    );
+
+                if (projectError)
+                    throw projectError;
+
+                // =====================
+                // REFRESH
+                // =====================
+
+                await loadProjects();
+
+                await loadTaskData();
+
+                alert(
+                    "Project deleted successfully"
+                );
 
             } catch (error) {
 
                 console.log(error);
 
-                alert(error.message);
+                alert(
+                    error.message
+                );
 
             }
 
@@ -435,9 +698,7 @@ export default function ProjectList() {
 
         };
 
-    // =========================
-    // FILTER PROJECT
-    // =========================
+
     // =========================
     // FILTER PROJECT
     // =========================
@@ -691,7 +952,7 @@ export default function ProjectList() {
     // SUMMARY CARD
     // =========================
     const totalNPI =
-        taskHeaders.filter((x) => {
+        filteredHeaders.filter((x) => {
 
             const project =
                 projects.find(
@@ -707,7 +968,7 @@ export default function ProjectList() {
         }).length;
 
     const totalKaizen =
-        taskHeaders.filter((x) => {
+        filteredHeaders.filter((x) => {
 
             const project =
                 projects.find(
@@ -723,7 +984,7 @@ export default function ProjectList() {
         }).length;
 
     const totalDT =
-        taskHeaders.filter((x) => {
+        filteredHeaders.filter((x) => {
 
             const project =
                 projects.find(
@@ -740,7 +1001,7 @@ export default function ProjectList() {
         }).length;
 
     const totalVAVE =
-        taskHeaders.filter((x) => {
+        filteredHeaders.filter((x) => {
 
             const project =
                 projects.find(
@@ -755,32 +1016,531 @@ export default function ProjectList() {
 
         }).length;
 
+    const totalProject =
+        taskHeaders.length;
+
+    const getHeaderSummary = () => {
+
+        let doneCount = 0;
+        let progressCount = 0;
+        let openCount = 0;
+        let delayCount = 0;
+
+        taskHeaders.forEach((header) => {
+
+            const relatedSubs =
+                subTasks.filter(
+                    sub =>
+                        String(sub.header_id) ===
+                        String(header.id)
+                );
+
+            const planTasks =
+                relatedSubs.filter(
+                    sub =>
+                        String(sub.remark)
+                            .toUpperCase() ===
+                        "PLAN"
+                );
+
+            const actualTasks =
+                relatedSubs.filter(
+                    sub =>
+                        String(sub.remark)
+                            .toUpperCase() ===
+                        "ACTUAL"
+                );
+
+            const hasPlanProgress =
+
+                planTasks.some(
+                    x =>
+                        x.start_date &&
+                        x.end_date
+                )
+
+                ||
+
+                actualTasks.some(
+                    x =>
+                        x.start_date &&
+                        x.end_date
+                );
+
+            const allActualDone =
+
+                actualTasks.length > 0 &&
+
+                actualTasks.every(
+                    x =>
+                        x.start_date &&
+                        x.end_date
+                );
+
+            if (allActualDone) {
+
+                doneCount++;
+                return;
+
+            }
+
+            const today =
+                new Date();
+
+            today.setHours(
+                0,
+                0,
+                0,
+                0
+            );
+
+            if (header.end_date) {
+
+                const endDate =
+                    new Date(
+                        header.end_date
+                    );
+
+                endDate.setHours(
+                    0,
+                    0,
+                    0,
+                    0
+                );
+
+                if (
+                    today > endDate &&
+                    !allActualDone
+                ) {
+
+                    delayCount++;
+                    return;
+
+                }
+
+            }
+
+            if (hasPlanProgress) {
+
+                progressCount++;
+                return;
+
+            }
+
+            openCount++;
+
+        });
+
+        return {
+
+            doneCount,
+            progressCount,
+            openCount,
+            delayCount
+
+        };
+
+    };
+
+    const statusSummary =
+        getHeaderSummary();
+
+    const overdueProject =
+        statusSummary.delayCount;
+
+    const healthData = [
+
+        {
+            name: "Done",
+            value: statusSummary.doneCount,
+            color: "#00D084"
+        },
+
+        {
+            name: "Progress",
+            value: statusSummary.progressCount,
+            color: "#00B4FF"
+        },
+
+        {
+            name: "Open",
+            value: statusSummary.openCount,
+            color: "#FACC15"
+        },
+
+        {
+            name: "Delay",
+            value: statusSummary.delayCount,
+            color: "#FF4D6D"
+        }
+
+    ];
+
+    const typeData = [
+        {
+            name: "NPI",
+            value: totalNPI,
+            color: "#00B4FF"
+        },
+        {
+            name: "KAIZEN",
+            value: totalKaizen,
+            color: "#00D084"
+        },
+        {
+            name: "DT",
+            value: totalDT,
+            color: "#FACC15"
+        },
+        {
+            name: "VAVE",
+            value: totalVAVE,
+            color: "#A855F7"
+        }
+    ];
+
+    const trendData = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec"
+    ].map((month, index) => {
+
+        let monthHeaders = [];
+
+        // ==========================
+        // PLAN MODE
+        // ==========================
+        if (trendMode === "PLAN") {
+
+            monthHeaders =
+                filteredHeaders.filter(
+                    (header) => {
+
+                        if (
+                            !header.end_date
+                        )
+                            return false;
+
+                        return (
+                            new Date(
+                                header.end_date
+                            ).getMonth()
+                            ===
+                            index
+                        );
+
+                    }
+                );
+
+        }
+
+        // ==========================
+        // ACTUAL MODE
+        // ==========================
+        else {
+
+            monthHeaders =
+                filteredHeaders.filter(
+                    (header) => {
+
+                        const actualSubs =
+                            subTasks.filter(
+                                (sub) =>
+                                    String(
+                                        sub.header_id
+                                    ) ===
+                                    String(
+                                        header.id
+                                    )
+                                    &&
+                                    String(
+                                        sub.remark
+                                    ).toUpperCase()
+                                    ===
+                                    "ACTUAL"
+                            );
+
+                        if (
+                            actualSubs.length === 0
+                        )
+                            return false;
+
+                        const allDone =
+                            actualSubs.every(
+                                (sub) =>
+                                    sub.end_date
+                            );
+
+                        if (!allDone)
+                            return false;
+
+                        const latestDate =
+                            actualSubs.reduce(
+                                (latest, sub) => {
+
+                                    const d =
+                                        new Date(
+                                            sub.end_date
+                                        );
+
+                                    return d > latest
+                                        ? d
+                                        : latest;
+
+                                },
+                                new Date(
+                                    actualSubs[0]
+                                        .end_date
+                                )
+                            );
+
+                        return (
+                            latestDate.getMonth()
+                            ===
+                            index
+                        );
+
+                    }
+                );
+
+        }
+
+        return {
+
+            month,
+
+            NPI:
+                monthHeaders.filter(
+                    h => {
+
+                        const project =
+                            projects.find(
+                                p =>
+                                    String(
+                                        p.id
+                                    ) ===
+                                    String(
+                                        h.project_id
+                                    )
+                            );
+
+                        return (
+                            project?.type
+                            ===
+                            "NPI"
+                        );
+
+                    }
+                ).length,
+
+            KAIZEN:
+                monthHeaders.filter(
+                    h => {
+
+                        const project =
+                            projects.find(
+                                p =>
+                                    String(
+                                        p.id
+                                    ) ===
+                                    String(
+                                        h.project_id
+                                    )
+                            );
+
+                        return (
+                            project?.type
+                            ===
+                            "KAIZEN"
+                        );
+
+                    }
+                ).length,
+
+            DT:
+                monthHeaders.filter(
+                    h => {
+
+                        const project =
+                            projects.find(
+                                p =>
+                                    String(
+                                        p.id
+                                    ) ===
+                                    String(
+                                        h.project_id
+                                    )
+                            );
+
+                        return (
+                            project?.type
+                            ===
+                            "Downtime and Finding"
+                        );
+
+                    }
+                ).length,
+
+            VAVE:
+                monthHeaders.filter(
+                    h => {
+
+                        const project =
+                            projects.find(
+                                p =>
+                                    String(
+                                        p.id
+                                    ) ===
+                                    String(
+                                        h.project_id
+                                    )
+                            );
+
+                        return (
+                            project?.type
+                            ===
+                            "VAVE"
+                        );
+
+                    }
+                ).length
+
+        };
+
+    });
+
+    // =====================================
+    // RECENT ALERTS (DELAY TASK)
+    // =====================================
+    const recentAlerts = taskHeaders
+        .filter((header) => {
+
+            const status =
+                getHeaderStatus(header);
+
+            return status === "DELAY";
+
+        })
+
+        .map((header) => {
+
+            const today = new Date();
+
+            const endDate =
+                new Date(header.end_date);
+
+            const delayDays =
+                Math.max(
+                    0,
+                    Math.floor(
+                        (
+                            today -
+                            endDate
+                        ) /
+                        (1000 * 60 * 60 * 24)
+                    )
+                );
+
+            return {
+                ...header,
+                delayDays
+            };
+
+        })
+
+        .sort(
+            (a, b) =>
+                b.delayDays -
+                a.delayDays
+        )
+
+        .slice(0, 10);
+
+
+    // =====================================
+    // UPCOMING DEADLINE
+    // =====================================
+    const upcomingDeadlines =
+        taskHeaders
+
+            .filter((header) => {
+
+                if (!header.end_date)
+                    return false;
+
+                const today =
+                    new Date();
+
+                today.setHours(
+                    0,
+                    0,
+                    0,
+                    0
+                );
+
+                const deadline =
+                    new Date(
+                        header.end_date
+                    );
+
+                deadline.setHours(
+                    0,
+                    0,
+                    0,
+                    0
+                );
+
+                const diffDays =
+                    (
+                        deadline -
+                        today
+                    ) /
+                    (
+                        1000 *
+                        60 *
+                        60 *
+                        24
+                    );
+
+                return (
+                    diffDays >= 0 &&
+                    diffDays <= 14
+                );
+
+            })
+
+            .sort(
+                (a, b) =>
+                    new Date(
+                        a.end_date
+                    ) -
+                    new Date(
+                        b.end_date
+                    )
+            )
+
+            .slice(0, 10);
+
     return (
 
         <div className="
                 relative
-                space-y-6
+                space-y-4
                 min-h-screen
                 overflow-hidden
 
-                bg-[radial-gradient(circle_at_top_right,rgba(0,255,200,0.08),transparent_22%),radial-gradient(circle_at_bottom_left,rgba(0,140,255,0.08),transparent_28%),linear-gradient(to_bottom,#020617,#031126,#020617)]
+                
             ">
 
-            {/* BACKGROUND EFFECT */}
-            <div className="
-                    absolute
-                    top-[-200px]
-                    right-[-150px]
-
-                    w-[500px]
-                    h-[500px]
-
-                    bg-cyan-500/10
-                    blur-[160px]
-                    rounded-full
-
-                    pointer-events-none
-                "></div>
 
             <div className="
                     absolute
@@ -797,266 +1557,959 @@ export default function ProjectList() {
                     pointer-events-none
                 "></div>
 
-            {/* HEADER */}
+            {/* ===================================== */}
+            {/* KPI DASHBOARD */}
+            {/* ===================================== */}
+
             <div className="
+                grid
+                grid-cols-7
+                gap-4
+                ">
+
+                {/* NPI */}
+
+                <div className="
+                    rounded-[24px]
+                    p-5
+
+                    border border-cyan-500/20
+
+                    bg-gradient-to-br
+                    from-cyan-500/10
+                    to-cyan-500/5
+
+                    backdrop-blur-xl
+                    ">
+
+                    <p className="
+                        text-[11px]
+                        font-bold
+                        tracking-widest
+                        text-cyan-400
+                        uppercase
+                        ">
+                        NPI
+                    </p>
+
+                    <h1 className="
+                        mt-2
+                        text-4xl
+                        font-black
+                        text-white
+                        ">
+                        {totalNPI}
+                    </h1>
+
+                </div>
+
+                {/* KAIZEN */}
+
+                <div className="
+                    rounded-[24px]
+                    p-5
+
+                    border border-green-500/20
+
+                    bg-gradient-to-br
+                    from-green-500/10
+                    to-green-500/5
+                    ">
+
+                    <p className="
+                        text-[11px]
+                        font-bold
+                        tracking-widest
+                        text-green-400
+                        uppercase
+                        ">
+                        KAIZEN
+                    </p>
+
+                    <h1 className="
+                        mt-2
+                        text-4xl
+                        font-black
+                        text-white
+                        ">
+                        {totalKaizen}
+                    </h1>
+
+                </div>
+
+                {/* DT */}
+
+                <div className="
+                    rounded-[24px]
+                    p-5
+
+                    border border-yellow-500/20
+
+                    bg-gradient-to-br
+                    from-yellow-500/10
+                    to-yellow-500/5
+                    ">
+
+                    <p className="
+                        text-[11px]
+                        font-bold
+                        tracking-widest
+                        text-yellow-400
+                        uppercase
+                        ">
+                        DT & FINDING
+                    </p>
+
+                    <h1 className="
+                        mt-2
+                        text-4xl
+                        font-black
+                        text-white
+                        ">
+                        {totalDT}
+                    </h1>
+
+                </div>
+
+                {/* VAVE */}
+
+                <div className="
+                    rounded-[24px]
+                    p-5
+
+                    border border-purple-500/20
+
+                    bg-gradient-to-br
+                    from-purple-500/10
+                    to-purple-500/5
+                    ">
+
+                    <p className="
+                        text-[11px]
+                        font-bold
+                        tracking-widest
+                        text-purple-400
+                        uppercase
+                        ">
+                        VAVE
+                    </p>
+
+                    <h1 className="
+                        mt-2
+                        text-4xl
+                        font-black
+                        text-white
+                        ">
+                        {totalVAVE}
+                    </h1>
+
+                </div>
+
+                {/* TOTAL */}
+
+                <div className="
+                    rounded-[24px]
+                    p-5
+
+                    border border-blue-500/20
+
+                    bg-gradient-to-br
+                    from-blue-500/10
+                    to-blue-500/5
+                    ">
+
+                    <p className="
+                        text-[11px]
+                        font-bold
+                        tracking-widest
+                        text-blue-400
+                        uppercase
+                        ">
+                        TOTAL PROJECT
+                    </p>
+
+                    <h1 className="
+                        mt-2
+                        text-4xl
+                        font-black
+                        text-white
+                        ">
+                        {
+                            statusSummary.doneCount +
+                            statusSummary.progressCount +
+                            statusSummary.openCount +
+                            statusSummary.delayCount
+                        }
+                    </h1>
+
+                </div>
+
+                {/* OVERDUE */}
+
+                <div className="
+                    rounded-[24px]
+                    p-5
+
+                    border border-red-500/20
+
+                    bg-gradient-to-br
+                    from-red-500/10
+                    to-red-500/5
+                    ">
+
+                    <p className="
+                        text-[11px]
+                        font-bold
+                        tracking-widest
+                        text-red-400
+                        uppercase
+                        ">
+                        OVERDUE
+                    </p>
+
+                    <h1 className="
+                        mt-2
+                        text-4xl
+                        font-black
+                        text-white
+                        ">
+                        {overdueProject}
+                    </h1>
+
+                </div>
+
+                {/* DATE */}
+
+                <div className="
+                    rounded-[24px]
+                    p-5
+
+                    border border-white/10
+
+                    bg-white/[0.03]
+                    ">
+
+                    <p className="
+                        text-[11px]
+                        font-bold
+                        tracking-widest
+                        text-slate-400
+                        uppercase
+                        ">
+                        TODAY
+                    </p>
+
+                    <h1 className="
+                        mt-2
+                        text-lg
+                        font-black
+                        text-white
+                        ">
+                        {new Date().toLocaleDateString()}
+                    </h1>
+
+                </div>
+
+            </div>
+
+            {/* ===================================== */}
+            {/* ANALYTICS DASHBOARD */}
+            {/* ===================================== */}
+
+            <div
+                className="
+            grid
+            gap-5
+            "
+                style={{
+                    gridTemplateColumns:
+                        "320px 1fr 360px 320px"
+                }}
+            >
+
+                {/* PROJECT HEALTH */}
+
+                <div className="
                 relative
-                overflow-hidden
+                h-[230px]
+                
 
-                rounded-[32px]
+                rounded-[28px]
 
-                border
-                border-cyan-500/10
+                border border-white/10
 
                 bg-gradient-to-br
-                from-[#071428]
-                via-[#08192f]
-                to-[#05101f]
+                from-[#081526]
+                to-[#07111d]
 
-                shadow-[0_0_80px_rgba(0,255,255,0.05)]
+                overflow-hidden
 
-                px-10
-                py-4
+                shadow-[0_0_30px_rgba(0,255,255,.05)]
+                ">
 
-                flex
-                items-start
-                justify-between
-                gap-6
-            ">
-
-                {/* LEFT */}
-                <div className="relative z-10">
-
-                    {/* MINI BADGE */}
                     <div className="
-                        inline-flex
-                        items-center
-                        gap-2
-                        px-4
-                        py-2
-                        rounded-2xl
+                        absolute
+                        top-[-40px]
+                        right-[-40px]
+
+                        w-[140px]
+                        h-[140px]
 
                         bg-cyan-500/10
-                        border border-cyan-500/20
+                        blur-[80px]
+                        rounded-full
+                        "/>
 
-                        mb-5
-                    ">
+                    <div className="p-5">
+
+                        <h3 className="
+                        text-white
+                        font-bold
+                        text-sm
+                        mb-4
+                        ">
+                            Project Health Overview
+                        </h3>
 
                         <div className="
-                            w-2 h-2
-                            rounded-full
-                            bg-cyan-400
-                            animate-pulse
-                        "></div>
+                            flex
+                            items-center
+                            justify-between
+                            ">
 
-                        <span className="
-                            text-[11px]
-                            font-black
-                            tracking-[2px]
-                            text-cyan-300
-                        ">
-                            ENGINEERING MONITORING
-                        </span>
+                            <div className="
+                                relative
+                                w-[150px]
+                                h-[150px]
+                            ">
+                                <ResponsiveContainer
+                                    width="100%"
+                                    height="100%"
+                                >
+
+                                    <PieChart>
+
+                                        <Pie
+                                            data={healthData}
+                                            dataKey="value"
+                                            innerRadius={50}
+                                            outerRadius={75}
+                                            strokeWidth={0}
+                                        >
+
+                                            {
+                                                healthData.map((entry, index) => (
+                                                    <Cell
+                                                        key={index}
+                                                        fill={entry.color}
+                                                        opacity={
+                                                            dashboardFilter === "ALL"
+                                                                ? 1
+                                                                : dashboardFilter ===
+                                                                    entry.name.toUpperCase()
+                                                                    ? 1
+                                                                    : 0.2
+                                                        }
+                                                    />
+                                                ))
+                                            }
+
+                                        </Pie>
+
+                                    </PieChart>
+
+                                </ResponsiveContainer>
+
+                                <div className="
+                                    absolute
+                                    inset-0
+
+                                    flex
+                                    flex-col
+                                    items-center
+                                    justify-center
+                                    ">
+
+                                    <h1 className="
+                                        text-4xl
+                                        font-black
+                                        text-white
+                                        ">
+                                        {totalProject}
+                                    </h1>
+
+                                    <p className="
+                                        text-slate-400
+                                        text-xs
+                                        ">
+                                        Total Task
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                            <div className="
+                                space-y-3
+                                ">
+
+                                {
+                                    healthData.map(item => (
+
+                                        <div
+                                            key={item.name}
+
+                                            onClick={() => {
+
+                                                const status =
+                                                    item.name.toUpperCase();
+
+                                                if (
+                                                    dashboardFilter === status
+                                                ) {
+
+                                                    setDashboardFilter("ALL");
+                                                    setTrendMode("PLAN");
+
+                                                    return;
+                                                }
+
+                                                setDashboardFilter(status);
+
+                                                if (status === "DONE") {
+
+                                                    setTrendMode("ACTUAL");
+
+                                                } else {
+
+                                                    setTrendMode("PLAN");
+
+                                                }
+
+                                            }}
+
+                                            className={`
+                                            flex
+                                            items-center
+                                            gap-3
+                                            cursor-pointer
+                                            rounded-lg
+                                            px-2
+                                            py-1
+
+                                            ${dashboardFilter ===
+                                                    item.name.toUpperCase()
+                                                    ? "bg-white/10"
+                                                    : ""
+                                                }
+                                        `}
+                                        >
+
+                                            <div
+                                                className="
+                                                w-3
+                                                h-3
+                                                rounded-full
+                                                "
+                                                style={{
+                                                    background: item.color
+                                                }}
+                                            />
+
+                                            <span className="
+                                                text-white
+                                                text-sm
+                                                ">
+                                                {item.name}
+                                            </span>
+
+                                            <span className="
+                                                text-slate-400
+                                                text-sm
+                                                ">
+                                                {item.value}
+                                            </span>
+
+                                        </div>
+
+                                    ))
+                                }
+
+                            </div>
+
+                        </div>
 
                     </div>
 
-                    {/* TITLE */}
-                    <h1 className="
-                        text-6xl
-                        font-black
-                        leading-tight
-                        bg-gradient-to-r
-                        from-white
-                        via-cyan-200
-                        to-cyan-500
-                        bg-clip-text
-                        text-transparent
-                        
-                    ">
-
-                        Project List
-
-                    </h1>
-                    <p className="
-                        mt-1
-                        text-slate-400
-                        text-sm
-                        font-medium
-                    ">
-                        Engineering project monitoring & activity management
-                    </p>
                 </div>
-                {/* CYAN GLOW */}
+
+                {/* ACTIVITY TREND */}
+
                 <div className="
-                    absolute
-                    top-[-120px]
-                    left-[-100px]
+                    h-[230px]
+                    rounded-[28px]
+                    border border-white/10
+                    bg-gradient-to-br
+                    from-[#081526]
+                    to-[#07111d]
+                    p-5
+                ">
 
-                    w-[320px]
-                    h-[320px]
-
-                    bg-cyan-400/10
-                    blur-[140px]
-                    rounded-full
-                "></div>
-
-                {/* GREEN GLOW */}
-                <div className="
-                    absolute
-                    bottom-[-180px]
-                    right-[120px]
-
-                    w-[320px]
-                    h-[320px]
-
-                    bg-emerald-400/10
-                    blur-[150px]
-                    rounded-full
-                "></div>
-
-                {/* BLUE LINE */}
-                <div className="
-                    absolute
-                    inset-0
-
-                    bg-[linear-gradient(to_right,transparent,rgba(0,255,255,0.03),transparent)]
-
-                    pointer-events-none
-                "></div>
-
-                {/* RIGHT SUMMARY */}
-                <div className="flex gap-4 mt-6 items-end">
-
-                    {/* NPI */}
                     <div className="
-                        w-[95px]
-                        h-[95px]
-                        rounded-[28px]
-                        border border-cyan-500/20
-                        bg-cyan-500/10
-                        backdrop-blur-xl
-                        flex flex-col
+                        flex
+                        justify-between
                         items-center
-                        justify-center
+                        mb-3
                     ">
 
-                        <p className="
-                            text-[11px]
-                            font-bold
-                            text-cyan-400
-                            tracking-wide
-                        ">
-                            NPI
-                        </p>
+                        <div>
 
-                        <h1 className="
-                            text-3xl
-                            font-black
-                            text-white
-                            mt-1
-                        ">
-                            {totalNPI}
-                        </h1>
+                            <h3 className="
+                                text-white
+                                font-bold
+                                text-sm
+                            ">
+                                Project Trend By Type
+                            </h3>
+
+                            <div className="
+                                flex
+                                items-center
+                                gap-4
+                                mt-2
+                                text-[11px]
+                            ">
+
+                                <div className="
+                                    flex
+                                    items-center
+                                    gap-1
+                                ">
+                                    <div className="
+                                        w-3
+                                        h-3
+                                        rounded
+                                        bg-cyan-400
+                                    "/>
+
+                                    <span className="
+                                        text-slate-300
+                                    ">
+                                        NPI
+                                    </span>
+                                </div>
+
+                                <div className="
+                                    flex
+                                    items-center
+                                    gap-1
+                                ">
+                                    <div className="
+                                        w-3
+                                        h-3
+                                        rounded
+                                        bg-green-400
+                                    "/>
+
+                                    <span className="
+                                        text-slate-300
+                                    ">
+                                        KAIZEN
+                                    </span>
+                                </div>
+
+                                <div className="
+                                    flex
+                                    items-center
+                                    gap-1
+                                ">
+                                    <div className="
+                                        w-3
+                                        h-3
+                                        rounded
+                                        bg-yellow-400
+                                    "/>
+
+                                    <span className="
+                                        text-slate-300
+                                    ">
+                                        DT & Finding
+                                    </span>
+                                </div>
+
+                                <div className="
+                                    flex
+                                    items-center
+                                    gap-1
+                                ">
+
+                                    <div className="
+                                        w-3
+                                        h-3
+                                        rounded
+                                        bg-purple-500
+                                    "/>
+
+                                    <span className="
+                                        text-slate-300
+                                    ">
+                                        VAVE
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <select
+                            value={trendMode}
+                            onChange={(e) =>
+                                setTrendMode(
+                                    e.target.value
+                                )
+                            }
+                            className="
+                                bg-black/30
+                                border border-white/10
+                                rounded-xl
+                                px-3
+                                py-1
+                                text-xs
+                                text-white
+                            "
+                        >
+
+                            <option value="PLAN">
+                                Plan
+                            </option>
+
+                            <option value="ACTUAL">
+                                Actual
+                            </option>
+
+                        </select>
 
                     </div>
 
-                    {/* KAIZEN */}
+                    <ResponsiveContainer
+                        width="100%"
+                        height="78%"
+                    >
+
+                        <BarChart
+                            data={trendData}
+                            barGap={2}
+                            barCategoryGap="5%"
+                        >
+
+                            <XAxis
+                                dataKey="month"
+                                stroke="#64748b"
+                            />
+
+                            <YAxis
+                                stroke="#64748b"
+                            />
+
+                            <Tooltip
+                                contentStyle={{
+                                    background: "#081526",
+                                    border:
+                                        "1px solid rgba(255,255,255,.1)"
+                                }}
+                            />
+
+                            <Bar
+                                dataKey="NPI"
+                                fill="#00B4FF"
+                                barSize={12}
+                                radius={[4, 4, 0, 0]}
+                            />
+
+                            <Bar
+                                dataKey="KAIZEN"
+                                fill="#00D084"
+                                barSize={12}
+                                radius={[4, 4, 0, 0]}
+                            />
+
+                            <Bar
+                                dataKey="DT"
+                                fill="#FACC15"
+                                barSize={12}
+                                radius={[4, 4, 0, 0]}
+                            />
+
+                            <Bar
+                                dataKey="VAVE"
+                                fill="#A855F7"
+                                barSize={12}
+                                radius={[4, 4, 0, 0]}
+                            />
+
+                        </BarChart>
+
+                    </ResponsiveContainer>
+
+                </div>
+
+                {/* ENGINEER WORKLOAD */}
+
+                <div className="
+                    h-[230px]
+                    rounded-[28px]
+                    border border-white/10
+
+                    bg-gradient-to-br
+                    from-[#081526]
+                    to-[#07111d]
+
+                    p-6
+
+                    flex
+                    flex-col
+
+                    overflow-hidden
+                ">
+
+                    <h3 className="
+                        text-white
+                        font-bold
+                        text-sm
+                        mb-4
+                    ">
+                        Engineer Workload
+                    </h3>
+
                     <div className="
-                        w-[95px]
-                        h-[95px]
-                        rounded-[28px]
-                        border border-green-500/20
-                        bg-green-500/10
-                        backdrop-blur-xl
-                        flex flex-col
-                        items-center
-                        justify-center
+                        flex-1
+                        overflow-y-auto
+                        overflow-x-hidden
+
+                        pr-2
+
+                        custom-scrollbar
                     ">
 
-                        <p className="
-                            text-[11px]
-                            font-bold
-                            text-green-400
-                            tracking-wide
-                        ">
-                            KAIZEN
-                        </p>
+                        {
+                            engineerWorkload.map((eng) => {
 
-                        <h1 className="
-                            text-3xl
-                            font-black
-                            text-white
-                            mt-1
-                        ">
-                            {totalKaizen}
-                        </h1>
+                                const count =
+                                    eng.taskCount;
+
+                                const percent =
+                                    (count / maxWorkload) * 100;
+
+                                return (
+
+                                    <div
+                                        key={eng.name}
+                                        className="mb-4"
+                                    >
+
+                                        <div className="
+                                            flex
+                                            items-center
+                                            gap-3
+                                            mb-2
+                                        ">
+
+                                            <div className="
+                                                w-8
+                                                h-8
+                                                rounded-full
+                                                bg-gradient-to-r
+                                                from-cyan-400
+                                                to-blue-500
+
+                                                flex
+                                                items-center
+                                                justify-center
+
+                                                text-black
+                                                font-black
+                                            ">
+                                                {eng.name[0]}
+                                            </div>
+
+                                            <div className="flex-1">
+
+                                                <div className="
+                                                    flex
+                                                    justify-between
+                                                ">
+
+                                                    <p className="
+                                                        text-white
+                                                        text-sm
+                                                    ">
+                                                        {eng.name}
+                                                    </p>
+
+                                                    <p className="
+                                                        text-slate-400
+                                                        text-xs
+                                                    ">
+                                                        {count} Task
+                                                    </p>
+
+                                                </div>
+
+                                                <div className="
+                                                    h-2
+                                                    bg-slate-800
+                                                    rounded-full
+                                                    mt-1
+                                                ">
+
+                                                    <div
+                                                        className="
+                                                            h-full
+                                                            rounded-full
+
+                                                            bg-gradient-to-r
+                                                            from-cyan-400
+                                                            to-blue-500
+                                                        "
+                                                        style={{
+                                                            width: `${percent}%`
+                                                        }}
+                                                    />
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                );
+
+                            })
+                        }
 
                     </div>
 
-                    {/* DT */}
-                    <div className="
-                        w-[95px]
-                        h-[95px]
-                        rounded-[28px]
-                        border border-yellow-500/20
-                        bg-yellow-500/10
-                        backdrop-blur-xl
-                        flex flex-col
-                        items-center
-                        justify-center
+                </div>
+
+                {/* PROJECT TYPE */}
+
+                <div className="
+                    h-[230px]
+
+                    rounded-[28px]
+
+                    border border-white/10
+
+                    bg-gradient-to-br
+                    from-[#081526]
+                    to-[#07111d]
+
+                    p-5
                     ">
 
-                        <p className="
-                            text-[10px]
-                            font-bold
-                            text-yellow-400
-                            tracking-wide
-                            text-center
-                            leading-3
+                    <h3 className="
+                        text-white
+                        font-bold
+                        text-sm
+                        mb-4
                         ">
-                            DT & FINDING
-                        </p>
+                        Project Type Distribution
+                    </h3>
 
-                        <h1 className="
-                            text-3xl
-                            font-black
-                            text-white
-                            mt-1
-                        ">
-                            {totalDT}
-                        </h1>
-
-                    </div>
-
-                    {/* VAVE */}
                     <div className="
-                        w-[95px]
-                        h-[95px]
-                        rounded-[28px]
-                        border border-purple-500/20
-                        bg-purple-500/10
-                        backdrop-blur-xl
-                        flex flex-col
+                        flex
                         items-center
-                        justify-center
-                    ">
-
-                        <p className="
-                            text-[11px]
-                            font-bold
-                            text-purple-400
-                            tracking-wide
+                        justify-between
                         ">
-                            VAVE
-                        </p>
 
-                        <h1 className="
-                            text-3xl
-                            font-black
-                            text-white
-                            mt-1
+                        <div className="
+                            relative
+                            w-[150px]
+                            h-[150px]
                         ">
-                            {totalVAVE}
-                        </h1>
+
+                            <ResponsiveContainer
+                                width="100%"
+                                height="100%"
+                            >
+
+                                <PieChart>
+
+                                    <Pie
+                                        data={typeData}
+                                        dataKey="value"
+                                        innerRadius={50}
+                                        outerRadius={75}
+                                        strokeWidth={0}
+                                    >
+
+                                        {
+                                            typeData.map((entry, index) => (
+                                                <Cell
+                                                    key={index}
+                                                    fill={entry.color}
+                                                />
+                                            ))
+                                        }
+
+                                    </Pie>
+
+                                </PieChart>
+
+                            </ResponsiveContainer>
+
+                        </div>
+
+                        <div className="
+                            space-y-3
+                            ">
+
+                            {
+                                typeData.map(item => (
+
+                                    <div
+                                        key={item.name}
+                                        className="
+                                        flex
+                                        items-center
+                                        gap-3
+                                        "
+                                    >
+
+                                        <div
+                                            className="
+                                            w-3
+                                            h-3
+                                            rounded-full
+                                            "
+                                            style={{
+                                                background: item.color
+                                            }}
+                                        />
+
+                                        <span className="
+                                            text-white
+                                            text-sm
+                                            ">
+                                            {item.name}
+                                        </span>
+
+                                        <span className="
+                                            text-slate-400
+                                            text-sm
+                                            ">
+                                            {item.value}
+                                        </span>
+
+                                    </div>
+
+                                ))
+                            }
+
+                        </div>
 
                     </div>
 
@@ -1241,121 +2694,140 @@ export default function ProjectList() {
 
             </div>
 
-            {/* PROJECT GRID */}
-            <div className="
-                    relative
-                    z-10
-                    grid
-                    grid-cols-4
-                    gap-6
-                ">
+            {/* PROJECT AREA */}
+            <div
+                className="
+            grid
+            gap-5
+            h-[calc(100vh-330px)]
+            overflow-hidden
+        "
+                style={{
+                    gridTemplateColumns: "1fr 320px"
+                }}
+            >
 
-                {loading ? (
+                <div
+                    className="
+                    overflow-y-auto
+                    pr-2
+                    main-scroll
+                "
+                >
+                    <div
+                        className="
+                        grid
+                        grid-cols-4
+                        gap-6
+                    "
+                    >
 
-                    <div className="col-span-4
-                    h-[300px]
-                    rounded-[36px]
-                    border border-white/5
-                    bg-white/[0.03]
-                    flex items-center justify-center
-                    text-slate-500">
+                        {loading ? (
 
-                        Loading projects...
+                            <div className="col-span-4
+                                h-[300px]
+                                rounded-[36px]
+                                border border-white/5
+                                bg-white/[0.03]
+                                flex items-center justify-center
+                                text-slate-500">
 
-                    </div>
+                                Loading projects...
 
-                ) : filteredProjects.length === 0 ? (
+                            </div>
 
-                    <div className="col-span-4
-                    h-[300px]
-                    rounded-[36px]
-                    border border-white/5
-                    bg-white/[0.03]
-                    flex items-center justify-center
-                    text-slate-500">
+                        ) : filteredProjects.length === 0 ? (
 
-                        No project data
+                            <div className="col-span-4
+                                h-[300px]
+                                rounded-[36px]
+                                border border-white/5
+                                bg-white/[0.03]
+                                flex items-center justify-center
+                                text-slate-500">
 
-                    </div>
+                                No project data
 
-                ) : (
+                            </div>
 
-                    filteredProjects.map((item) => (
+                        ) : (
 
-                        <div
-                            key={item.id}
+                            filteredProjects.map((item) => (
 
-                            onClick={() =>
-                                handleViewActivity(item)
-                            }
+                                <div
+                                    key={item.id}
 
-                            className="group relative
-                            rounded-[32px]
-                            cursor-pointer
-                            border border-white/5
-                            bg-white/[0.03]
-                            backdrop-blur-2xl
-                            overflow-hidden
-                            hover:border-green-500/20
-                            hover:bg-green-500/[0.03]
-                            transition-all duration-300"
-                        >
+                                    onClick={() =>
+                                        handleViewActivity(item)
+                                    }
 
-                            <div className="absolute top-[-40px] right-[-40px]
-                            w-[120px] h-[120px]
-                            bg-green-500/10
-                            blur-[60px]
-                            rounded-full"></div>
+                                    className="group relative
+                                    rounded-[32px]
+                                    cursor-pointer
+                                    border border-white/5
+                                    bg-white/[0.03]
+                                    backdrop-blur-2xl
+                                    overflow-hidden
+                                    hover:border-green-500/20
+                                    hover:bg-green-500/[0.03]
+                                    transition-all duration-300"
+                                >
 
-                            <div className="relative z-10 p-6">
+                                    <div className="absolute top-[-40px] right-[-40px]
+                                    w-[120px] h-[120px]
+                                    bg-green-500/10
+                                    blur-[60px]
+                                    rounded-full"></div>
 
-                                <div className="
+                                    <div className="relative z-10 p-6">
+
+                                        <div className="
                                         flex
                                         items-start
                                         justify-between
                                         gap-4
                                     ">
 
-                                    <div className="
+                                            <div className="
                                             flex-1
                                             min-w-0
                                         ">
 
-                                        <div className="inline-flex
+                                                <div className="inline-flex
                                         px-3 py-1 rounded-xl
                                         bg-green-500/10
                                         border border-green-500/20
                                         text-green-400
                                         text-xs font-bold">
 
-                                            {item.type}
+                                                    {item.type}
 
-                                        </div>
+                                                </div>
 
-                                        <h2 className="mt-4 text-xl font-bold text-white leading-8">
+                                                <h2 className="mt-4 text-xl font-bold text-white leading-8">
 
-                                            {item.title}
+                                                    {item.title}
 
-                                        </h2>
+                                                </h2>
 
-                                        {/* PERFORMANCE BAR */}
-                                        {(() => {
+                                                {/* PERFORMANCE BAR */}
+                                                {(() => {
 
-                                            const {
-                                                progress,
-                                                done,
-                                                total
-                                            } = getProjectProgress(item.id);
+                                                    const {
+                                                        progress,
+                                                        done,
+                                                        total
+                                                    } = getProjectProgress(item.id);
 
-                                            return (
+                                                    return (
 
-                                                <div className="
+                                                        <div className="
                                                         mt-5
                                                         w-full
                                                     ">
 
-                                                    {/* TOP */}
-                                                    <div className="
+                                                            {/* TOP */}
+                                                            <div className="
                                                             flex
                                                             items-center
                                                             justify-between
@@ -1363,18 +2835,18 @@ export default function ProjectList() {
                                                             gap-3
                                                         ">
 
-                                                        <span className="
+                                                                <span className="
                                                                 text-[11px]
                                                                 font-bold
                                                                 tracking-wider
                                                                 text-cyan-400
                                                             ">
 
-                                                            PERFORMANCE
+                                                                    PERFORMANCE
 
-                                                        </span>
+                                                                </span>
 
-                                                        <span className="
+                                                                <span className="
                                                             w-[55px]
                                                             text-right
                                                             shrink-0
@@ -1382,13 +2854,13 @@ export default function ProjectList() {
                                                             font-bold
                                                             text-white
                                                         ">
-                                                            {done}/{total}
-                                                        </span>
+                                                                    {done}/{total}
+                                                                </span>
 
-                                                    </div>
+                                                            </div>
 
-                                                    {/* BAR CONTAINER */}
-                                                    <div className="
+                                                            {/* BAR CONTAINER */}
+                                                            <div className="
                                                         relative
                                                         w-full
                                                         min-w-full
@@ -1401,8 +2873,8 @@ export default function ProjectList() {
                                                         mt-2
                                                     ">
 
-                                                        {/* BACKGROUND GLOW */}
-                                                        <div className="
+                                                                {/* BACKGROUND GLOW */}
+                                                                <div className="
                                                             absolute
                                                             inset-0
                                                             bg-gradient-to-r
@@ -1410,9 +2882,9 @@ export default function ProjectList() {
                                                             to-emerald-500/5
                                                         "></div>
 
-                                                        {/* PROGRESS */}
-                                                        <div
-                                                            className="
+                                                                {/* PROGRESS */}
+                                                                <div
+                                                                    className="
                                                                 absolute
                                                                 left-0
                                                                 top-0
@@ -1429,207 +2901,207 @@ export default function ProjectList() {
                                                                 transition-all
                                                                 duration-700
                                                             "
-                                                            style={{
-                                                                width: `${progress}%`
-                                                            }}
-                                                        />
+                                                                    style={{
+                                                                        width: `${progress}%`
+                                                                    }}
+                                                                />
 
-                                                    </div>
+                                                            </div>
 
-                                                    {/* PERCENT */}
-                                                    <div className="
+                                                            {/* PERCENT */}
+                                                            <div className="
                                                             mt-2
                                                             flex
                                                             items-center
                                                             justify-between
                                                         ">
 
-                                                        <span className="
+                                                                <span className="
                                                             text-[11px]
                                                             text-slate-400
                                                             font-semibold
                                                         ">
-                                                            {done} / {total} Task
-                                                        </span>
+                                                                    {done} / {total} Task
+                                                                </span>
 
-                                                        <span className="
+                                                                <span className="
                                                             text-[12px]
                                                             font-black
                                                             text-green-400
                                                         ">
-                                                            {progress}%
-                                                        </span>
+                                                                    {progress}%
+                                                                </span>
 
-                                                    </div>
+                                                            </div>
 
-                                                </div>
+                                                        </div>
 
-                                            );
-
-                                        })()}
-
-                                    </div>
-
-                                    <div className="flex items-center gap-2">
-
-                                        {/* DELETE */}
-                                        <button
-                                            onClick={(e) => {
-
-                                                e.stopPropagation();
-
-                                                // ======================
-                                                // ROLE VALIDATION
-                                                // ======================
-
-                                                if (
-                                                    currentUser?.role !== "Manager"
-                                                ) {
-
-                                                    alert(
-                                                        "Delete project hanya bisa dilakukan oleh Manager role"
                                                     );
 
-                                                    return;
+                                                })()}
 
-                                                }
+                                            </div>
 
-                                                handleDeleteProject(item.id)
+                                            <div className="flex items-center gap-2">
 
-                                            }}
+                                                {/* DELETE */}
+                                                <button
+                                                    onClick={(e) => {
 
-                                            className="w-10 h-10 rounded-xl
+                                                        e.stopPropagation();
+
+                                                        // ======================
+                                                        // ROLE VALIDATION
+                                                        // ======================
+
+                                                        if (
+                                                            currentUser?.role !== "Manager"
+                                                        ) {
+
+                                                            alert(
+                                                                "Delete project hanya bisa dilakukan oleh Manager role"
+                                                            );
+
+                                                            return;
+
+                                                        }
+
+                                                        handleDeleteProject(item.id)
+
+                                                    }}
+
+                                                    className="w-10 h-10 rounded-xl
                                             bg-red-500/10
                                             border border-red-500/20
                                             flex items-center justify-center
                                             hover:scale-105
                                             transition-all"
-                                        >
+                                                >
 
-                                            <Trash2
-                                                size={16}
-                                                className="text-red-400"
-                                            />
+                                                    <Trash2
+                                                        size={16}
+                                                        className="text-red-400"
+                                                    />
 
-                                        </button>
+                                                </button>
 
-                                        {/* EDIT */}
-                                        <button
-                                            onClick={(e) => {
+                                                {/* EDIT */}
+                                                <button
+                                                    onClick={(e) => {
 
-                                                e.stopPropagation();
+                                                        e.stopPropagation();
 
-                                                // ======================
-                                                // ROLE VALIDATION
-                                                // ======================
+                                                        // ======================
+                                                        // ROLE VALIDATION
+                                                        // ======================
 
-                                                if (
-                                                    currentUser?.role !== "Manager"
-                                                ) {
+                                                        if (
+                                                            currentUser?.role !== "Manager"
+                                                        ) {
 
-                                                    alert(
-                                                        "Edit project hanya bisa dilakukan oleh Manager role"
-                                                    );
+                                                            alert(
+                                                                "Edit project hanya bisa dilakukan oleh Manager role"
+                                                            );
 
-                                                    return;
+                                                            return;
 
-                                                }
+                                                        }
 
-                                                // ======================
-                                                // OPEN EDIT MODAL
-                                                // ======================
+                                                        // ======================
+                                                        // OPEN EDIT MODAL
+                                                        // ======================
 
-                                                setEditMode(true);
+                                                        setEditMode(true);
 
-                                                setSelectedProject(item);
+                                                        setSelectedProject(item);
 
-                                                setFormData({
-                                                    title: item.title || "",
-                                                    type: item.type || "",
-                                                    site: item.site || "",
-                                                    tpm: item.tpm || "",
-                                                    ee: Array.isArray(item.ee)
-                                                        ? item.ee
-                                                        : item.ee
-                                                            ? [item.ee]
-                                                            : [],
-                                                });
+                                                        setFormData({
+                                                            title: item.title || "",
+                                                            type: item.type || "",
+                                                            site: item.site || "",
+                                                            tpm: item.tpm || "",
+                                                            ee: Array.isArray(item.ee)
+                                                                ? item.ee
+                                                                : item.ee
+                                                                    ? [item.ee]
+                                                                    : [],
+                                                        });
 
-                                                setOpenModal(true);
+                                                        setOpenModal(true);
 
-                                            }}
+                                                    }}
 
-                                            className="w-10 h-10 rounded-xl
+                                                    className="w-10 h-10 rounded-xl
                                             bg-yellow-500/10
                                             border border-yellow-500/20
                                             flex items-center justify-center
                                             hover:scale-105
                                             transition-all"
-                                        >
+                                                >
 
-                                            <Pencil
-                                                size={16}
-                                                className="text-yellow-400"
-                                            />
+                                                    <Pencil
+                                                        size={16}
+                                                        className="text-yellow-400"
+                                                    />
 
-                                        </button>
+                                                </button>
 
-                                    </div>
-
-                                </div>
-
-                                <div className="mt-6 flex items-start justify-between gap-4">
-
-                                    {/* LEFT INFO */}
-                                    <div className="space-y-3 flex-1">
-
-                                        <div className="grid grid-cols-[70px_1fr] items-center gap-x-2">
-
-                                            <p className="text-slate-500 text-sm">
-                                                Site
-                                            </p>
-
-                                            <p className="font-semibold text-white">
-                                                {item.site}
-                                            </p>
+                                            </div>
 
                                         </div>
 
-                                        <div className="grid grid-cols-[70px_1fr] items-center gap-x-2">
+                                        <div className="mt-6 flex items-start justify-between gap-4">
 
-                                            <p className="text-slate-500 text-sm">
-                                                TPM
-                                            </p>
+                                            {/* LEFT INFO */}
+                                            <div className="space-y-3 flex-1">
 
-                                            <p className="font-semibold text-white">
-                                                {item.tpm}
-                                            </p>
+                                                <div className="grid grid-cols-[70px_1fr] items-center gap-x-2">
 
-                                        </div>
+                                                    <p className="text-slate-500 text-sm">
+                                                        Site
+                                                    </p>
 
-                                        <div className="grid grid-cols-[70px_1fr] items-center gap-x-2">
+                                                    <p className="font-semibold text-white">
+                                                        {item.site}
+                                                    </p>
 
-                                            <p className="text-slate-500 text-sm">
-                                                Engineer
-                                            </p>
+                                                </div>
 
-                                            <div className="
+                                                <div className="grid grid-cols-[70px_1fr] items-center gap-x-2">
+
+                                                    <p className="text-slate-500 text-sm">
+                                                        TPM
+                                                    </p>
+
+                                                    <p className="font-semibold text-white">
+                                                        {item.tpm}
+                                                    </p>
+
+                                                </div>
+
+                                                <div className="grid grid-cols-[70px_1fr] items-center gap-x-2">
+
+                                                    <p className="text-slate-500 text-sm">
+                                                        Engineer
+                                                    </p>
+
+                                                    <div className="
                                                 flex
                                                 flex-wrap
                                                 gap-2
                                             ">
 
-                                                {
-                                                    Array.isArray(item.ee)
+                                                        {
+                                                            Array.isArray(item.ee)
 
-                                                        ? (
+                                                                ? (
 
-                                                            item.ee.map((name) => (
+                                                                    item.ee.map((name) => (
 
-                                                            <div
-                                                                key={name}
+                                                                        <div
+                                                                            key={name}
 
-                                                                className="
+                                                                            className="
                                                                     px-3
                                                                     py-1.5
 
@@ -1646,19 +3118,19 @@ export default function ProjectList() {
                                                                     hover:bg-cyan-500/15
                                                                     transition-all
                                                                 "
-                                                            >
+                                                                        >
 
-                                                                {name}
+                                                                            {name}
 
-                                                            </div>
+                                                                        </div>
 
-                                                        ))
+                                                                    ))
 
-                                                        )
+                                                                )
 
-                                                        : (
+                                                                : (
 
-                                                            <div className="
+                                                                    <div className="
                                                                 px-3
                                                                 py-1.5
 
@@ -1672,303 +3144,543 @@ export default function ProjectList() {
                                                                 text-sm
                                                                 font-semibold
                                                             ">
-                                                                {item.ee}
-                                                            </div>
+                                                                        {item.ee}
+                                                                    </div>
 
-                                                        )
-                                                }
+                                                                )
+                                                        }
+
+                                                    </div>
+
+                                                </div>
 
                                             </div>
+
+                                            {/* RIGHT STATUS */}
+                                            {(() => {
+
+                                                const headers =
+                                                    taskHeaders.filter((header) => {
+
+                                                        return (
+                                                            String(header.project_id) ===
+                                                            String(item.id)
+                                                        );
+
+                                                    });
+
+                                                let doneCount = 0;
+                                                let openCount = 0;
+                                                let progressCount = 0;
+                                                let delayCount = 0;
+
+                                                headers.forEach((header) => {
+
+                                                    const relatedSubs =
+                                                        subTasks.filter((sub) => {
+
+                                                            return (
+                                                                String(sub.header_id) ===
+                                                                String(header.id)
+                                                            );
+
+                                                        });
+
+                                                    // ======================
+                                                    // PLAN TASKS
+                                                    // ======================
+
+                                                    const planTasks =
+                                                        relatedSubs.filter((sub) => {
+
+                                                            return (
+                                                                String(sub.remark)
+                                                                    .toUpperCase() ===
+                                                                "PLAN"
+                                                            );
+
+                                                        });
+
+                                                    // ======================
+                                                    // ACTUAL TASKS
+                                                    // ======================
+
+                                                    const actualTasks =
+                                                        relatedSubs.filter((sub) => {
+
+                                                            return (
+                                                                String(sub.remark)
+                                                                    .toUpperCase() ===
+                                                                "ACTUAL"
+                                                            );
+
+                                                        });
+
+                                                    // ======================
+                                                    // HAS PROGRESS
+                                                    // ======================
+
+                                                    const hasPlanProgress =
+
+                                                        planTasks.some(
+                                                            (x) =>
+
+                                                                x.start_date &&
+                                                                x.end_date
+                                                        )
+
+                                                        ||
+
+                                                        actualTasks.some(
+                                                            (x) =>
+
+                                                                x.start_date &&
+                                                                x.end_date
+                                                        );
+
+                                                    // ======================
+                                                    // ALL ACTUAL DONE
+                                                    // ======================
+
+                                                    const allActualDone =
+
+                                                        actualTasks.length > 0 &&
+
+                                                        actualTasks.every(
+                                                            (x) =>
+
+                                                                x.start_date &&
+                                                                x.end_date
+                                                        );
+
+                                                    // ======================
+                                                    // DONE
+                                                    // ======================
+
+                                                    if (allActualDone) {
+
+                                                        doneCount++;
+                                                        return;
+
+                                                    }
+
+                                                    // ======================
+                                                    // DELAY
+                                                    // ======================
+
+                                                    const today =
+                                                        new Date();
+
+                                                    today.setHours(
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0
+                                                    );
+
+                                                    if (header.end_date) {
+
+                                                        const endDate =
+                                                            new Date(
+                                                                header.end_date
+                                                            );
+
+                                                        endDate.setHours(
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0
+                                                        );
+
+                                                        if (
+                                                            today > endDate &&
+                                                            !allActualDone
+                                                        ) {
+
+                                                            delayCount++;
+                                                            return;
+
+                                                        }
+
+                                                    }
+
+                                                    // ======================
+                                                    // PROGRESS
+                                                    // ======================
+
+                                                    if (hasPlanProgress) {
+
+                                                        progressCount++;
+                                                        return;
+
+                                                    }
+
+                                                    // ======================
+                                                    // OPEN
+                                                    // ======================
+
+                                                    openCount++;
+
+                                                });
+
+                                                return (
+
+                                                    <div className="
+                                                    min-w-[120px]
+                                                    space-y-2
+                                                ">
+
+                                                        <div className="
+                                                        flex
+                                                        items-center
+                                                        justify-between
+                                                        gap-3
+                                                    ">
+
+                                                            <p className="
+                                                            text-[14px]
+                                                            text-slate-500
+                                                        ">
+                                                                Done
+                                                            </p>
+
+                                                            <p className="
+                                                            text-green-400
+                                                            font-bold
+                                                            text-sm
+                                                        ">
+                                                                {doneCount}
+                                                            </p>
+
+                                                        </div>
+
+                                                        <div className="
+                                                        flex
+                                                        items-center
+                                                        justify-between
+                                                        gap-3
+                                                    ">
+
+                                                            <p className="
+                                                            text-[14px]
+                                                            text-slate-500
+                                                        ">
+                                                                Progress
+                                                            </p>
+
+                                                            <p className="
+                                                            text-yellow-400
+                                                            font-bold
+                                                            text-sm
+                                                        ">
+                                                                {progressCount}
+                                                            </p>
+
+                                                        </div>
+
+                                                        <div className="
+                                                        flex
+                                                        items-center
+                                                        justify-between
+                                                        gap-3
+                                                    ">
+
+                                                            <p className="
+                                                            text-[14px]
+                                                            text-slate-500
+                                                        ">
+                                                                Open
+                                                            </p>
+
+                                                            <p className="
+                                                            text-cyan-400
+                                                            font-bold
+                                                            text-sm
+                                                        ">
+                                                                {openCount}
+                                                            </p>
+
+                                                        </div>
+
+                                                        <div className="
+                                                        flex
+                                                        items-center
+                                                        justify-between
+                                                        gap-3
+                                                    ">
+
+                                                            <p className="
+                                                            text-[14px]
+                                                            text-slate-500
+                                                        ">
+                                                                Delay
+                                                            </p>
+
+                                                            <p className="
+                                                            text-red-400
+                                                            font-bold
+                                                            text-sm
+                                                        ">
+                                                                {delayCount}
+                                                            </p>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                );
+
+                                            })()}
 
                                         </div>
 
                                     </div>
 
-                                    {/* RIGHT STATUS */}
-                                    {(() => {
-
-                                        const headers =
-                                            taskHeaders.filter((header) => {
-
-                                                return (
-                                                    String(header.project_id) ===
-                                                    String(item.id)
-                                                );
-
-                                            });
-
-                                        let doneCount = 0;
-                                        let openCount = 0;
-                                        let progressCount = 0;
-                                        let delayCount = 0;
-
-                                        headers.forEach((header) => {
-
-                                            const relatedSubs =
-                                                subTasks.filter((sub) => {
-
-                                                    return (
-                                                        String(sub.header_id) ===
-                                                        String(header.id)
-                                                    );
-
-                                                });
-
-                                            // ======================
-                                            // PLAN TASKS
-                                            // ======================
-
-                                            const planTasks =
-                                                relatedSubs.filter((sub) => {
-
-                                                    return (
-                                                        String(sub.remark)
-                                                            .toUpperCase() ===
-                                                        "PLAN"
-                                                    );
-
-                                                });
-
-                                            // ======================
-                                            // ACTUAL TASKS
-                                            // ======================
-
-                                            const actualTasks =
-                                                relatedSubs.filter((sub) => {
-
-                                                    return (
-                                                        String(sub.remark)
-                                                            .toUpperCase() ===
-                                                        "ACTUAL"
-                                                    );
-
-                                                });
-
-                                            // ======================
-                                            // HAS PROGRESS
-                                            // ======================
-
-                                            const hasPlanProgress =
-
-                                                planTasks.some(
-                                                    (x) =>
-
-                                                        x.start_date &&
-                                                        x.end_date
-                                                )
-
-                                                ||
-
-                                                actualTasks.some(
-                                                    (x) =>
-
-                                                        x.start_date &&
-                                                        x.end_date
-                                                );
-
-                                            // ======================
-                                            // ALL ACTUAL DONE
-                                            // ======================
-
-                                            const allActualDone =
-
-                                                actualTasks.length > 0 &&
-
-                                                actualTasks.every(
-                                                    (x) =>
-
-                                                        x.start_date &&
-                                                        x.end_date
-                                                );
-
-                                            // ======================
-                                            // DONE
-                                            // ======================
-
-                                            if (allActualDone) {
-
-                                                doneCount++;
-                                                return;
-
-                                            }
-
-                                            // ======================
-                                            // DELAY
-                                            // ======================
-
-                                            const today =
-                                                new Date();
-
-                                            today.setHours(
-                                                0,
-                                                0,
-                                                0,
-                                                0
-                                            );
-
-                                            if (header.end_date) {
-
-                                                const endDate =
-                                                    new Date(
-                                                        header.end_date
-                                                    );
-
-                                                endDate.setHours(
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0
-                                                );
-
-                                                if (
-                                                    today > endDate &&
-                                                    !allActualDone
-                                                ) {
-
-                                                    delayCount++;
-                                                    return;
-
-                                                }
-
-                                            }
-
-                                            // ======================
-                                            // PROGRESS
-                                            // ======================
-
-                                            if (hasPlanProgress) {
-
-                                                progressCount++;
-                                                return;
-
-                                            }
-
-                                            // ======================
-                                            // OPEN
-                                            // ======================
-
-                                            openCount++;
-
-                                        });
-
-                                        return (
-
-                                            <div className="
-                                                    min-w-[120px]
-                                                    space-y-2
-                                                ">
-
-                                                <div className="
-                                                        flex
-                                                        items-center
-                                                        justify-between
-                                                        gap-3
-                                                    ">
-
-                                                    <p className="
-                                                            text-[14px]
-                                                            text-slate-500
-                                                        ">
-                                                        Done
-                                                    </p>
-
-                                                    <p className="
-                                                            text-green-400
-                                                            font-bold
-                                                            text-sm
-                                                        ">
-                                                        {doneCount}
-                                                    </p>
-
-                                                </div>
-
-                                                <div className="
-                                                        flex
-                                                        items-center
-                                                        justify-between
-                                                        gap-3
-                                                    ">
-
-                                                    <p className="
-                                                            text-[14px]
-                                                            text-slate-500
-                                                        ">
-                                                        Progress
-                                                    </p>
-
-                                                    <p className="
-                                                            text-yellow-400
-                                                            font-bold
-                                                            text-sm
-                                                        ">
-                                                        {progressCount}
-                                                    </p>
-
-                                                </div>
-
-                                                <div className="
-                                                        flex
-                                                        items-center
-                                                        justify-between
-                                                        gap-3
-                                                    ">
-
-                                                    <p className="
-                                                            text-[14px]
-                                                            text-slate-500
-                                                        ">
-                                                        Open
-                                                    </p>
-
-                                                    <p className="
-                                                            text-cyan-400
-                                                            font-bold
-                                                            text-sm
-                                                        ">
-                                                        {openCount}
-                                                    </p>
-
-                                                </div>
-
-                                                <div className="
-                                                        flex
-                                                        items-center
-                                                        justify-between
-                                                        gap-3
-                                                    ">
-
-                                                    <p className="
-                                                            text-[14px]
-                                                            text-slate-500
-                                                        ">
-                                                        Delay
-                                                    </p>
-
-                                                    <p className="
-                                                            text-red-400
-                                                            font-bold
-                                                            text-sm
-                                                        ">
-                                                        {delayCount}
-                                                    </p>
-
-                                                </div>
-
-                                            </div>
-
-                                        );
-
-                                    })()}
-
                                 </div>
 
-                            </div>
+                            ))
+
+                        )}
+                    </div>
+                </div>
+
+
+
+
+                {/* KANAN */}
+                <div
+                    className="
+                        flex
+                        flex-col
+                        gap-4
+                        overflow-y-auto
+                    "
+                >
+                    <div
+                        className="
+                        rounded-[28px]
+                        border border-red-500/20
+                        bg-gradient-to-br
+                        from-[#081526]
+                        to-[#07111d]
+                        p-5
+                        h-[340px]
+                        flex
+                        flex-col
+                    "
+                    >
+
+                        <div className="flex justify-between mb-4">
+
+                            <h3 className="text-white font-bold">
+                                Recent Alerts
+                            </h3>
+
+                            <span className="
+                                text-red-400
+                                text-xs
+                                font-bold
+                            ">
+                                {recentAlerts.length} Delay
+                            </span>
 
                         </div>
 
-                    ))
+                        <div className="
+                            flex-1
+                            overflow-y-auto
+                            space-y-2
+                        ">
 
-                )}
+                            {
+                                recentAlerts.length === 0
+                                    ? (
+                                        <div className="
+                                            text-slate-500
+                                            text-sm
+                                        ">
+                                            No delayed task
+                                        </div>
+                                    )
+
+                                    : (
+
+                                        recentAlerts.map(
+                                            (item) => (
+
+                                                <div
+                                                    key={item.id}
+                                                    className="
+                                                        rounded-xl
+                                                        border
+                                                        border-red-500/10
+                                                        bg-red-500/5
+                                                        p-3
+                                                    "
+                                                >
+
+                                                    <div className="
+                                                        text-white
+                                                        text-sm
+                                                        font-semibold
+                                                        truncate
+                                                    ">
+                                                        {item.title}
+                                                    </div>
+
+                                                    <div className="
+                                                        mt-1
+                                                        text-xs
+                                                        text-slate-400
+                                                    ">
+                                                        Assign To :
+                                                        {" "}
+                                                        {item.assigned_to}
+                                                    </div>
+
+                                                    <div className="
+                                                        mt-1
+                                                        flex
+                                                        justify-between
+                                                        text-xs
+                                                    ">
+
+                                                        <span className="
+                                                            text-slate-500
+                                                        ">
+                                                            Due:
+                                                            {" "}
+                                                            {item.end_date}
+                                                        </span>
+
+                                                        <span className="
+                                                            text-red-400
+                                                            font-bold
+                                                        ">
+                                                            {item.delayDays}
+                                                            {" "}
+                                                            Days
+                                                        </span>
+
+                                                    </div>
+
+                                                </div>
+
+                                            )
+                                        )
+
+                                    )
+                            }
+
+                        </div>
+
+                    </div>
+
+                    <div
+                        className="
+                        rounded-[28px]
+                        border border-white/10
+                        bg-gradient-to-br
+                        from-[#081526]
+                        to-[#07111d]
+                        p-5
+                        h-[340px]
+                        flex
+                        flex-col
+                    "
+                    >
+
+                        <div className="flex justify-between mb-4">
+
+                            <h3 className="text-white font-bold">
+                                Upcoming Deadlines
+                            </h3>
+
+                            <span className="
+                                text-cyan-400
+                                text-xs
+                                font-bold
+                            ">
+                                Next 14 Days
+                            </span>
+
+                        </div>
+
+                        <div className="
+                            flex-1
+                            overflow-y-auto
+                            space-y-2
+                        ">
+
+                            {
+                                upcomingDeadlines.length === 0
+                                    ? (
+                                        <div className="
+                                            text-slate-500
+                                            text-sm
+                                        ">
+                                            No upcoming deadline
+                                        </div>
+                                    )
+
+                                    : (
+
+                                        upcomingDeadlines.map(
+                                            (item) => (
+
+                                                <div
+                                                    key={item.id}
+                                                    className="
+                                                        rounded-xl
+                                                        border
+                                                        border-cyan-500/10
+                                                        bg-cyan-500/5
+                                                        p-3
+                                                    "
+                                                >
+
+                                                    <div className="
+                                                        text-white
+                                                        text-sm
+                                                        font-semibold
+                                                        truncate
+                                                    ">
+                                                        {item.title}
+                                                    </div>
+
+                                                    <div className="
+                                                        mt-1
+                                                        text-xs
+                                                        text-slate-400
+                                                    ">
+                                                        Assign To :
+                                                        {" "}
+                                                        {item.assigned_to}
+                                                    </div>
+
+                                                    <div className="
+                                                        mt-1
+                                                        text-xs
+                                                        text-cyan-400
+                                                    ">
+                                                        Due:
+                                                        {" "}
+                                                        {item.end_date}
+                                                    </div>
+
+                                                </div>
+
+                                            )
+                                        )
+
+                                    )
+                            }
+
+                        </div>
+
+                    </div>
+
+                </div>
 
             </div>
 
