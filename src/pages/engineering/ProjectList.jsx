@@ -96,6 +96,29 @@ export default function ProjectList() {
         setDashboardFilter] =
         useState("ALL");
 
+    const [selectedEngineer, setSelectedEngineer] =
+        useState("ALL");
+
+    const [selectedHeader, setSelectedHeader] =
+        useState(null);
+
+    const handleOpenTask = (header) => {
+
+        const project =
+            projects.find(
+                p =>
+                    String(p.id) ===
+                    String(header.project_id)
+            );
+
+        if (!project) return;
+
+        setSelectedProjectActivity({
+            ...project,
+            selectedHeaderId: header.id
+        });
+
+    };
     // =========================
     // LOAD PROJECTS
     // =========================
@@ -389,46 +412,69 @@ export default function ProjectList() {
 
     const filteredHeaders =
         taskHeaders.filter(
-            header => {
+            (header) => {
 
-                if (
+                const statusMatch =
+
                     dashboardFilter === "ALL"
-                ) {
-                    return true;
-                }
+
+                    ||
+
+                    getHeaderStatus(header)
+                    ===
+                    dashboardFilter;
+
+                const engineerMatch =
+
+                    selectedEngineer === "ALL"
+
+                    ||
+
+                    String(
+                        header.assigned_to || ""
+                    )
+                        .trim()
+                        .toLowerCase()
+
+                    ===
+
+                    String(
+                        selectedEngineer || ""
+                    )
+                        .trim()
+                        .toLowerCase();
 
                 return (
-                    getHeaderStatus(
-                        header
-                    ) ===
-                    dashboardFilter
+                    statusMatch &&
+                    engineerMatch
                 );
 
             }
         );
+
+    const sourceHeaders =
+        dashboardFilter === "ALL"
+            ? taskHeaders
+            : taskHeaders.filter(
+                h =>
+                    getHeaderStatus(h) ===
+                    dashboardFilter
+            );
 
     const engineerWorkload =
         engineerList
             .map((eng) => {
 
                 const taskCount =
-                    filteredHeaders.filter(
-                        (header) =>
-
-                            String(
-                                header.assigned_to || ""
-                            )
+                    sourceHeaders.filter(
+                        header =>
+                            String(header.assigned_to || "")
                                 .trim()
                                 .toLowerCase()
-
                             ===
-
-                            String(
-                                eng.name || ""
-                            )
+                            String(eng.name || "")
                                 .trim()
                                 .toLowerCase()
-
                     ).length;
 
                 return {
@@ -1421,7 +1467,7 @@ export default function ProjectList() {
     // =====================================
     // RECENT ALERTS (DELAY TASK)
     // =====================================
-    const recentAlerts = taskHeaders
+    const recentAlerts = filteredHeaders
         .filter((header) => {
 
             const status =
@@ -1470,7 +1516,7 @@ export default function ProjectList() {
     // UPCOMING DEADLINE
     // =====================================
     const upcomingDeadlines =
-        taskHeaders
+        filteredHeaders
 
             .filter((header) => {
 
@@ -1526,6 +1572,71 @@ export default function ProjectList() {
                     new Date(
                         b.end_date
                     )
+            )
+
+            .slice(0, 10);
+
+
+    const ongoingTasks =
+        filteredHeaders
+
+            .filter((header) => {
+
+                if (!header.end_date)
+                    return false;
+
+                const status =
+                    getHeaderStatus(header);
+
+                if (
+                    status === "DONE" ||
+                    status === "DELAY"
+                ) {
+                    return false;
+                }
+
+                const today =
+                    new Date();
+
+                today.setHours(
+                    0,
+                    0,
+                    0,
+                    0
+                );
+
+                const deadline =
+                    new Date(
+                        header.end_date
+                    );
+
+                deadline.setHours(
+                    0,
+                    0,
+                    0,
+                    0
+                );
+
+                const diffDays =
+                    (
+                        deadline -
+                        today
+                    ) /
+                    (
+                        1000 *
+                        60 *
+                        60 *
+                        24
+                    );
+
+                return diffDays > 14;
+
+            })
+
+            .sort(
+                (a, b) =>
+                    new Date(a.end_date) -
+                    new Date(b.end_date)
             )
 
             .slice(0, 10);
@@ -2265,7 +2376,7 @@ export default function ProjectList() {
                     from-[#081526]
                     to-[#07111d]
 
-                    p-6
+                    p-4
 
                     flex
                     flex-col
@@ -2305,7 +2416,43 @@ export default function ProjectList() {
 
                                     <div
                                         key={eng.name}
-                                        className="mb-4"
+
+                                        onClick={() => {
+
+                                            if (
+                                                selectedEngineer === eng.name
+                                            ) {
+
+                                                setSelectedEngineer("ALL");
+
+                                            } else {
+
+                                                setSelectedEngineer(
+                                                    eng.name
+                                                );
+
+                                            }
+
+                                        }}
+
+                                        className={`
+                                            mb-1
+                                            cursor-pointer
+                                            rounded-xl
+                                            p-1.5
+                                            transition-all
+
+                                            ${selectedEngineer === eng.name
+                                                ? `
+                                                        bg-cyan-500/10
+                                                        border
+                                                        border-cyan-500/30
+                                                    `
+                                                : `
+                                                        hover:bg-white/5
+                                                    `
+                                            }
+                                        `}
                                     >
 
                                         <div className="
@@ -3464,7 +3611,7 @@ export default function ProjectList() {
                         from-[#081526]
                         to-[#07111d]
                         p-5
-                        h-[340px]
+                        h-[270px]
                         flex
                         flex-col
                     "
@@ -3510,12 +3657,24 @@ export default function ProjectList() {
 
                                                 <div
                                                     key={item.id}
+
+                                                    onClick={() =>
+                                                        handleOpenTask(item)
+                                                    }
+
                                                     className="
                                                         rounded-xl
                                                         border
                                                         border-red-500/10
                                                         bg-red-500/5
                                                         p-3
+
+                                                        cursor-pointer
+
+                                                        hover:border-red-500/40
+                                                        hover:bg-red-500/10
+
+                                                        transition-all
                                                     "
                                                 >
 
@@ -3584,7 +3743,7 @@ export default function ProjectList() {
                         from-[#081526]
                         to-[#07111d]
                         p-5
-                        h-[340px]
+                        h-[270px]
                         flex
                         flex-col
                     "
@@ -3630,12 +3789,24 @@ export default function ProjectList() {
 
                                                 <div
                                                     key={item.id}
+
+                                                    onClick={() =>
+                                                        handleOpenTask(item)
+                                                    }
+
                                                     className="
                                                         rounded-xl
                                                         border
                                                         border-cyan-500/10
                                                         bg-cyan-500/5
                                                         p-3
+
+                                                        cursor-pointer
+
+                                                        hover:border-cyan-500/40
+                                                        hover:bg-cyan-500/10
+
+                                                        transition-all
                                                     "
                                                 >
 
@@ -3678,8 +3849,175 @@ export default function ProjectList() {
 
                         </div>
 
-                    </div>
 
+                    </div>
+                    <div
+                        className="
+                                rounded-[28px]
+                                border border-green-500/20
+                                bg-gradient-to-br
+                                from-[#081526]
+                                to-[#07111d]
+                                p-5
+                                h-[270px]
+                                flex
+                                flex-col
+                            "
+                    >
+
+                        <div className="
+                                flex
+                                justify-between
+                                mb-4
+                            ">
+
+                            <h3 className="
+                                    text-white
+                                    font-bold
+                                ">
+                                Ongoing Tasks
+                            </h3>
+
+                            <span className="
+                                    text-green-400
+                                    text-xs
+                                    font-bold
+                                ">
+                                +14 Days
+                            </span>
+
+                        </div>
+
+                        <div className="
+                                flex-1
+                                overflow-y-auto
+                                space-y-2
+                            ">
+
+                            {
+                                ongoingTasks.length === 0
+
+                                    ? (
+
+                                        <div className="
+                                                text-slate-500
+                                                text-sm
+                                            ">
+                                            No ongoing task
+                                        </div>
+
+                                    )
+
+                                    : (
+
+                                        ongoingTasks.map(
+                                            (item) => {
+
+                                                const today =
+                                                    new Date();
+
+                                                const dueDate =
+                                                    new Date(
+                                                        item.end_date
+                                                    );
+
+                                                const remainingDays =
+                                                    Math.ceil(
+                                                        (
+                                                            dueDate -
+                                                            today
+                                                        ) /
+                                                        (
+                                                            1000 *
+                                                            60 *
+                                                            60 *
+                                                            24
+                                                        )
+                                                    );
+
+                                                return (
+
+                                                    <div
+                                                        key={item.id}
+
+                                                        onClick={() =>
+                                                            handleOpenTask(item)
+                                                        }
+
+                                                        className="
+                                                            rounded-xl
+                                                            border
+                                                            border-green-500/10
+                                                            bg-green-500/5
+                                                            p-3
+
+                                                            cursor-pointer
+
+                                                            hover:border-green-500/40
+                                                            hover:bg-green-500/10
+
+                                                            transition-all
+                                                        "
+                                                    >
+
+                                                        <div className="
+                                                                text-white
+                                                                text-sm
+                                                                font-semibold
+                                                                truncate
+                                                            ">
+                                                            {item.title}
+                                                        </div>
+
+                                                        <div className="
+                                                                mt-1
+                                                                text-xs
+                                                                text-slate-400
+                                                            ">
+                                                            Assign To :
+                                                            {" "}
+                                                            {item.assigned_to}
+                                                        </div>
+
+                                                        <div className="
+                                                                mt-1
+                                                                flex
+                                                                justify-between
+                                                                text-xs
+                                                            ">
+
+                                                            <span className="
+                                                                    text-green-400
+                                                                ">
+                                                                Due:
+                                                                {" "}
+                                                                {item.end_date}
+                                                            </span>
+
+                                                            <span className="
+                                                                    text-slate-300
+                                                                    font-semibold
+                                                                ">
+                                                                {remainingDays}
+                                                                {" "}
+                                                                Days Left
+                                                            </span>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                );
+
+                                            }
+                                        )
+
+                                    )
+                            }
+
+                        </div>
+
+                    </div>
                 </div>
 
             </div>

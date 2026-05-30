@@ -558,7 +558,7 @@ export default function ActivityDetail({
                 );
 
                 await loadTaskHeaders();
-                
+
 
                 if (refreshProjects) {
 
@@ -1920,6 +1920,35 @@ export default function ActivityDetail({
                 getHeaderStatus(x) === "OPEN"
         ).length;
 
+
+    useEffect(() => {
+
+        if (
+            !project?.selectedHeaderId
+        ) return;
+
+        const header =
+            taskHeaders.find(
+                h =>
+                    String(h.id) ===
+                    String(
+                        project.selectedHeaderId
+                    )
+            );
+
+        if (header) {
+
+            setSelectedHeader(
+                header
+            );
+
+        }
+
+    }, [
+        project,
+        taskHeaders
+    ]);
+    
     return (
 
         <div className="space-y-6">
