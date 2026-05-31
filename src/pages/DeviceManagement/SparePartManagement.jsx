@@ -1528,315 +1528,7 @@ export default function SparePartManagement() {
     return (
         <div className="min-h-screen bg-[#020817] text-white px-6 pb-6 pt-2">
 
-            {/* ======================================== */}
-            {/* HEADER */}
-            {/* ======================================== */}
-
-            <div className="
-                flex
-                justify-between
-                items-end
-                mb-3
-                rounded-[32px]
-                border
-                border-cyan-500/10
-                bg-gradient-to-r
-                from-cyan-500/5
-                to-transparent
-                backdrop-blur-xl
-                px-6 py-5
-                shadow-2xl
-                shadow-cyan-500/5
-            ">
-
-                {/* LEFT */}
-
-                <div>
-
-                    <div className="
-                        inline-flex
-                        items-center
-                        gap-2
-                        px-4
-                        py-2
-                        rounded-2xl
-                        border
-                        border-cyan-500/20
-                        bg-cyan-500/10
-                        text-cyan-300
-                        text-xs
-                        font-bold
-                        uppercase
-                        tracking-[3px]
-                        mb-4
-                    ">
-
-                        <div className="
-                            w-2
-                            h-2
-                            rounded-full
-                            bg-cyan-400
-                            animate-pulse
-                        " />
-
-                        SPARE PART MONITORING
-
-                    </div>
-
-                    <h1 className="
-                        text-5xl
-                        font-black
-                        leading-tight
-                        bg-gradient-to-r
-                        from-white
-                        via-cyan-200
-                        to-cyan-500
-                        bg-clip-text
-                        text-transparent
-                    ">
-                        Spare Part Management
-                    </h1>
-
-                    <p className="
-                        text-slate-400
-                        mt-3
-                        text-lg
-                    ">
-                        Inventory monitoring & warehouse management system
-                    </p>
-
-                </div>
-
-                {/* RIGHT ACTION */}
-
-                <div className="
-                    flex
-                    items-center
-                    gap-3
-                    self-end
-                    mb-2
-                ">
-                    <div className="relative">
-
-                        <Search
-                            className="
-                                absolute
-                                left-4
-                                top-3.5
-                                text-slate-500
-                            "
-                            size={18}
-                        />
-
-                        <input
-                            type="text"
-                            placeholder="Search part..."
-                            value={search}
-                            onChange={(e) =>
-                                setSearch(e.target.value)
-                            }
-                            className="
-                                w-[320px]
-                                h-12
-                                pl-12
-                                pr-4
-                                rounded-2xl
-                                bg-[#08192e]
-                                border
-                                border-cyan-500/10
-                                outline-none
-                                text-white
-                                placeholder:text-slate-500
-                                focus:border-cyan-400/40
-                            "
-                        />
-
-                    </div>
-                    <button
-                        onClick={() => {
-
-                            if (!canManage) {
-                                alert("Only Manager/Admin");
-                                return;
-                            }
-
-                            resetForm();
-                            setShowPartModal(true);
-
-                        }}
-                        className="
-                            h-12
-                            px-6
-                            rounded-2xl
-                            bg-cyan-500
-                            hover:bg-cyan-400
-                            font-bold
-                            flex
-                            items-center
-                            gap-2
-                            shadow-lg
-                            shadow-cyan-500/20
-                        "
-                    >
-                        <Plus size={18} />
-                        Add Part
-                    </button>
-
-                    <label className="
-                        h-12
-                        px-6
-                        rounded-2xl
-                        bg-[#071226]
-                        border
-                        border-cyan-500/10
-                        hover:border-cyan-400/30
-                        font-bold
-                        flex
-                        items-center
-                        gap-2
-                        cursor-pointer
-                    ">
-
-                        <Upload size={18} />
-                        Import Excel
-
-                        <input
-                            type="file"
-                            hidden
-                            onChange={handleImportExcel}
-                        />
-
-                    </label>
-
-                    <button
-                        onClick={exportExcel}
-                        className="
-                            h-12
-                            px-6
-                            rounded-2xl
-                            bg-[#071226]
-                            border
-                            border-cyan-500/10
-                            hover:border-cyan-400/30
-                            font-bold
-                            flex
-                            items-center
-                            gap-2
-                        "
-                    >
-                        <Download size={18} />
-                        Export Excel
-                    </button>
-
-                    <div className="relative group">
-
-                        <button
-                            className="
-                            h-12
-                            px-6
-                            rounded-2xl
-                            bg-purple-500/10
-                            border
-                            border-purple-500/20
-                            text-purple-300
-                            hover:bg-purple-500/20
-                            font-bold
-                            flex
-                            items-center
-                            gap-2
-                        "
-                        >
-                            <Activity size={18} />
-                            Transaction
-                        </button>
-
-                        {/* DROPDOWN */}
-
-                        <div className="
-                        absolute
-                        right-0
-                        top-14
-                        w-44
-                        bg-[#071226]
-                        border
-                        border-purple-500/20
-                        rounded-2xl
-                        overflow-hidden
-                        opacity-0
-                        invisible
-                        group-hover:opacity-100
-                        group-hover:visible
-                        transition-all
-                        duration-200
-                        z-50
-                        shadow-2xl
-                    ">
-
-                            {/* IN */}
-
-                            <button
-                                onClick={() => {
-
-                                    setTransactionType("IN");
-
-                                    setSelectedPart(null);
-
-                                    setShowTransactionModal(true);
-
-                                }}
-                                className="
-                                w-full
-                                h-12
-                                px-4
-                                flex
-                                items-center
-                                gap-3
-                                hover:bg-green-500/10
-                                text-green-400
-                                font-semibold
-                            "
-                            >
-                                <ArrowDownCircle size={18} />
-                                Stock In
-                            </button>
-
-                            {/* OUT */}
-
-                            <button
-                                onClick={() => {
-
-                                    setTransactionType("OUT");
-
-                                    setSelectedPart(null);
-
-                                    setShowTransactionModal(true);
-
-                                }}
-                                className="
-                                w-full
-                                h-12
-                                px-4
-                                flex
-                                items-center
-                                gap-3
-                                hover:bg-red-500/10
-                                text-red-400
-                                font-semibold
-                                border-t
-                                border-purple-500/10
-                            "
-                            >
-                                <ArrowUpCircle size={18} />
-                                Stock Out
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
+            
 
             {/* ====================================================== */}
             {/* KPI */}
@@ -2451,6 +2143,234 @@ export default function SparePartManagement() {
 
                 <div className="col-span-9 space-y-5">
 
+                <div className="
+                            flex
+                            items-center
+                            gap-3
+                            mb-3
+                        ">
+                        <div className="
+                                relative
+                                flex-1
+                            ">
+
+                            <Search
+                                className="
+                                    absolute
+                                    left-4
+                                    top-3.5
+                                    text-slate-500
+                                "
+                                size={18}
+                            />
+
+                            <input
+                                type="text"
+                                placeholder="Search part..."
+                                value={search}
+                                onChange={(e) =>
+                                    setSearch(e.target.value)
+                                }
+                                className="
+                                    w-full
+                                    h-12
+                                    pl-12
+                                    pr-4
+                                    rounded-2xl
+                                    bg-[#08192e]
+                                    border
+                                    border-cyan-500/10
+                                    outline-none
+                                    text-white
+                                    placeholder:text-slate-500
+                                    focus:border-cyan-400/40
+                                "
+                            />
+
+                        </div>
+                        <button
+                            onClick={() => {
+
+                                if (!canManage) {
+                                    alert("Only Manager/Admin");
+                                    return;
+                                }
+
+                                resetForm();
+                                setShowPartModal(true);
+
+                            }}
+                            className="
+                                h-12
+                                px-6
+                                rounded-2xl
+                                bg-cyan-500
+                                hover:bg-cyan-400
+                                font-bold
+                                flex
+                                items-center
+                                gap-2
+                                shadow-lg
+                                shadow-cyan-500/20
+                            "
+                        >
+                            <Plus size={18} />
+                            Add Part
+                        </button>
+
+                        <label className="
+                            h-12
+                            px-6
+                            rounded-2xl
+                            bg-[#071226]
+                            border
+                            border-cyan-500/10
+                            hover:border-cyan-400/30
+                            font-bold
+                            flex
+                            items-center
+                            gap-2
+                            cursor-pointer
+                        ">
+
+                            <Upload size={18} />
+                            Import Excel
+
+                            <input
+                                type="file"
+                                hidden
+                                onChange={handleImportExcel}
+                            />
+
+                        </label>
+
+                        <button
+                            onClick={exportExcel}
+                            className="
+                                h-12
+                                px-6
+                                rounded-2xl
+                                bg-[#071226]
+                                border
+                                border-cyan-500/10
+                                hover:border-cyan-400/30
+                                font-bold
+                                flex
+                                items-center
+                                gap-2
+                            "
+                        >
+                            <Download size={18} />
+                            Export Excel
+                        </button>
+
+                        <div className="relative group">
+
+                            <button
+                                className="
+                                h-12
+                                px-6
+                                rounded-2xl
+                                bg-purple-500/10
+                                border
+                                border-purple-500/20
+                                text-purple-300
+                                hover:bg-purple-500/20
+                                font-bold
+                                flex
+                                items-center
+                                gap-2
+                            "
+                            >
+                                <Activity size={18} />
+                                Transaction
+                            </button>
+
+                            {/* DROPDOWN */}
+
+                            <div className="
+                            absolute
+                            right-0
+                            top-14
+                            w-44
+                            bg-[#071226]
+                            border
+                            border-purple-500/20
+                            rounded-2xl
+                            overflow-hidden
+                            opacity-0
+                            invisible
+                            group-hover:opacity-100
+                            group-hover:visible
+                            transition-all
+                            duration-200
+                            z-50
+                            shadow-2xl
+                        ">
+
+                                {/* IN */}
+
+                                <button
+                                    onClick={() => {
+
+                                        setTransactionType("IN");
+
+                                        setSelectedPart(null);
+
+                                        setShowTransactionModal(true);
+
+                                    }}
+                                    className="
+                                    w-full
+                                    h-12
+                                    px-4
+                                    flex
+                                    items-center
+                                    gap-3
+                                    hover:bg-green-500/10
+                                    text-green-400
+                                    font-semibold
+                                "
+                                >
+                                    <ArrowDownCircle size={18} />
+                                    Stock In
+                                </button>
+
+                                {/* OUT */}
+
+                                <button
+                                    onClick={() => {
+
+                                        setTransactionType("OUT");
+
+                                        setSelectedPart(null);
+
+                                        setShowTransactionModal(true);
+
+                                    }}
+                                    className="
+                                    w-full
+                                    h-12
+                                    px-4
+                                    flex
+                                    items-center
+                                    gap-3
+                                    hover:bg-red-500/10
+                                    text-red-400
+                                    font-semibold
+                                    border-t
+                                    border-purple-500/10
+                                "
+                                >
+                                    <ArrowUpCircle size={18} />
+                                    Stock Out
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
                     {/* ================================================= */}
                     {/* PART TABLE */}
                     {/* ================================================= */}
@@ -2991,7 +2911,7 @@ export default function SparePartManagement() {
                         rounded-3xl
                         border
                         border-cyan-500/10
-                        h-[310px]
+                        h-[370px]
                         overflow-hidden
                         flex
                         flex-col
