@@ -102,6 +102,10 @@ export default function ProjectList() {
     const [selectedHeader, setSelectedHeader] =
         useState(null);
 
+    const [selectedProjectType,
+        setSelectedProjectType] =
+        useState("ALL");
+
     const handleOpenTask = (header) => {
 
         const project =
@@ -414,6 +418,22 @@ export default function ProjectList() {
         taskHeaders.filter(
             (header) => {
 
+                const project =
+                    projects.find(
+                        p =>
+                            String(p.id) ===
+                            String(header.project_id)
+                    );
+
+                const typeMatch =
+
+                    selectedProjectType === "ALL"
+
+                    ||
+
+                    project?.type ===
+                    selectedProjectType;
+
                 const statusMatch =
 
                     dashboardFilter === "ALL"
@@ -421,8 +441,7 @@ export default function ProjectList() {
                     ||
 
                     getHeaderStatus(header)
-                    ===
-                    dashboardFilter;
+                    === dashboardFilter;
 
                 const engineerMatch =
 
@@ -445,6 +464,7 @@ export default function ProjectList() {
                         .toLowerCase();
 
                 return (
+                    typeMatch &&
                     statusMatch &&
                     engineerMatch
                 );
@@ -466,7 +486,7 @@ export default function ProjectList() {
             .map((eng) => {
 
                 const taskCount =
-                    sourceHeaders.filter(
+                    filteredHeaders.filter(
                         header =>
                             String(header.assigned_to || "")
                                 .trim()
@@ -994,11 +1014,49 @@ export default function ProjectList() {
 
         };
 
+    const typeSourceHeaders =
+        taskHeaders.filter((header) => {
+
+            const statusMatch =
+
+                dashboardFilter === "ALL"
+
+                ||
+
+                getHeaderStatus(header) ===
+                dashboardFilter;
+
+            const engineerMatch =
+
+                selectedEngineer === "ALL"
+
+                ||
+
+                String(
+                    header.assigned_to || ""
+                )
+                    .trim()
+                    .toLowerCase()
+
+                ===
+
+                String(
+                    selectedEngineer || ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+            return (
+                statusMatch &&
+                engineerMatch
+            );
+
+        });
     // =========================
     // SUMMARY CARD
     // =========================
     const totalNPI =
-        filteredHeaders.filter((x) => {
+        typeSourceHeaders.filter((x) => {
 
             const project =
                 projects.find(
@@ -1014,7 +1072,7 @@ export default function ProjectList() {
         }).length;
 
     const totalKaizen =
-        filteredHeaders.filter((x) => {
+        typeSourceHeaders.filter((x) => {
 
             const project =
                 projects.find(
@@ -1030,7 +1088,7 @@ export default function ProjectList() {
         }).length;
 
     const totalDT =
-        filteredHeaders.filter((x) => {
+        typeSourceHeaders.filter((x) => {
 
             const project =
                 projects.find(
@@ -1047,7 +1105,7 @@ export default function ProjectList() {
         }).length;
 
     const totalVAVE =
-        filteredHeaders.filter((x) => {
+        typeSourceHeaders.filter((x) => {
 
             const project =
                 projects.find(
@@ -2615,6 +2673,18 @@ export default function ProjectList() {
                                                 <Cell
                                                     key={index}
                                                     fill={entry.color}
+                                                    opacity={
+                                                        selectedProjectType === "ALL"
+                                                            ? 1
+                                                            : selectedProjectType ===
+                                                                (
+                                                                    entry.name === "DT"
+                                                                        ? "Downtime and Finding"
+                                                                        : entry.name
+                                                                )
+                                                                ? 1
+                                                                : 0.2
+                                                    }
                                                 />
                                             ))
                                         }
@@ -2636,11 +2706,49 @@ export default function ProjectList() {
 
                                     <div
                                         key={item.name}
-                                        className="
-                                        flex
-                                        items-center
-                                        gap-3
-                                        "
+
+                                        onClick={() => {
+
+                                            const type =
+
+                                                item.name === "DT"
+                                                    ? "Downtime and Finding"
+                                                    : item.name;
+
+                                            if (
+                                                selectedProjectType === type
+                                            ) {
+
+                                                setSelectedProjectType("ALL");
+
+                                            } else {
+
+                                                setSelectedProjectType(type);
+
+                                            }
+
+                                        }}
+
+                                        className={`
+                                            flex
+                                            items-center
+                                            gap-3
+
+                                            cursor-pointer
+                                            rounded-lg
+                                            px-2
+                                            py-1
+
+                                            ${selectedProjectType ===
+                                                (
+                                                    item.name === "DT"
+                                                        ? "Downtime and Finding"
+                                                        : item.name
+                                                )
+                                                ? "bg-white/10"
+                                                : ""
+                                            }
+                                        `}
                                     >
 
                                         <div
