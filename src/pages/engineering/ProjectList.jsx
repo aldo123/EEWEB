@@ -481,12 +481,39 @@ export default function ProjectList() {
                     dashboardFilter
             );
 
+    const workloadHeaders =
+        taskHeaders.filter((header) => {
+
+            const project =
+                projects.find(
+                    p =>
+                        String(p.id) ===
+                        String(header.project_id)
+                );
+
+            const typeMatch =
+                selectedProjectType === "ALL"
+                ||
+                project?.type === selectedProjectType;
+
+            const statusMatch =
+                dashboardFilter === "ALL"
+                ||
+                getHeaderStatus(header) === dashboardFilter;
+
+            return (
+                typeMatch &&
+                statusMatch
+            );
+
+        }); 
+        
     const engineerWorkload =
         engineerList
             .map((eng) => {
 
                 const taskCount =
-                    filteredHeaders.filter(
+                    workloadHeaders.filter(
                         header =>
                             String(header.assigned_to || "")
                                 .trim()
@@ -2789,51 +2816,76 @@ export default function ProjectList() {
 
             </div>
 
-            {/* FILTER */}
-            <div className="rounded-[32px]
-            border border-white/5
-            bg-white/[0.03]
-            backdrop-blur-2xl
-            p-5">
 
-                <div className="flex items-center gap-4">
+            {/* PROJECT AREA */}
+            <div
+                className="
+                grid
+                gap-5
+                h-[calc(100vh-330px)]
+                overflow-hidden
+        "
+                style={{
+                    gridTemplateColumns: "1fr 320px"
+                }}
+            >
 
-                    {/* SEARCH */}
-                    <div className="relative flex-1">
+                {/* LEFT SIDE */}
+                <div
+                    className="
+                        flex
+                        flex-col
+                        overflow-hidden
+                        min-w-0
+                    "
+                >
 
-                        <Search
-                            size={18}
-                            className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500"
-                        />
-
-                        <input
-                            type="text"
-                            placeholder="Search project..."
-                            value={search}
-                            onChange={(e) =>
-                                setSearch(
-                                    e.target.value
-                                )
-                            }
-                            className="w-full h-14 rounded-2xl
-                            bg-black/20
-                            border border-white/5
-                            pl-14 pr-5
-                            text-white
-                            placeholder:text-slate-500
-                            outline-none
-                            focus:border-green-500/20"
-                        />
-
-                    </div>
-
-                    {/* FILTER BUTTON */}
+                    {/* FILTER */}
                     <div className="
                     flex
                     items-center
                     gap-3
-                    shrink-0
+                    mb-4
                     ">
+
+                        {/* SEARCH */}
+                        <div className="relative flex-1">
+
+                            <Search
+                                size={18}
+                                className="
+                                absolute
+                                left-4
+                                top-1/2
+                                -translate-y-1/2
+                                text-slate-500
+                                "
+                            />
+
+                            <input
+                                type="text"
+                                placeholder="Search project..."
+                                value={search}
+                                onChange={(e) =>
+                                    setSearch(e.target.value)
+                                }
+                                className="
+                                w-full
+                                h-12
+                                rounded-2xl
+
+                                bg-[#081526]
+                                border
+                                border-white/10
+
+                                pl-12
+                                pr-4
+
+                                text-white
+                                "
+                            />
+
+                        </div>
 
                         {/* MY PROJECT */}
                         <button
@@ -2841,30 +2893,30 @@ export default function ProjectList() {
                                 setProjectFilter("MY")
                             }
                             className={`
-                            h-14
-                            px-5
-                            rounded-2xl
-                            border
-                            font-bold
-                            transition-all
+                                h-14
+                                px-5
+                                rounded-2xl
+                                border
+                                font-bold
+                                transition-all
 
-                            ${projectFilter === "MY"
+                                ${projectFilter === "MY"
 
                                     ? `
-                                border-cyan-400
-                                bg-cyan-500/20
-                                text-cyan-300
-                                shadow-[0_0_25px_rgba(0,255,255,0.25)]
-                                `
+                                    border-cyan-400
+                                    bg-cyan-500/20
+                                    text-cyan-300
+                                    shadow-[0_0_25px_rgba(0,255,255,0.25)]
+                                    `
 
                                     : `
-                                border-white/10
-                                bg-white/5
-                                text-slate-400
-                                hover:border-cyan-500/20
-                                `
+                                    border-white/10
+                                    bg-white/5
+                                    text-slate-400
+                                    hover:border-cyan-500/20
+                                    `
                                 }
-                            `}
+                                `}
                         >
 
                             My Project
@@ -2877,126 +2929,112 @@ export default function ProjectList() {
                                 setProjectFilter("ALL")
                             }
                             className={`
-                            h-14
-                            px-5
-                            rounded-2xl
-                            border
-                            font-bold
-                            transition-all
+                                h-14
+                                px-5
+                                rounded-2xl
+                                border
+                                font-bold
+                                transition-all
 
-                            ${projectFilter === "ALL"
+                                ${projectFilter === "ALL"
 
                                     ? `
-                                border-green-400
-                                bg-green-500/20
-                                text-green-300
-                                shadow-[0_0_25px_rgba(0,255,120,0.25)]
-                                `
+                                    border-green-400
+                                    bg-green-500/20
+                                    text-green-300
+                                    shadow-[0_0_25px_rgba(0,255,120,0.25)]
+                                    `
 
                                     : `
-                                border-white/10
-                                bg-white/5
-                                text-slate-400
-                                hover:border-green-500/20
-                                `
+                                    border-white/10
+                                    bg-white/5
+                                    text-slate-400
+                                    hover:border-green-500/20
+                                    `
                                 }
-                            `}
+                                `}
                         >
 
                             All Project
 
                         </button>
 
+                        {/* ADD PROJECT */}
+                        <button
+                            onClick={() => {
+
+                                // ======================
+                                // ROLE VALIDATION
+                                // ======================
+
+                                if (
+                                    currentUser?.role !== "Manager"
+                                ) {
+
+                                    alert(
+                                        "Project hanya bisa ditambahkan oleh Manager role"
+                                    );
+
+                                    return;
+
+                                }
+
+                                // ======================
+                                // OPEN MODAL
+                                // ======================
+
+                                setEditMode(false);
+
+                                setFormData({
+                                    title: "",
+                                    type: "",
+                                    site: "",
+                                    tpm: "",
+                                    ee: [],
+                                });
+
+                                setOpenModal(true);
+
+                            }}
+                            className="h-14 px-6 rounded-2xl
+                                shrink-0
+                                bg-gradient-to-r
+                                from-green-500 to-emerald-600
+                                shadow-[0_0_30px_rgba(34,197,94,.25)]
+                                flex items-center gap-3
+                                text-sm font-bold transition-all
+                                hover:scale-[1.02]"
+                        >
+
+                            <Plus size={16} />
+
+                            Add Project
+
+                        </button>
+
+
+
                     </div>
 
-                    {/* ADD PROJECT */}
-                    <button
-                        onClick={() => {
-
-                            // ======================
-                            // ROLE VALIDATION
-                            // ======================
-
-                            if (
-                                currentUser?.role !== "Manager"
-                            ) {
-
-                                alert(
-                                    "Project hanya bisa ditambahkan oleh Manager role"
-                                );
-
-                                return;
-
-                            }
-
-                            // ======================
-                            // OPEN MODAL
-                            // ======================
-
-                            setEditMode(false);
-
-                            setFormData({
-                                title: "",
-                                type: "",
-                                site: "",
-                                tpm: "",
-                                ee: [],
-                            });
-
-                            setOpenModal(true);
-
-                        }}
-                        className="h-14 px-6 rounded-2xl
-                        shrink-0
-                        bg-gradient-to-r
-                        from-green-500 to-emerald-600
-                        shadow-[0_0_30px_rgba(34,197,94,.25)]
-                        flex items-center gap-3
-                        text-sm font-bold transition-all
-                        hover:scale-[1.02]"
-                    >
-
-                        <Plus size={16} />
-
-                        Add Project
-
-                    </button>
-
-                </div>
-
-            </div>
-
-            {/* PROJECT AREA */}
-            <div
-                className="
-            grid
-            gap-5
-            h-[calc(100vh-330px)]
-            overflow-hidden
-        "
-                style={{
-                    gridTemplateColumns: "1fr 320px"
-                }}
-            >
-
-                <div
-                    className="
+                    {/* PROJECT LIST */}
+                    <div
+                        className="
                     overflow-y-auto
                     pr-2
                     main-scroll
                 "
-                >
-                    <div
-                        className="
+                    >
+                        <div
+                            className="
                         grid
                         grid-cols-4
                         gap-6
                     "
-                    >
+                        >
 
-                        {loading ? (
+                            {loading ? (
 
-                            <div className="col-span-4
+                                <div className="col-span-4
                                 h-[300px]
                                 rounded-[36px]
                                 border border-white/5
@@ -3004,13 +3042,13 @@ export default function ProjectList() {
                                 flex items-center justify-center
                                 text-slate-500">
 
-                                Loading projects...
+                                    Loading projects...
 
-                            </div>
+                                </div>
 
-                        ) : filteredProjects.length === 0 ? (
+                            ) : filteredProjects.length === 0 ? (
 
-                            <div className="col-span-4
+                                <div className="col-span-4
                                 h-[300px]
                                 rounded-[36px]
                                 border border-white/5
@@ -3018,22 +3056,22 @@ export default function ProjectList() {
                                 flex items-center justify-center
                                 text-slate-500">
 
-                                No project data
+                                    No project data
 
-                            </div>
+                                </div>
 
-                        ) : (
+                            ) : (
 
-                            filteredProjects.map((item) => (
+                                filteredProjects.map((item) => (
 
-                                <div
-                                    key={item.id}
+                                    <div
+                                        key={item.id}
 
-                                    onClick={() =>
-                                        handleViewActivity(item)
-                                    }
+                                        onClick={() =>
+                                            handleViewActivity(item)
+                                        }
 
-                                    className="group relative
+                                        className="group relative
                                     rounded-[32px]
                                     cursor-pointer
                                     border border-white/5
@@ -3043,63 +3081,63 @@ export default function ProjectList() {
                                     hover:border-green-500/20
                                     hover:bg-green-500/[0.03]
                                     transition-all duration-300"
-                                >
+                                    >
 
-                                    <div className="absolute top-[-40px] right-[-40px]
+                                        <div className="absolute top-[-40px] right-[-40px]
                                     w-[120px] h-[120px]
                                     bg-green-500/10
                                     blur-[60px]
                                     rounded-full"></div>
 
-                                    <div className="relative z-10 p-6">
+                                        <div className="relative z-10 p-6">
 
-                                        <div className="
+                                            <div className="
                                         flex
                                         items-start
                                         justify-between
                                         gap-4
                                     ">
 
-                                            <div className="
+                                                <div className="
                                             flex-1
                                             min-w-0
                                         ">
 
-                                                <div className="inline-flex
+                                                    <div className="inline-flex
                                         px-3 py-1 rounded-xl
                                         bg-green-500/10
                                         border border-green-500/20
                                         text-green-400
                                         text-xs font-bold">
 
-                                                    {item.type}
+                                                        {item.type}
 
-                                                </div>
+                                                    </div>
 
-                                                <h2 className="mt-4 text-xl font-bold text-white leading-8">
+                                                    <h2 className="mt-4 text-xl font-bold text-white leading-8">
 
-                                                    {item.title}
+                                                        {item.title}
 
-                                                </h2>
+                                                    </h2>
 
-                                                {/* PERFORMANCE BAR */}
-                                                {(() => {
+                                                    {/* PERFORMANCE BAR */}
+                                                    {(() => {
 
-                                                    const {
-                                                        progress,
-                                                        done,
-                                                        total
-                                                    } = getProjectProgress(item.id);
+                                                        const {
+                                                            progress,
+                                                            done,
+                                                            total
+                                                        } = getProjectProgress(item.id);
 
-                                                    return (
+                                                        return (
 
-                                                        <div className="
+                                                            <div className="
                                                         mt-5
                                                         w-full
                                                     ">
 
-                                                            {/* TOP */}
-                                                            <div className="
+                                                                {/* TOP */}
+                                                                <div className="
                                                             flex
                                                             items-center
                                                             justify-between
@@ -3107,18 +3145,18 @@ export default function ProjectList() {
                                                             gap-3
                                                         ">
 
-                                                                <span className="
+                                                                    <span className="
                                                                 text-[11px]
                                                                 font-bold
                                                                 tracking-wider
                                                                 text-cyan-400
                                                             ">
 
-                                                                    PERFORMANCE
+                                                                        PERFORMANCE
 
-                                                                </span>
+                                                                    </span>
 
-                                                                <span className="
+                                                                    <span className="
                                                             w-[55px]
                                                             text-right
                                                             shrink-0
@@ -3126,13 +3164,13 @@ export default function ProjectList() {
                                                             font-bold
                                                             text-white
                                                         ">
-                                                                    {done}/{total}
-                                                                </span>
+                                                                        {done}/{total}
+                                                                    </span>
 
-                                                            </div>
+                                                                </div>
 
-                                                            {/* BAR CONTAINER */}
-                                                            <div className="
+                                                                {/* BAR CONTAINER */}
+                                                                <div className="
                                                         relative
                                                         w-full
                                                         min-w-full
@@ -3145,8 +3183,8 @@ export default function ProjectList() {
                                                         mt-2
                                                     ">
 
-                                                                {/* BACKGROUND GLOW */}
-                                                                <div className="
+                                                                    {/* BACKGROUND GLOW */}
+                                                                    <div className="
                                                             absolute
                                                             inset-0
                                                             bg-gradient-to-r
@@ -3154,9 +3192,9 @@ export default function ProjectList() {
                                                             to-emerald-500/5
                                                         "></div>
 
-                                                                {/* PROGRESS */}
-                                                                <div
-                                                                    className="
+                                                                    {/* PROGRESS */}
+                                                                    <div
+                                                                        className="
                                                                 absolute
                                                                 left-0
                                                                 top-0
@@ -3173,207 +3211,207 @@ export default function ProjectList() {
                                                                 transition-all
                                                                 duration-700
                                                             "
-                                                                    style={{
-                                                                        width: `${progress}%`
-                                                                    }}
-                                                                />
+                                                                        style={{
+                                                                            width: `${progress}%`
+                                                                        }}
+                                                                    />
 
-                                                            </div>
+                                                                </div>
 
-                                                            {/* PERCENT */}
-                                                            <div className="
+                                                                {/* PERCENT */}
+                                                                <div className="
                                                             mt-2
                                                             flex
                                                             items-center
                                                             justify-between
                                                         ">
 
-                                                                <span className="
+                                                                    <span className="
                                                             text-[11px]
                                                             text-slate-400
                                                             font-semibold
                                                         ">
-                                                                    {done} / {total} Task
-                                                                </span>
+                                                                        {done} / {total} Task
+                                                                    </span>
 
-                                                                <span className="
+                                                                    <span className="
                                                             text-[12px]
                                                             font-black
                                                             text-green-400
                                                         ">
-                                                                    {progress}%
-                                                                </span>
+                                                                        {progress}%
+                                                                    </span>
+
+                                                                </div>
 
                                                             </div>
 
-                                                        </div>
+                                                        );
 
-                                                    );
+                                                    })()}
 
-                                                })()}
+                                                </div>
 
-                                            </div>
+                                                <div className="flex items-center gap-2">
 
-                                            <div className="flex items-center gap-2">
+                                                    {/* DELETE */}
+                                                    <button
+                                                        onClick={(e) => {
 
-                                                {/* DELETE */}
-                                                <button
-                                                    onClick={(e) => {
+                                                            e.stopPropagation();
 
-                                                        e.stopPropagation();
+                                                            // ======================
+                                                            // ROLE VALIDATION
+                                                            // ======================
 
-                                                        // ======================
-                                                        // ROLE VALIDATION
-                                                        // ======================
+                                                            if (
+                                                                currentUser?.role !== "Manager"
+                                                            ) {
 
-                                                        if (
-                                                            currentUser?.role !== "Manager"
-                                                        ) {
+                                                                alert(
+                                                                    "Delete project hanya bisa dilakukan oleh Manager role"
+                                                                );
 
-                                                            alert(
-                                                                "Delete project hanya bisa dilakukan oleh Manager role"
-                                                            );
+                                                                return;
 
-                                                            return;
+                                                            }
 
-                                                        }
+                                                            handleDeleteProject(item.id)
 
-                                                        handleDeleteProject(item.id)
+                                                        }}
 
-                                                    }}
-
-                                                    className="w-10 h-10 rounded-xl
+                                                        className="w-10 h-10 rounded-xl
                                             bg-red-500/10
                                             border border-red-500/20
                                             flex items-center justify-center
                                             hover:scale-105
                                             transition-all"
-                                                >
+                                                    >
 
-                                                    <Trash2
-                                                        size={16}
-                                                        className="text-red-400"
-                                                    />
+                                                        <Trash2
+                                                            size={16}
+                                                            className="text-red-400"
+                                                        />
 
-                                                </button>
+                                                    </button>
 
-                                                {/* EDIT */}
-                                                <button
-                                                    onClick={(e) => {
+                                                    {/* EDIT */}
+                                                    <button
+                                                        onClick={(e) => {
 
-                                                        e.stopPropagation();
+                                                            e.stopPropagation();
 
-                                                        // ======================
-                                                        // ROLE VALIDATION
-                                                        // ======================
+                                                            // ======================
+                                                            // ROLE VALIDATION
+                                                            // ======================
 
-                                                        if (
-                                                            currentUser?.role !== "Manager"
-                                                        ) {
+                                                            if (
+                                                                currentUser?.role !== "Manager"
+                                                            ) {
 
-                                                            alert(
-                                                                "Edit project hanya bisa dilakukan oleh Manager role"
-                                                            );
+                                                                alert(
+                                                                    "Edit project hanya bisa dilakukan oleh Manager role"
+                                                                );
 
-                                                            return;
+                                                                return;
 
-                                                        }
+                                                            }
 
-                                                        // ======================
-                                                        // OPEN EDIT MODAL
-                                                        // ======================
+                                                            // ======================
+                                                            // OPEN EDIT MODAL
+                                                            // ======================
 
-                                                        setEditMode(true);
+                                                            setEditMode(true);
 
-                                                        setSelectedProject(item);
+                                                            setSelectedProject(item);
 
-                                                        setFormData({
-                                                            title: item.title || "",
-                                                            type: item.type || "",
-                                                            site: item.site || "",
-                                                            tpm: item.tpm || "",
-                                                            ee: Array.isArray(item.ee)
-                                                                ? item.ee
-                                                                : item.ee
-                                                                    ? [item.ee]
-                                                                    : [],
-                                                        });
+                                                            setFormData({
+                                                                title: item.title || "",
+                                                                type: item.type || "",
+                                                                site: item.site || "",
+                                                                tpm: item.tpm || "",
+                                                                ee: Array.isArray(item.ee)
+                                                                    ? item.ee
+                                                                    : item.ee
+                                                                        ? [item.ee]
+                                                                        : [],
+                                                            });
 
-                                                        setOpenModal(true);
+                                                            setOpenModal(true);
 
-                                                    }}
+                                                        }}
 
-                                                    className="w-10 h-10 rounded-xl
+                                                        className="w-10 h-10 rounded-xl
                                             bg-yellow-500/10
                                             border border-yellow-500/20
                                             flex items-center justify-center
                                             hover:scale-105
                                             transition-all"
-                                                >
+                                                    >
 
-                                                    <Pencil
-                                                        size={16}
-                                                        className="text-yellow-400"
-                                                    />
+                                                        <Pencil
+                                                            size={16}
+                                                            className="text-yellow-400"
+                                                        />
 
-                                                </button>
+                                                    </button>
+
+                                                </div>
 
                                             </div>
 
-                                        </div>
+                                            <div className="mt-6 flex items-start justify-between gap-4">
 
-                                        <div className="mt-6 flex items-start justify-between gap-4">
+                                                {/* LEFT INFO */}
+                                                <div className="space-y-3 flex-1">
 
-                                            {/* LEFT INFO */}
-                                            <div className="space-y-3 flex-1">
+                                                    <div className="grid grid-cols-[70px_1fr] items-center gap-x-2">
 
-                                                <div className="grid grid-cols-[70px_1fr] items-center gap-x-2">
+                                                        <p className="text-slate-500 text-sm">
+                                                            Site
+                                                        </p>
 
-                                                    <p className="text-slate-500 text-sm">
-                                                        Site
-                                                    </p>
+                                                        <p className="font-semibold text-white">
+                                                            {item.site}
+                                                        </p>
 
-                                                    <p className="font-semibold text-white">
-                                                        {item.site}
-                                                    </p>
+                                                    </div>
 
-                                                </div>
+                                                    <div className="grid grid-cols-[70px_1fr] items-center gap-x-2">
 
-                                                <div className="grid grid-cols-[70px_1fr] items-center gap-x-2">
+                                                        <p className="text-slate-500 text-sm">
+                                                            TPM
+                                                        </p>
 
-                                                    <p className="text-slate-500 text-sm">
-                                                        TPM
-                                                    </p>
+                                                        <p className="font-semibold text-white">
+                                                            {item.tpm}
+                                                        </p>
 
-                                                    <p className="font-semibold text-white">
-                                                        {item.tpm}
-                                                    </p>
+                                                    </div>
 
-                                                </div>
+                                                    <div className="grid grid-cols-[70px_1fr] items-center gap-x-2">
 
-                                                <div className="grid grid-cols-[70px_1fr] items-center gap-x-2">
+                                                        <p className="text-slate-500 text-sm">
+                                                            Engineer
+                                                        </p>
 
-                                                    <p className="text-slate-500 text-sm">
-                                                        Engineer
-                                                    </p>
-
-                                                    <div className="
+                                                        <div className="
                                                 flex
                                                 flex-wrap
                                                 gap-2
                                             ">
 
-                                                        {
-                                                            Array.isArray(item.ee)
+                                                            {
+                                                                Array.isArray(item.ee)
 
-                                                                ? (
+                                                                    ? (
 
-                                                                    item.ee.map((name) => (
+                                                                        item.ee.map((name) => (
 
-                                                                        <div
-                                                                            key={name}
+                                                                            <div
+                                                                                key={name}
 
-                                                                            className="
+                                                                                className="
                                                                     px-3
                                                                     py-1.5
 
@@ -3390,19 +3428,19 @@ export default function ProjectList() {
                                                                     hover:bg-cyan-500/15
                                                                     transition-all
                                                                 "
-                                                                        >
+                                                                            >
 
-                                                                            {name}
+                                                                                {name}
 
-                                                                        </div>
+                                                                            </div>
 
-                                                                    ))
+                                                                        ))
 
-                                                                )
+                                                                    )
 
-                                                                : (
+                                                                    : (
 
-                                                                    <div className="
+                                                                        <div className="
                                                                 px-3
                                                                 py-1.5
 
@@ -3416,308 +3454,307 @@ export default function ProjectList() {
                                                                 text-sm
                                                                 font-semibold
                                                             ">
-                                                                        {item.ee}
-                                                                    </div>
+                                                                            {item.ee}
+                                                                        </div>
 
-                                                                )
-                                                        }
+                                                                    )
+                                                            }
+
+                                                        </div>
 
                                                     </div>
 
                                                 </div>
 
-                                            </div>
+                                                {/* RIGHT STATUS */}
+                                                {(() => {
 
-                                            {/* RIGHT STATUS */}
-                                            {(() => {
-
-                                                const headers =
-                                                    taskHeaders.filter((header) => {
-
-                                                        return (
-                                                            String(header.project_id) ===
-                                                            String(item.id)
-                                                        );
-
-                                                    });
-
-                                                let doneCount = 0;
-                                                let openCount = 0;
-                                                let progressCount = 0;
-                                                let delayCount = 0;
-
-                                                headers.forEach((header) => {
-
-                                                    const relatedSubs =
-                                                        subTasks.filter((sub) => {
+                                                    const headers =
+                                                        taskHeaders.filter((header) => {
 
                                                             return (
-                                                                String(sub.header_id) ===
-                                                                String(header.id)
+                                                                String(header.project_id) ===
+                                                                String(item.id)
                                                             );
 
                                                         });
 
-                                                    // ======================
-                                                    // PLAN TASKS
-                                                    // ======================
+                                                    let doneCount = 0;
+                                                    let openCount = 0;
+                                                    let progressCount = 0;
+                                                    let delayCount = 0;
 
-                                                    const planTasks =
-                                                        relatedSubs.filter((sub) => {
+                                                    headers.forEach((header) => {
 
-                                                            return (
-                                                                String(sub.remark)
-                                                                    .toUpperCase() ===
-                                                                "PLAN"
+                                                        const relatedSubs =
+                                                            subTasks.filter((sub) => {
+
+                                                                return (
+                                                                    String(sub.header_id) ===
+                                                                    String(header.id)
+                                                                );
+
+                                                            });
+
+                                                        // ======================
+                                                        // PLAN TASKS
+                                                        // ======================
+
+                                                        const planTasks =
+                                                            relatedSubs.filter((sub) => {
+
+                                                                return (
+                                                                    String(sub.remark)
+                                                                        .toUpperCase() ===
+                                                                    "PLAN"
+                                                                );
+
+                                                            });
+
+                                                        // ======================
+                                                        // ACTUAL TASKS
+                                                        // ======================
+
+                                                        const actualTasks =
+                                                            relatedSubs.filter((sub) => {
+
+                                                                return (
+                                                                    String(sub.remark)
+                                                                        .toUpperCase() ===
+                                                                    "ACTUAL"
+                                                                );
+
+                                                            });
+
+                                                        // ======================
+                                                        // HAS PROGRESS
+                                                        // ======================
+
+                                                        const hasPlanProgress =
+
+                                                            planTasks.some(
+                                                                (x) =>
+
+                                                                    x.start_date &&
+                                                                    x.end_date
+                                                            )
+
+                                                            ||
+
+                                                            actualTasks.some(
+                                                                (x) =>
+
+                                                                    x.start_date &&
+                                                                    x.end_date
                                                             );
 
-                                                        });
+                                                        // ======================
+                                                        // ALL ACTUAL DONE
+                                                        // ======================
 
-                                                    // ======================
-                                                    // ACTUAL TASKS
-                                                    // ======================
+                                                        const allActualDone =
 
-                                                    const actualTasks =
-                                                        relatedSubs.filter((sub) => {
+                                                            actualTasks.length > 0 &&
 
-                                                            return (
-                                                                String(sub.remark)
-                                                                    .toUpperCase() ===
-                                                                "ACTUAL"
+                                                            actualTasks.every(
+                                                                (x) =>
+
+                                                                    x.start_date &&
+                                                                    x.end_date
                                                             );
 
-                                                        });
+                                                        // ======================
+                                                        // DONE
+                                                        // ======================
 
-                                                    // ======================
-                                                    // HAS PROGRESS
-                                                    // ======================
+                                                        if (allActualDone) {
 
-                                                    const hasPlanProgress =
+                                                            doneCount++;
+                                                            return;
 
-                                                        planTasks.some(
-                                                            (x) =>
+                                                        }
 
-                                                                x.start_date &&
-                                                                x.end_date
-                                                        )
+                                                        // ======================
+                                                        // DELAY
+                                                        // ======================
 
-                                                        ||
+                                                        const today =
+                                                            new Date();
 
-                                                        actualTasks.some(
-                                                            (x) =>
-
-                                                                x.start_date &&
-                                                                x.end_date
-                                                        );
-
-                                                    // ======================
-                                                    // ALL ACTUAL DONE
-                                                    // ======================
-
-                                                    const allActualDone =
-
-                                                        actualTasks.length > 0 &&
-
-                                                        actualTasks.every(
-                                                            (x) =>
-
-                                                                x.start_date &&
-                                                                x.end_date
-                                                        );
-
-                                                    // ======================
-                                                    // DONE
-                                                    // ======================
-
-                                                    if (allActualDone) {
-
-                                                        doneCount++;
-                                                        return;
-
-                                                    }
-
-                                                    // ======================
-                                                    // DELAY
-                                                    // ======================
-
-                                                    const today =
-                                                        new Date();
-
-                                                    today.setHours(
-                                                        0,
-                                                        0,
-                                                        0,
-                                                        0
-                                                    );
-
-                                                    if (header.end_date) {
-
-                                                        const endDate =
-                                                            new Date(
-                                                                header.end_date
-                                                            );
-
-                                                        endDate.setHours(
+                                                        today.setHours(
                                                             0,
                                                             0,
                                                             0,
                                                             0
                                                         );
 
-                                                        if (
-                                                            today > endDate &&
-                                                            !allActualDone
-                                                        ) {
+                                                        if (header.end_date) {
 
-                                                            delayCount++;
+                                                            const endDate =
+                                                                new Date(
+                                                                    header.end_date
+                                                                );
+
+                                                            endDate.setHours(
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0
+                                                            );
+
+                                                            if (
+                                                                today > endDate &&
+                                                                !allActualDone
+                                                            ) {
+
+                                                                delayCount++;
+                                                                return;
+
+                                                            }
+
+                                                        }
+
+                                                        // ======================
+                                                        // PROGRESS
+                                                        // ======================
+
+                                                        if (hasPlanProgress) {
+
+                                                            progressCount++;
                                                             return;
 
                                                         }
 
-                                                    }
+                                                        // ======================
+                                                        // OPEN
+                                                        // ======================
 
-                                                    // ======================
-                                                    // PROGRESS
-                                                    // ======================
+                                                        openCount++;
 
-                                                    if (hasPlanProgress) {
+                                                    });
 
-                                                        progressCount++;
-                                                        return;
+                                                    return (
 
-                                                    }
-
-                                                    // ======================
-                                                    // OPEN
-                                                    // ======================
-
-                                                    openCount++;
-
-                                                });
-
-                                                return (
-
-                                                    <div className="
+                                                        <div className="
                                                     min-w-[120px]
                                                     space-y-2
                                                 ">
 
-                                                        <div className="
+                                                            <div className="
                                                         flex
                                                         items-center
                                                         justify-between
                                                         gap-3
                                                     ">
 
-                                                            <p className="
+                                                                <p className="
                                                             text-[14px]
                                                             text-slate-500
                                                         ">
-                                                                Done
-                                                            </p>
+                                                                    Done
+                                                                </p>
 
-                                                            <p className="
+                                                                <p className="
                                                             text-green-400
                                                             font-bold
                                                             text-sm
                                                         ">
-                                                                {doneCount}
-                                                            </p>
+                                                                    {doneCount}
+                                                                </p>
 
-                                                        </div>
+                                                            </div>
 
-                                                        <div className="
+                                                            <div className="
                                                         flex
                                                         items-center
                                                         justify-between
                                                         gap-3
                                                     ">
 
-                                                            <p className="
+                                                                <p className="
                                                             text-[14px]
                                                             text-slate-500
                                                         ">
-                                                                Progress
-                                                            </p>
+                                                                    Progress
+                                                                </p>
 
-                                                            <p className="
+                                                                <p className="
                                                             text-yellow-400
                                                             font-bold
                                                             text-sm
                                                         ">
-                                                                {progressCount}
-                                                            </p>
+                                                                    {progressCount}
+                                                                </p>
 
-                                                        </div>
+                                                            </div>
 
-                                                        <div className="
+                                                            <div className="
                                                         flex
                                                         items-center
                                                         justify-between
                                                         gap-3
                                                     ">
 
-                                                            <p className="
+                                                                <p className="
                                                             text-[14px]
                                                             text-slate-500
                                                         ">
-                                                                Open
-                                                            </p>
+                                                                    Open
+                                                                </p>
 
-                                                            <p className="
+                                                                <p className="
                                                             text-cyan-400
                                                             font-bold
                                                             text-sm
                                                         ">
-                                                                {openCount}
-                                                            </p>
+                                                                    {openCount}
+                                                                </p>
 
-                                                        </div>
+                                                            </div>
 
-                                                        <div className="
+                                                            <div className="
                                                         flex
                                                         items-center
                                                         justify-between
                                                         gap-3
                                                     ">
 
-                                                            <p className="
+                                                                <p className="
                                                             text-[14px]
                                                             text-slate-500
                                                         ">
-                                                                Delay
-                                                            </p>
+                                                                    Delay
+                                                                </p>
 
-                                                            <p className="
+                                                                <p className="
                                                             text-red-400
                                                             font-bold
                                                             text-sm
                                                         ">
-                                                                {delayCount}
-                                                            </p>
+                                                                    {delayCount}
+                                                                </p>
+
+                                                            </div>
 
                                                         </div>
 
-                                                    </div>
+                                                    );
 
-                                                );
+                                                })()}
 
-                                            })()}
+                                            </div>
 
                                         </div>
 
                                     </div>
 
-                                </div>
+                                ))
 
-                            ))
+                            )}
+                        </div>
 
-                        )}
                     </div>
                 </div>
-
-
-
 
                 {/* KANAN */}
                 <div
