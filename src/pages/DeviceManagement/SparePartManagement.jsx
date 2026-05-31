@@ -1710,7 +1710,7 @@ export default function SparePartManagement() {
                             font-bold
                             text-lg
                         ">
-                            Stock Health
+                            Stock Overview
                         </h2>
 
                         <select

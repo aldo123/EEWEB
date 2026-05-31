@@ -2121,7 +2121,7 @@ export default function ProjectList() {
                         text-sm
                         mb-4
                         ">
-                            Project Health Overview
+                            Project Status Overview
                         </h3>
 
                         <div className="
@@ -2330,7 +2330,7 @@ export default function ProjectList() {
                                 font-bold
                                 text-sm
                             ">
-                                Project Trend By Type
+                                Project Trend
                             </h3>
 
                             <div className="
@@ -2713,7 +2713,7 @@ export default function ProjectList() {
                         text-sm
                         mb-4
                         ">
-                        Project Type Distribution
+                        Project Type Overview
                     </h3>
 
                     <div className="
