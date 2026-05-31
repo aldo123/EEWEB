@@ -10,6 +10,7 @@ import {
     Upload,
     Pencil,
     Trash2,
+    MessageSquare,
     X,
 } from "lucide-react";
 
@@ -105,6 +106,17 @@ export default function ProjectList() {
     const [selectedProjectType,
         setSelectedProjectType] =
         useState("ALL");
+
+    const [commentModal, setCommentModal] =
+        useState(false);
+
+    const [selectedCommentTask,
+        setSelectedCommentTask] =
+        useState(null);
+
+    const [commentText,
+        setCommentText] =
+        useState("");
 
     const handleOpenTask = (header) => {
 
@@ -506,8 +518,8 @@ export default function ProjectList() {
                 statusMatch
             );
 
-        }); 
-        
+        });
+
     const engineerWorkload =
         engineerList
             .map((eng) => {
@@ -1734,6 +1746,42 @@ export default function ProjectList() {
             )
 
             .slice(0, 10);
+
+    const handleSaveComment =
+        async (
+            headerId,
+            comment
+        ) => {
+
+            try {
+
+                const { error } =
+                    await supabase
+                        .from("task_headers")
+                        .update({
+                            comment
+                        })
+                        .eq(
+                            "id",
+                            headerId
+                        );
+
+                if (error)
+                    throw error;
+
+                await loadTaskData();
+
+            } catch (err) {
+
+                console.log(err);
+
+                alert(
+                    err.message
+                );
+
+            }
+
+        };
 
     return (
 
@@ -3841,22 +3889,110 @@ export default function ProjectList() {
                                                 >
 
                                                     <div className="
-                                                        text-white
-                                                        text-sm
-                                                        font-semibold
-                                                        truncate
-                                                    ">
-                                                        {item.title}
+                                                    flex
+                                                    justify-between
+                                                    items-center
+                                                    gap-2
+                                                ">
+                                                        <div
+                                                            className={`
+                                                            text-sm
+                                                            font-semibold
+                                                            truncate
+
+                                                            ${projects.find(
+                                                                p =>
+                                                                    String(p.id) ===
+                                                                    String(item.project_id)
+                                                            )?.type === "NPI"
+
+                                                                    ? "text-cyan-400"
+
+                                                                    : projects.find(
+                                                                        p =>
+                                                                            String(p.id) ===
+                                                                            String(item.project_id)
+                                                                    )?.type === "KAIZEN"
+
+                                                                        ? "text-green-400"
+
+                                                                        : projects.find(
+                                                                            p =>
+                                                                                String(p.id) ===
+                                                                                String(item.project_id)
+                                                                        )?.type === "Downtime and Finding"
+
+                                                                            ? "text-yellow-400"
+
+                                                                            : projects.find(
+                                                                                p =>
+                                                                                    String(p.id) ===
+                                                                                    String(item.project_id)
+                                                                            )?.type === "VAVE"
+
+                                                                                ? "text-purple-400"
+
+                                                                                : "text-white"
+                                                                }
+                                                        `}
+                                                        >
+                                                            {item.title}
+                                                        </div>
+                                                        <button
+                                                            onClick={(e) => {
+
+                                                                e.stopPropagation();
+
+                                                                setSelectedCommentTask(item);
+
+                                                                setCommentText(
+                                                                    item.comment || ""
+                                                                );
+
+                                                                setCommentModal(true);
+
+                                                            }}
+                                                            className="
+                                                                text-cyan-400
+                                                                hover:text-cyan-300
+                                                            "
+                                                        >
+                                                            <MessageSquare size={14} />
+                                                        </button>
+
                                                     </div>
 
                                                     <div className="
                                                         mt-1
-                                                        text-xs
-                                                        text-slate-400
+                                                        flex
+                                                        justify-between
+                                                        items-center
+                                                        gap-2
                                                     ">
-                                                        Assign To :
-                                                        {" "}
-                                                        {item.assigned_to}
+
+                                                        <span className="
+                                                            text-xs
+                                                            text-slate-400
+                                                        ">
+                                                            Assign To :
+                                                            {" "}
+                                                            {item.assigned_to}
+                                                        </span>
+
+                                                        {
+                                                            item.comment && (
+                                                                <span className="
+                                                                    text-[10px]
+                                                                    text-cyan-400
+                                                                    font-semibold
+                                                                    truncate
+                                                                    max-w-[120px]
+                                                                ">
+                                                                    {item.comment}
+                                                                </span>
+                                                            )
+                                                        }
+
                                                     </div>
 
                                                     <div className="
@@ -3971,24 +4107,110 @@ export default function ProjectList() {
                                                         transition-all
                                                     "
                                                 >
-
                                                     <div className="
-                                                        text-white
-                                                        text-sm
-                                                        font-semibold
-                                                        truncate
-                                                    ">
-                                                        {item.title}
+                                                    flex
+                                                    justify-between
+                                                    items-center
+                                                    gap-2
+                                                ">
+                                                        <div
+                                                            className={`
+                                                            text-sm
+                                                            font-semibold
+                                                            truncate
+
+                                                            ${projects.find(
+                                                                p =>
+                                                                    String(p.id) ===
+                                                                    String(item.project_id)
+                                                            )?.type === "NPI"
+
+                                                                    ? "text-cyan-400"
+
+                                                                    : projects.find(
+                                                                        p =>
+                                                                            String(p.id) ===
+                                                                            String(item.project_id)
+                                                                    )?.type === "KAIZEN"
+
+                                                                        ? "text-green-400"
+
+                                                                        : projects.find(
+                                                                            p =>
+                                                                                String(p.id) ===
+                                                                                String(item.project_id)
+                                                                        )?.type === "Downtime and Finding"
+
+                                                                            ? "text-yellow-400"
+
+                                                                            : projects.find(
+                                                                                p =>
+                                                                                    String(p.id) ===
+                                                                                    String(item.project_id)
+                                                                            )?.type === "VAVE"
+
+                                                                                ? "text-purple-400"
+
+                                                                                : "text-white"
+                                                                }
+                                                        `}
+                                                        >
+                                                            {item.title}
+                                                        </div>
+                                                        <button
+                                                            onClick={(e) => {
+
+                                                                e.stopPropagation();
+
+                                                                setSelectedCommentTask(item);
+
+                                                                setCommentText(
+                                                                    item.comment || ""
+                                                                );
+
+                                                                setCommentModal(true);
+
+                                                            }}
+                                                            className="
+                                                            text-cyan-400
+                                                            hover:text-cyan-300
+                                                        "
+                                                        >
+                                                            <MessageSquare size={14} />
+                                                        </button>
                                                     </div>
 
                                                     <div className="
                                                         mt-1
-                                                        text-xs
-                                                        text-slate-400
+                                                        flex
+                                                        justify-between
+                                                        items-center
+                                                        gap-2
                                                     ">
-                                                        Assign To :
-                                                        {" "}
-                                                        {item.assigned_to}
+
+                                                        <span className="
+                                                            text-xs
+                                                            text-slate-400
+                                                        ">
+                                                            Assign To :
+                                                            {" "}
+                                                            {item.assigned_to}
+                                                        </span>
+
+                                                        {
+                                                            item.comment && (
+                                                                <span className="
+                                                                    text-[10px]
+                                                                    text-cyan-400
+                                                                    font-semibold
+                                                                    truncate
+                                                                    max-w-[120px]
+                                                                ">
+                                                                    {item.comment}
+                                                                </span>
+                                                            )
+                                                        }
+
                                                     </div>
 
                                                     <div className="
@@ -4121,24 +4343,110 @@ export default function ProjectList() {
                                                             transition-all
                                                         "
                                                     >
-
                                                         <div className="
-                                                                text-white
+                                                        flex
+                                                        justify-between
+                                                        items-center
+                                                        gap-2
+                                                    ">
+                                                            <div
+                                                                className={`
                                                                 text-sm
                                                                 font-semibold
                                                                 truncate
-                                                            ">
-                                                            {item.title}
+
+                                                                ${projects.find(
+                                                                    p =>
+                                                                        String(p.id) ===
+                                                                        String(item.project_id)
+                                                                )?.type === "NPI"
+
+                                                                        ? "text-cyan-400"
+
+                                                                        : projects.find(
+                                                                            p =>
+                                                                                String(p.id) ===
+                                                                                String(item.project_id)
+                                                                        )?.type === "KAIZEN"
+
+                                                                            ? "text-green-400"
+
+                                                                            : projects.find(
+                                                                                p =>
+                                                                                    String(p.id) ===
+                                                                                    String(item.project_id)
+                                                                            )?.type === "Downtime and Finding"
+
+                                                                                ? "text-yellow-400"
+
+                                                                                : projects.find(
+                                                                                    p =>
+                                                                                        String(p.id) ===
+                                                                                        String(item.project_id)
+                                                                                )?.type === "VAVE"
+
+                                                                                    ? "text-purple-400"
+
+                                                                                    : "text-white"
+                                                                    }
+                                                            `}
+                                                            >
+                                                                {item.title}
+                                                            </div>
+                                                            <button
+                                                                onClick={(e) => {
+
+                                                                    e.stopPropagation();
+
+                                                                    setSelectedCommentTask(item);
+
+                                                                    setCommentText(
+                                                                        item.comment || ""
+                                                                    );
+
+                                                                    setCommentModal(true);
+
+                                                                }}
+                                                                className="
+                                                                    text-cyan-400
+                                                                    hover:text-cyan-300
+                                                                "
+                                                            >
+                                                                <MessageSquare size={14} />
+                                                            </button>
                                                         </div>
 
                                                         <div className="
-                                                                mt-1
-                                                                text-xs
-                                                                text-slate-400
-                                                            ">
-                                                            Assign To :
-                                                            {" "}
-                                                            {item.assigned_to}
+                                                        mt-1
+                                                        flex
+                                                        justify-between
+                                                        items-center
+                                                        gap-2
+                                                    ">
+
+                                                            <span className="
+                                                            text-xs
+                                                            text-slate-400
+                                                        ">
+                                                                Assign To :
+                                                                {" "}
+                                                                {item.assigned_to}
+                                                            </span>
+
+                                                            {
+                                                                item.comment && (
+                                                                    <span className="
+                                                                    text-[10px]
+                                                                    text-cyan-400
+                                                                    font-semibold
+                                                                    truncate
+                                                                    max-w-[120px]
+                                                                ">
+                                                                        {item.comment}
+                                                                    </span>
+                                                                )
+                                                            }
+
                                                         </div>
 
                                                         <div className="
@@ -4183,6 +4491,148 @@ export default function ProjectList() {
                 </div>
 
             </div>
+
+            {
+                commentModal && (
+
+                    <div className="
+                        fixed inset-0
+                        z-[999]
+                        bg-black/70
+                        backdrop-blur-sm
+
+                        flex
+                        items-center
+                        justify-center
+                    ">
+
+                        <div className="
+                            w-full
+                            max-w-[600px]
+
+                            rounded-[30px]
+
+                            border
+                            border-cyan-500/20
+
+                            bg-[#071225]
+
+                            overflow-hidden
+                        ">
+
+                            <div className="
+                                p-6
+                                border-b
+                                border-white/10
+                            ">
+
+                                <h2 className="
+                                    text-xl
+                                    font-black
+                                    text-white
+                                ">
+                                    Task Comment
+                                </h2>
+
+                            </div>
+
+                            <div className="p-6">
+
+                                <textarea
+                                    value={commentText}
+                                    onChange={(e) =>
+                                        setCommentText(
+                                            e.target.value
+                                        )
+                                    }
+                                    rows={6}
+                                    className="
+                                        w-full
+
+                                        rounded-2xl
+
+                                        bg-[#081526]
+
+                                        border
+                                        border-white/10
+
+                                        p-4
+
+                                        text-white
+
+                                        resize-none
+                                    "
+                                    placeholder="
+                                        Enter comment...
+                                    "
+                                />
+
+                            </div>
+
+                            <div className="
+                                p-6
+
+                                flex
+                                justify-end
+                                gap-3
+                            ">
+
+                                <button
+                                    onClick={() =>
+                                        setCommentModal(false)
+                                    }
+                                    className="
+                                        px-5
+                                        py-2
+
+                                        rounded-xl
+
+                                        bg-white/5
+                                        border
+                                        border-white/10
+
+                                        text-white
+                                    "
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    onClick={async () => {
+
+                                        await handleSaveComment(
+                                            selectedCommentTask.id,
+                                            commentText
+                                        );
+
+                                        setCommentModal(false);
+
+                                    }}
+                                    className="
+                                        px-5
+                                        py-2
+
+                                        rounded-xl
+
+                                        bg-gradient-to-r
+                                        from-cyan-500
+                                        to-blue-600
+
+                                        text-white
+                                        font-bold
+                                    "
+                                >
+                                    Save Comment
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                )
+            }
 
             {/* MODAL */}
             {openModal && (
