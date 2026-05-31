@@ -1063,16 +1063,18 @@ export default function ProjectList() {
         }).length;
 
     const totalProject =
-        taskHeaders.length;
+        filteredHeaders.length;
 
-    const getHeaderSummary = () => {
+    const getHeaderSummary = (
+        headers = filteredHeaders
+    ) => {
 
         let doneCount = 0;
         let progressCount = 0;
         let openCount = 0;
         let delayCount = 0;
 
-        taskHeaders.forEach((header) => {
+        headers.forEach((header) => {
 
             const relatedSubs =
                 subTasks.filter(
@@ -1188,8 +1190,15 @@ export default function ProjectList() {
 
     };
 
+    const globalSummary =
+        getHeaderSummary(
+            taskHeaders
+        );
+
     const statusSummary =
-        getHeaderSummary();
+        getHeaderSummary(
+            filteredHeaders
+        );
 
     const overdueProject =
         statusSummary.delayCount;
@@ -1198,25 +1207,25 @@ export default function ProjectList() {
 
         {
             name: "Done",
-            value: statusSummary.doneCount,
+            value: globalSummary.doneCount,
             color: "#00D084"
         },
 
         {
             name: "Progress",
-            value: statusSummary.progressCount,
-            color: "#00B4FF"
-        },
-
-        {
-            name: "Open",
-            value: statusSummary.openCount,
+            value: globalSummary.progressCount,
             color: "#FACC15"
         },
 
         {
+            name: "Open",
+            value: globalSummary.openCount,
+            color: "#00B4FF"
+        },
+
+        {
             name: "Delay",
-            value: statusSummary.delayCount,
+            value: globalSummary.delayCount,
             color: "#FF4D6D"
         }
 
@@ -2137,8 +2146,16 @@ export default function ProjectList() {
                                             <span className="
                                                 text-slate-400
                                                 text-sm
-                                                ">
-                                                {item.value}
+                                            ">
+                                                {
+                                                    item.name === "Done"
+                                                        ? statusSummary.doneCount
+                                                        : item.name === "Progress"
+                                                            ? statusSummary.progressCount
+                                                            : item.name === "Open"
+                                                                ? statusSummary.openCount
+                                                                : statusSummary.delayCount
+                                                }
                                             </span>
 
                                         </div>
